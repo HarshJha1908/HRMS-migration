@@ -1,0 +1,37 @@
+.leave-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.leave-table th,
+.leave-table td {
+  padding: 8px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+.leave-table th {
+  background-color: #0f5f7f;
+  color: #fff;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status.approved {
+  background-color: #c5e1a5;
+  color: #33691e;
+}
+
+.status.pending {
+  background-color: #ffe082;
+  color: #ff6f00;
+}
+.visually-hidden {
+  position: absolute;
+  left: -10000px;
+}

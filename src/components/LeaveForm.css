@@ -1,0 +1,68 @@
+.form-card {
+  background: #fff;
+  padding: 12px;
+  border: 1px solid #ccc;
+  margin-bottom: 16px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  row-gap: 8px;
+  column-gap: 12px;
+  font-size: 13px;
+}
+
+.form-grid input,
+.form-grid select {
+  height: 24px;
+  font-size: 12px;
+}
+
+.readonly {
+  padding-top: 4px;
+}
+
+.error {
+  color: red;
+  margin-top: 6px;
+  font-size: 12px;
+}
+
+.form-footer {
+  margin-top: 12px;
+  text-align: right;
+}
+
+.btn {
+  padding: 6px 18px;
+  margin-left: 8px;
+}
+
+.primary {
+  background: #174e72;
+  color: #fff;
+}
+
+.secondary {
+  background: #174e72;
+  color: #fff;
+}
+
+.error {
+  color: #b81111;
+  font-size: 15px;
+  margin-top: 8px;
+}
+
+.success {
+  color: #2e7d32;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.sick-note {
+  color: #ad1f32;        
+  font-size: 12px;
+  margin-top: 10px;
+  line-height: 1.4;
+}

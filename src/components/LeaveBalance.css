@@ -1,0 +1,32 @@
+.lb-card {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+
+.lb-title {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.lb-header {
+  border: 1px solid #ddd;
+  padding: 6px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+.lb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  font-size: 13px;
+}
+
+.red { color: #d32f2f; }
+.blue { color: #1976d2; }
+
+.lb-grid p {
+  margin: 6px 0;
+}
