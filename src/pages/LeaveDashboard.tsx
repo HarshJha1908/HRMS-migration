@@ -1,3 +1,4 @@
+// import Footer from '../components/Footer';
 import LeaveBalance from '../components/LeaveBalance';
 import LeaveForm from '../components/LeaveForm';
 import LeaveTable from '../components/LeaveTable';
