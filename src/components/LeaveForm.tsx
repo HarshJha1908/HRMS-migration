@@ -10,6 +10,7 @@ type LeaveFormProps = {
     startDate: string;
     endDate: string;
     reason: string;
+    otherReason: string;
   }) => void;
 };
 
@@ -34,6 +35,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [reason, setReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
   const [error, setError] = useState('');
 
   // 🔹 Convert holiday strings → yyyy-mm-dd
@@ -68,12 +70,17 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
       setError('Selected date falls on a holiday.');
       return;
     }
+    if (reason === 'Others' && !otherReason.trim()) {
+      alert('Please specify the reason');
+      return;
+    }
 
     onSubmit({
       leaveType,
       startDate: startDate.toISOString().split('T')[0],
       endDate: endDate.toISOString().split('T')[0],
       reason,
+      otherReason: reason === 'Others' ? otherReason : '',
     });
   };
 
@@ -114,7 +121,8 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
                     isHoliday(date) ? 'holiday-day' : ''
                   }
                   filterDate={date => !isHoliday(date)}
-                  dateFormat="MM-dd-yyyy"      
+                  dateFormat="MM-dd-yyyy"
+                  maxDate={endDate || undefined}
                 />
                 <label className="inline">
                   <input type="checkbox" /> Half Day
@@ -127,7 +135,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
               <td>
                 <DatePicker
                   selected={endDate}
-                   onChange={(date: Date | null) => setEndDate(date)}
+                  onChange={(date: Date | null) => setEndDate(date)}
                   dayClassName={date =>
                     isHoliday(date) ? 'holiday-day' : ''
                   }
@@ -144,35 +152,75 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
             <tr>
               <td>Reason *</td>
               <td>
-                <input type="text" value={reason} onChange={e => setReason(e.target.value)} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <select
+                  value={reason}
+                  onChange={(e) => {
+                    setReason(e.target.value);
+                    if (e.target.value !== 'Others') {
+                      setOtherReason('');
+                    }
+                  }}
+                  required
+                >
+                  <option value="">-- Select Reason --</option>
+                  <option value="Inclement Weather">Inclement Weather</option>
+                  <option value="Medical Appointment">Medical Appointment</option>
+                  <option value="Medical Procedure">Medical Procedure</option>
+                  <option value="Medical Illness/Injury">Medical Illness/Injury</option>
+                  <option value="Contractor Appointment">Contractor Appointment</option>
+                  <option value="Family Emergency">Family Emergency</option>
+                  <option value="Jury Duty">Jury Duty</option>
+                  <option value="Funeral Attendance">Funeral Attendance</option>
+                  <option value="Home Emergency">Home Emergency</option>
+                  <option value="Sick Family Member">Sick Family Member</option>
+                  <option value="Sick Pet">Sick Pet</option>
+                  <option value="Legal Obligations">Legal Obligations</option>
+                  <option value="Vacation">Vacation</option>
+                  <option value="Others">Others</option>
+                </select>
+
+                {reason === 'Others' && (
+                  
+                    <input
+                      type="text"
+                      placeholder="Please specify reason"
+                      value={otherReason}
+                      onChange={(e) => setOtherReason(e.target.value)}
+                      required
+                    />
+                 
+                )}
+                </div>
               </td>
             </tr>
 
-            <tr>
+
+            {/* <tr>
               <td>Contact during Leave</td>
               <td><input type="text" /></td>
-            </tr>
+            </tr> */}
 
-            <tr>
+            {/* <tr>
               <td>Schedule for Submit</td>
               <td>
                 <input type="checkbox" />
                 <input type="date" />
               </td>
-            </tr>
+            </tr> */}
 
-            <tr>
+            {/* <tr>
               <td>Work Handed Over</td>
               <td><input type="text" /></td>
-            </tr>
+            </tr> */}
 
             <tr>
               <td>Attachment</td>
-              
+
               <td><input type="file" /></td>
-              
+
             </tr>
-           
+
           </tbody>
         </table>
         {/* ERROR MESSAGE */}
