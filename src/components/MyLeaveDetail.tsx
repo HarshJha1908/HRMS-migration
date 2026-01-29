@@ -22,7 +22,7 @@ const data: LeaveRequest[] = [
   },
 ];
 
-export default function LeaveTable() {
+export default function MyLeaveDetail() {
   return (
     <section className="card">
       <h3 className="section-title">Latest Applied Leave :</h3>
@@ -70,3 +70,4 @@ export default function LeaveTable() {
     </section>
   );
 }
+

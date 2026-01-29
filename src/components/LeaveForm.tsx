@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import './LeaveForm.css';
 import { LEAVE_TYPES } from '../types/leave';
 
@@ -11,144 +13,187 @@ type LeaveFormProps = {
   }) => void;
 };
 
+const YEAR = 2026;
+
+const HOLIDAY_LIST = [
+  'January 26, Monday - Republic Day',
+  'March 3, Tuesday - Doljatra',
+  'April 15, Wednesday - Bengali New Year',
+  'May 1, Friday - May Day',
+  'May 27, Wednesday - Bakr-Id',
+  'October 2, Friday - Gandhi Jayanti',
+  'October 19, Monday - Maha Astami',
+  'October 20, Tuesday - Maha Navami',
+  'October 21, Wednesday - Vijaya Dashami',
+  'November 9, Monday - Kali Puja',
+  'December 25, Friday - Christmas Day'
+];
 
 export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const [leaveType, setLeaveType] = useState('WFH');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [reason, setReason] = useState('');
   const [error, setError] = useState('');
+
+  // 🔹 Convert holiday strings → yyyy-mm-dd
+  const holidayDates = useMemo(() => {
+    return HOLIDAY_LIST.map(item => {
+      const [monthDay] = item.split(',');
+      return new Date(`${monthDay} ${YEAR}`)
+        .toISOString()
+        .split('T')[0];
+    });
+  }, []);
+
+  const isHoliday = (date: Date) => {
+    const d = date.toISOString().split('T')[0];
+    return holidayDates.includes(d);
+  };
 
   const handleSubmit = () => {
     setError('');
 
-    // Required field validation (as per UI)
     if (!leaveType || !startDate || !endDate || !reason.trim()) {
-      setError('Please fill the required details....');
+      setError('Please fill the required details.');
       return;
     }
 
-    // Date validation
-    if (new Date(endDate) < new Date(startDate)) {
-      setError('End date must be greater than start date...');
+    if (endDate < startDate) {
+      setError('End date must be greater than start date.');
+      return;
+    }
+
+    if (isHoliday(startDate) || isHoliday(endDate)) {
+      setError('Selected date falls on a holiday.');
       return;
     }
 
     onSubmit({
-  leaveType,
-  startDate,
-  endDate,
-  reason,
-});
-
+      leaveType,
+      startDate: startDate.toISOString().split('T')[0],
+      endDate: endDate.toISOString().split('T')[0],
+      reason,
+    });
   };
 
+
   return (
-    <section className="form-card">
-      <h3 className="section-title">Apply For Leave : Harsh Kumar Jha</h3>
+    <section className="page-layout">
+      {/* LEFT : LEAVE FORM */}
+      <section className="form-card">
+        <h3>Apply For Leave : Tania Bhattacharjee</h3>
 
-      <div className="form-grid">
-        {/* Leave Type */}
-        <label htmlFor="leaveType">Leave Type *</label>
-        <select
-          id="leaveType"
-          value={leaveType}
-          onChange={e => setLeaveType(e.target.value)}
-        >
-          {LEAVE_TYPES.map(t => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
+        <table className="form-table">
+          <tbody>
+            <tr>
+              <td>Leave Type *</td>
+              <td>
+                <select value={leaveType} onChange={e => setLeaveType(e.target.value)}>
+                  {LEAVE_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>
+                      {t.label}
+                    </option>
+                  ))}
+                </select>
+              </td>
+            </tr>
+
+            <tr>
+              <td>Approver Name</td>
+              <td><strong>Snehashish Bhunia</strong></td>
+            </tr>
+
+            <tr>
+              <td>Start From *</td>
+              <td>
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date: Date | null) => setStartDate(date)}
+                  dayClassName={date =>
+                    isHoliday(date) ? 'holiday-day' : ''
+                  }
+                  filterDate={date => !isHoliday(date)}
+                  dateFormat="MM-dd-yyyy"      
+                />
+                <label className="inline">
+                  <input type="checkbox" /> Half Day
+                </label>
+              </td>
+            </tr>
+
+            <tr>
+              <td>Ends On *</td>
+              <td>
+                <DatePicker
+                  selected={endDate}
+                   onChange={(date: Date | null) => setEndDate(date)}
+                  dayClassName={date =>
+                    isHoliday(date) ? 'holiday-day' : ''
+                  }
+                  filterDate={date => !isHoliday(date)}
+                  dateFormat="MM-dd-yyyy"
+                  minDate={startDate || undefined}
+                />
+                <label className="inline">
+                  <input type="checkbox" /> Half Day
+                </label>
+              </td>
+            </tr>
+
+            <tr>
+              <td>Reason *</td>
+              <td>
+                <input type="text" value={reason} onChange={e => setReason(e.target.value)} />
+              </td>
+            </tr>
+
+            <tr>
+              <td>Contact during Leave</td>
+              <td><input type="text" /></td>
+            </tr>
+
+            <tr>
+              <td>Schedule for Submit</td>
+              <td>
+                <input type="checkbox" />
+                <input type="date" />
+              </td>
+            </tr>
+
+            <tr>
+              <td>Work Handed Over</td>
+              <td><input type="text" /></td>
+            </tr>
+
+            <tr>
+              <td>Attachment</td>
+              <td><input type="file" /></td>
+            </tr>
+          </tbody>
+        </table>
+        {/* ERROR MESSAGE */}
+        {error && (
+          <div className="form-error">
+            {error}
+          </div>
+        )}
+        <div className="form-footer">
+          <button className="btn primary" onClick={handleSubmit}>Submit</button>
+          <button className="btn secondary">Save Draft</button>
+        </div>
+      </section>
+      {/* RIGHT : HOLIDAY LIST */}
+      <section className="holiday-card">
+        <h3>Upcoming Holidays</h3>
+
+        <ul className="holiday-list">
+          {HOLIDAY_LIST.map((holiday, index) => (
+            <li key={index}>{holiday}</li>
           ))}
-        </select>
-
-        {/* Approver Name */}
-        <label>Approver Name</label>
-        <span className="readonly">Rajeev Kalleparambil</span>
-
-        {/* Start Date */}
-        <label htmlFor="startDate">Start From (dd/mm/yyyy) *</label>
-        <input
-          id="startDate"
-          type="date"
-          value={startDate}
-          onChange={e => setStartDate(e.target.value)}
-        />
-
-        {/* Half Day (Start) */}
-        <label htmlFor="halfDayStart">Half Day</label>
-        <input id="halfDayStart" type="checkbox" />
-
-        {/* End Date */}
-        <label htmlFor="endDate">Ends on (dd/mm/yyyy) *</label>
-        <input
-          id="endDate"
-          type="date"
-          value={endDate}
-          onChange={e => setEndDate(e.target.value)}
-        />
-
-        {/* Half Day (End) */}
-        <label htmlFor="halfDayEnd">Half Day</label>
-        <input id="halfDayEnd" type="checkbox" />
-
-        {/* Reason */}
-        <label htmlFor="reason">Reason *</label>
-        <input
-          id="reason"
-          type="text"
-          value={reason}
-          onChange={e => setReason(e.target.value)}
-        />
-
-        {/* Contact */}
-        <label htmlFor="contact">
-          My Contact during Leave (Phone# only)
-        </label>
-        <input id="contact" type="text" />
-
-        {/* Schedule for Submit */}
-        <label htmlFor="scheduleSubmit">Schedule for Submit</label>
-        <input id="scheduleSubmit" type="checkbox" />
-
-        {/* Schedule Date */}
-        <label htmlFor="scheduleDate">Schedule Date (dd/mm/yyyy)</label>
-        <input id="scheduleDate" type="date" />
-
-        {/* Work Handed Over */}
-        <label htmlFor="workHandedOver">Work Handed Over</label>
-        <input id="workHandedOver" type="text" />
-      </div>
-
-      {/* Sick Leave Note */}
-      <div className="sick-note">
-        To be used for Sick Leaves only: While applying for Sick Leaves, please
-        upload the Leave of Absence Certificate, signed by a medical practitioner.
-        Only documents in PDF format can be uploaded. Please DO NOT upload any
-        medical prescriptions or medical Test Records in the tool that contains
-        personal medical data.
-      </div>
-
-      {/* File Upload (accessible) */}
-      <div className="upload-row">
-        <label htmlFor="medicalUpload" className="visually-hidden">
-          Upload medical certificate
-        </label>
-        <input id="medicalUpload" type="file" />
-      </div>
-
-      {/* Error Message */}
-      {error && <p className="error">{error}</p>}
-
-      {/* Footer Buttons */}
-      <div className="form-footer">
-        <button type="button" className="btn primary" onClick={handleSubmit}>
-          Submit
-        </button>
-        <button type="button" className="btn secondary">
-          Save Draft
-        </button>
-      </div>
+        </ul>
+      </section>
     </section>
+
   );
 }

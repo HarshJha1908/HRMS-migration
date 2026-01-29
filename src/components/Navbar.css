@@ -14,7 +14,10 @@
   display: flex;
   gap: 16px;
 }
-
+.navbar-left a{
+  color: #ffffff;
+  text-decoration: none;
+}
 .nav-item {
   font-weight: 600;
   cursor: pointer;

@@ -48,7 +48,15 @@
   background: #174e72;
   color: #fff;
 }
-
+.form-error {
+  color: #b00020;
+  /* background: #fdecea; */
+  /* border: 1px solid #f5c6cb; */
+  padding: 8px 12px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
 .error {
   color: #b81111;
   font-size: 15px;
@@ -65,4 +73,22 @@
   font-size: 12px;
   margin-top: 10px;
   line-height: 1.4;
+}
+.page-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr; /* form wider than holidays */
+  gap: 24px;
+}
+
+.form-card,
+.holiday-card {
+ background: #fff;
+  padding: 12px;
+  border: 1px solid #ccc;
+  margin-bottom: 16px;
+}
+.holiday-day {
+  background-color: #d32f2f !important;
+  color: #fff !important;
+  border-radius: 50%;
 }
