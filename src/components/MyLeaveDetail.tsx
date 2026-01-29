@@ -62,11 +62,7 @@ export default function MyLeaveDetail() {
         </tbody>
       </table>
 
-      <div className="view-more">
-        <a href="/leave-details" aria-label="View more applied leave">
-          View More..
-        </a>
-      </div>
+      
     </section>
   );
 }

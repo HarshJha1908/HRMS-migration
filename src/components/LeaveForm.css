@@ -92,3 +92,10 @@
   color: #fff !important;
   border-radius: 50%;
 }
+.sick-note {
+  color: #ad1f32;        
+  font-size: 12px;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+

@@ -168,8 +168,11 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
             <tr>
               <td>Attachment</td>
+              
               <td><input type="file" /></td>
+              
             </tr>
+           
           </tbody>
         </table>
         {/* ERROR MESSAGE */}
