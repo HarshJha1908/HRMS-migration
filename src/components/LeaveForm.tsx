@@ -30,7 +30,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
     // Date validation
     if (new Date(endDate) < new Date(startDate)) {
-      setError('End date must be greater than start date.');
+      setError('End date must be greater than start date...');
       return;
     }
 
