@@ -24,7 +24,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
     // Required field validation (as per UI)
     if (!leaveType || !startDate || !endDate || !reason.trim()) {
-      setError('Please fill the required details.');
+      setError('Please fill the required details....');
       return;
     }
 
