@@ -1,5 +1,15 @@
-.main-layout {
-  padding: 20px;
-  background-color: #e5e5e5;
+html, body, #root {
+  height: 100%;
+  margin: 0;
+}
+ 
+.layout {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+ 
+.main-layout {
+  flex: 1;              
+  padding: 20px;
 }

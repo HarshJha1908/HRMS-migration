@@ -11,6 +11,7 @@ type LeaveFormProps = {
     endDate: string;
     reason: string;
     otherReason: string;
+    // totalDays: number;
   }) => void;
 };
 
@@ -29,6 +30,28 @@ const HOLIDAY_LIST = [
   'November 9, Monday - Kali Puja',
   'December 25, Friday - Christmas Day'
 ];
+// const calculateLeaveDays = (
+//   start: Date,
+//   end: Date,
+//   holidayDates: string[]
+// ): number => {
+//   let count = 0;
+//   const current = new Date(start);
+
+//   while (current <= end) {
+//     const day = current.getDay(); // 0=Sun, 6=Sat
+//     const iso = current.toISOString().split('T')[0];
+
+//     const isWeekend = day === 0 || day === 6;
+//     const isHoliday = holidayDates.includes(iso);
+
+//     if (!isWeekend && !isHoliday) count++;
+
+//     current.setDate(current.getDate() + 1);
+//   }
+
+//   return count;
+// };
 
 export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const [leaveType, setLeaveType] = useState('WFH');
@@ -52,6 +75,16 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
     const d = date.toISOString().split('T')[0];
     return holidayDates.includes(d);
   };
+
+  //  const totalLeaveDays = useMemo(() => {
+  //   if (!startDate || !endDate) return 0;
+  //   return calculateLeaveDays(startDate, endDate, holidayDates);
+  // }, [startDate, endDate, holidayDates]);
+
+  //  if (totalLeaveDays <= 0) {
+  //     setError('No valid leave days selected.');
+  //     return;
+  //   }
 
   const handleSubmit = () => {
     setError('');
@@ -81,6 +114,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
       endDate: endDate.toISOString().split('T')[0],
       reason,
       otherReason: reason === 'Others' ? otherReason : '',
+      // totalDays: totalLeaveDays
     });
   };
 
@@ -121,6 +155,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
                     isHoliday(date) ? 'holiday-day' : ''
                   }
                   filterDate={date => !isHoliday(date)}
+                  
                   dateFormat="MM-dd-yyyy"
                   maxDate={endDate || undefined}
                 />
@@ -149,10 +184,20 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
               </td>
             </tr>
 
+            {/* {startDate && endDate && (
+              <tr className="leave-days-row">
+                <td>Total Leave Days</td>
+                <td>
+                  <strong className="leave-days-value">{totalLeaveDays}</strong>
+                </td>
+              </tr>
+            )} */}
+
             <tr>
+              
               <td>Reason *</td>
               <td>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <select
                   value={reason}
                   onChange={(e) => {
@@ -164,6 +209,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
                   required
                 >
                   <option value="">-- Select Reason --</option>
+                  <option value="WFH Policy">As Per Home Office Policy</option>
                   <option value="Inclement Weather">Inclement Weather</option>
                   <option value="Medical Appointment">Medical Appointment</option>
                   <option value="Medical Procedure">Medical Procedure</option>
@@ -182,8 +228,8 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
                 {reason === 'Others' && (
                   
-                    <input
-                      type="text"
+                    <textarea
+                      rows={4}
                       placeholder="Please specify reason"
                       value={otherReason}
                       onChange={(e) => setOtherReason(e.target.value)}
