@@ -1,3 +1,4 @@
+/* ---------- FORM CARD ---------- */
 .form-card {
   background: #fff;
   padding: 12px;
@@ -5,6 +6,19 @@
   margin-bottom: 16px;
 }
 
+/* ---------- ERROR BELOW TITLE (MATCHES SS) ---------- */
+.form-error-placeholder {
+  min-height: 18px;          /* space always reserved */
+  margin-bottom: 10px;      /* gap below error */
+}
+
+.form-error-text {
+  color: #d32f2f;            /* screenshot red */
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* ---------- GRID ---------- */
 .form-grid {
   display: grid;
   grid-template-columns: 200px 1fr;
@@ -19,16 +33,22 @@
   font-size: 12px;
 }
 
-.readonly {
-  padding-top: 4px;
+/* ---------- TOTAL LEAVE DAYS (MATCHES SS) ---------- */
+.leave-days-row {
+  background-color: #fff5f5; /* light pink row */
 }
 
-.error {
-  color: red;
-  margin-top: 6px;
-  font-size: 12px;
+.leave-days-row td {
+  color: #d32f2f;            /* full text red */
+  font-weight: 600;
 }
 
+.leave-days-value {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* ---------- BUTTONS ---------- */
 .form-footer {
   margin-top: 12px;
   text-align: right;
@@ -39,28 +59,35 @@
   margin-left: 8px;
 }
 
-.primary {
-  background: #174e72;
-  color: #fff;
-}
-
+.primary,
 .secondary {
   background: #174e72;
   color: #fff;
 }
-.form-error {
-  color: #b00020;
-  /* background: #fdecea; */
-  /* border: 1px solid #f5c6cb; */
-  padding: 8px 12px;
-  margin-top: 12px;
-  margin-bottom: 12px;
-  font-size: 14px;
+
+/* ---------- PAGE LAYOUT ---------- */
+.page-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
 }
-.error {
-  color: #b81111;
-  font-size: 15px;
-  margin-top: 8px;
+
+.holiday-card {
+  background: #fff;
+  padding: 12px;
+  border: 1px solid #ccc;
+}
+
+/* ---------- DATEPICKER HOLIDAY ---------- */
+.holiday-day {
+  background-color: #d32f2f !important;
+  color: #fff !important;
+  border-radius: 50%;
+}
+
+/* ---------- MISC ---------- */
+.readonly {
+  padding-top: 4px;
 }
 
 .success {
@@ -68,34 +95,27 @@
   font-size: 13px;
   margin-top: 8px;
 }
+
 .sick-note {
-  color: #ad1f32;        
+  color: #ad1f32;
   font-size: 12px;
   margin-top: 10px;
   line-height: 1.4;
 }
-.page-layout {
-  display: grid;
-  grid-template-columns: 2fr 1fr; /* form wider than holidays */
-  gap: 24px;
+
+/* Red dot below holiday date (not Sat/Sun) */
+.holiday-dot {
+  position: relative;
 }
 
-.form-card,
-.holiday-card {
- background: #fff;
-  padding: 12px;
-  border: 1px solid #ccc;
-  margin-bottom: 16px;
-}
-.holiday-day {
-  background-color: #d32f2f !important;
-  color: #fff !important;
+.holiday-dot::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background-color: #d32f2f;
   border-radius: 50%;
 }
-.sick-note {
-  color: #ad1f32;        
-  font-size: 12px;
-  margin-top: 10px;
-  line-height: 1.4;
-}
-

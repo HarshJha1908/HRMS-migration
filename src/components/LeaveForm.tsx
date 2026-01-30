@@ -11,6 +11,7 @@ type LeaveFormProps = {
     endDate: string;
     reason: string;
     otherReason: string;
+    totalDays: number;
   }) => void;
 };
 
@@ -30,6 +31,30 @@ const HOLIDAY_LIST = [
   'December 25, Friday - Christmas Day'
 ];
 
+/* ---------- LEAVE DAY CALCULATION ---------- */
+const calculateLeaveDays = (
+  start: Date,
+  end: Date,
+  holidayDates: string[]
+): number => {
+  let count = 0;
+  const current = new Date(start);
+
+  while (current <= end) {
+    const day = current.getDay(); // 0=Sun, 6=Sat
+    const iso = current.toISOString().split('T')[0];
+
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidayDates.includes(iso);
+
+    if (!isWeekend && !isHoliday) count++;
+
+    current.setDate(current.getDate() + 1);
+  }
+
+  return count;
+};
+
 export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const [leaveType, setLeaveType] = useState('WFH');
   const [startDate, setStartDate] = useState<Date | null>(null);
@@ -38,7 +63,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const [otherReason, setOtherReason] = useState('');
   const [error, setError] = useState('');
 
-  // 🔹 Convert holiday strings → yyyy-mm-dd
+  /* ---------- HOLIDAY DATE NORMALIZATION ---------- */
   const holidayDates = useMemo(() => {
     return HOLIDAY_LIST.map(item => {
       const [monthDay] = item.split(',');
@@ -49,10 +74,17 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   }, []);
 
   const isHoliday = (date: Date) => {
-    const d = date.toISOString().split('T')[0];
-    return holidayDates.includes(d);
+    const iso = date.toISOString().split('T')[0];
+    return holidayDates.includes(iso);
   };
 
+  /* ---------- TOTAL DAYS ---------- */
+  const totalLeaveDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    return calculateLeaveDays(startDate, endDate, holidayDates);
+  }, [startDate, endDate, holidayDates]);
+
+  /* ---------- SUBMIT ---------- */
   const handleSubmit = () => {
     setError('');
 
@@ -66,12 +98,13 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
       return;
     }
 
-    if (isHoliday(startDate) || isHoliday(endDate)) {
-      setError('Selected date falls on a holiday.');
+    if (totalLeaveDays <= 0) {
+      setError('No valid leave days selected.');
       return;
     }
+
     if (reason === 'Others' && !otherReason.trim()) {
-      alert('Please specify the reason');
+      setError('Please specify the reason.');
       return;
     }
 
@@ -81,15 +114,30 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
       endDate: endDate.toISOString().split('T')[0],
       reason,
       otherReason: reason === 'Others' ? otherReason : '',
+      totalDays: totalLeaveDays
     });
   };
 
+  /* ---------- DAY CLASS (RED DOT LOGIC) ---------- */
+  const getDayClass = (date: Date) => {
+    const day = date.getDay(); // 0=Sun, 6=Sat
+    const isWeekend = day === 0 || day === 6;
+
+    if (isHoliday(date) && !isWeekend) {
+      return 'holiday-dot';
+    }
+
+    return undefined;
+  };
 
   return (
     <section className="page-layout">
-      {/* LEFT : LEAVE FORM */}
       <section className="form-card">
         <h3>Apply For Leave : Tania Bhattacharjee</h3>
+
+        <div className="form-error-placeholder">
+          {error && <span className="form-error-text">{error}</span>}
+        </div>
 
         <table className="form-table">
           <tbody>
@@ -116,17 +164,12 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
               <td>
                 <DatePicker
                   selected={startDate}
-                  onChange={(date: Date | null) => setStartDate(date)}
-                  dayClassName={date =>
-                    isHoliday(date) ? 'holiday-day' : ''
-                  }
+                  onChange={setStartDate}
                   filterDate={date => !isHoliday(date)}
+                  dayClassName={getDayClass}
                   dateFormat="MM-dd-yyyy"
                   maxDate={endDate || undefined}
                 />
-                <label className="inline">
-                  <input type="checkbox" /> Half Day
-                </label>
               </td>
             </tr>
 
@@ -135,116 +178,73 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
               <td>
                 <DatePicker
                   selected={endDate}
-                  onChange={(date: Date | null) => setEndDate(date)}
-                  dayClassName={date =>
-                    isHoliday(date) ? 'holiday-day' : ''
-                  }
+                  onChange={setEndDate}
                   filterDate={date => !isHoliday(date)}
+                  dayClassName={getDayClass}
                   dateFormat="MM-dd-yyyy"
                   minDate={startDate || undefined}
                 />
-                <label className="inline">
-                  <input type="checkbox" /> Half Day
-                </label>
               </td>
             </tr>
+
+            {startDate && endDate && (
+              <tr className="leave-days-row">
+                <td>Total Leave Days</td>
+                <td>
+                  <strong className="leave-days-value">{totalLeaveDays}</strong>
+                </td>
+              </tr>
+            )}
 
             <tr>
               <td>Reason *</td>
               <td>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <select
                   value={reason}
-                  onChange={(e) => {
+                  onChange={e => {
                     setReason(e.target.value);
-                    if (e.target.value !== 'Others') {
-                      setOtherReason('');
-                    }
+                    if (e.target.value !== 'Others') setOtherReason('');
                   }}
-                  required
                 >
                   <option value="">-- Select Reason --</option>
-                  <option value="Inclement Weather">Inclement Weather</option>
                   <option value="Medical Appointment">Medical Appointment</option>
-                  <option value="Medical Procedure">Medical Procedure</option>
-                  <option value="Medical Illness/Injury">Medical Illness/Injury</option>
-                  <option value="Contractor Appointment">Contractor Appointment</option>
                   <option value="Family Emergency">Family Emergency</option>
-                  <option value="Jury Duty">Jury Duty</option>
-                  <option value="Funeral Attendance">Funeral Attendance</option>
-                  <option value="Home Emergency">Home Emergency</option>
-                  <option value="Sick Family Member">Sick Family Member</option>
-                  <option value="Sick Pet">Sick Pet</option>
-                  <option value="Legal Obligations">Legal Obligations</option>
                   <option value="Vacation">Vacation</option>
                   <option value="Others">Others</option>
                 </select>
 
                 {reason === 'Others' && (
-                  
-                    <input
-                      type="text"
-                      placeholder="Please specify reason"
-                      value={otherReason}
-                      onChange={(e) => setOtherReason(e.target.value)}
-                      required
-                    />
-                 
+                  <input
+                    type="text"
+                    placeholder="Please specify reason"
+                    value={otherReason}
+                    onChange={e => setOtherReason(e.target.value)}
+                  />
                 )}
-                </div>
               </td>
             </tr>
-
-
-            {/* <tr>
-              <td>Contact during Leave</td>
-              <td><input type="text" /></td>
-            </tr> */}
-
-            {/* <tr>
-              <td>Schedule for Submit</td>
-              <td>
-                <input type="checkbox" />
-                <input type="date" />
-              </td>
-            </tr> */}
-
-            {/* <tr>
-              <td>Work Handed Over</td>
-              <td><input type="text" /></td>
-            </tr> */}
 
             <tr>
               <td>Attachment</td>
-
               <td><input type="file" /></td>
-
             </tr>
-
           </tbody>
         </table>
-        {/* ERROR MESSAGE */}
-        {error && (
-          <div className="form-error">
-            {error}
-          </div>
-        )}
+
         <div className="form-footer">
           <button className="btn primary" onClick={handleSubmit}>Submit</button>
           <button className="btn secondary">Save Draft</button>
         </div>
       </section>
-      {/* RIGHT : HOLIDAY LIST */}
+
       <section className="holiday-card">
         <h3>Upcoming Holidays</h3>
-
         <ul className="holiday-list">
-          {HOLIDAY_LIST.map((holiday, index) => (
-            <li key={index}>{holiday}</li>
+          {HOLIDAY_LIST.map((h, i) => (
+            <li key={i}>{h}</li>
           ))}
         </ul>
       </section>
     </section>
-
   );
 }
