@@ -92,35 +92,35 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
   /* ---------- CUSTOM DAY ---------- */
   const renderDay = (day: number, date?: Date) => {
-  if (!date) return day;
+    if (!date) return day;
 
-  const iso = date.toISOString().split('T')[0];
-  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-  const index = holidayDates.indexOf(iso);
+    const iso = date.toISOString().split('T')[0];
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const index = holidayDates.indexOf(iso);
 
-  const fullHolidayName =
-    index !== -1
-      ? HOLIDAY_LIST[index].split('-')[1]?.trim()
-      : '';
+    const fullHolidayName =
+      index !== -1
+        ? HOLIDAY_LIST[index].split('-')[1]?.trim()
+        : '';
 
-  return (
-    <div
-      className="day-cell"
-      title={index !== -1 && !isWeekend ? fullHolidayName : undefined}
-    >
-      <span>{day}</span>
+    return (
+      <div
+        className="day-cell"
+        title={index !== -1 && !isWeekend ? fullHolidayName : undefined}
+      >
+        <span>{day}</span>
 
-      {index !== -1 && !isWeekend && (
-        <>
-          <span className="holiday-underline" />
-          <span className="holiday-label">
-            {fullHolidayName.slice(0, 4)}
-          </span>
-        </>
-      )}
-    </div>
-  );
-};
+        {index !== -1 && !isWeekend && (
+          <>
+            <span className="holiday-underline" />
+            <span className="holiday-label">
+              {fullHolidayName.slice(0, 4)}
+            </span>
+          </>
+        )}
+      </div>
+    );
+  };
 
 
   /* ---------- DATE CHANGE ---------- */
@@ -159,157 +159,120 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   };
 
   return (
-    <section className="page-layout">
-      <section className="form-card">
-        <h3>Apply For Leave : Tania Bhattacharjee</h3>
+    <section className="form-card">
+      <h3>Apply For Leave : Tania Bhattacharjee</h3>
 
-        <div className="form-error-placeholder">
-          {error && <span className="form-error-text">{error}</span>}
+      <div className="form-error-placeholder">
+        {error && <span className="form-error-text">{error}</span>}
+      </div>
+
+      <div className="form-grid">
+
+        <div className="form-row">
+          <label>Leave Type *</label>
+          <select value={leaveType} onChange={e => setLeaveType(e.target.value)}>
+            {LEAVE_TYPES.map(t => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <table className="form-table">
-          <tbody>
-            <tr>
-              <td>Leave Type *</td>
-              <td>
-                <select value={leaveType} onChange={e => setLeaveType(e.target.value)}>
-                  {LEAVE_TYPES.map(t => (
-                    <option key={t.value} value={t.value}>
-                      {t.label}
-                    </option>
-                  ))}
-                </select>
-              </td>
-            </tr>
+        <div className="form-row">
+          <label>Approver Name</label>
+          <strong>Snehashish Bhunia</strong>
+        </div>
 
-            <tr>
-              <td>Approver Name</td>
-              <td><strong>Snehashish Bhunia</strong></td>
-            </tr>
+        <div className="form-row date-anchor">
+          <label>Start Date *</label>
+          <input
+            readOnly
+            value={startDate ? startDate.toLocaleDateString() : ''}
+            placeholder="Select start date"
+            onClick={() => setCalendarOpen(true)}
+          />
+        </div>
 
-            <tr>
-              <td>Start Date *</td>
-              <td>
-                <input
-                  readOnly
-                  value={startDate ? startDate.toLocaleDateString() : ''}
-                  placeholder="Select start date"
-                  onClick={() => setCalendarOpen(true)}
-                />
-              </td>
-            </tr>
+        <div className="form-row">
+          <label>End Date *</label>
+          <input
+            readOnly
+            value={endDate ? endDate.toLocaleDateString() : ''}
+            placeholder="Select end date"
+            onClick={() => setCalendarOpen(true)}
+          />
+        </div>
 
-            <tr>
-              <td>End Date *</td>
-              <td>
-                <input
-                  readOnly
-                  value={endDate ? endDate.toLocaleDateString() : ''}
-                  placeholder="Select end date"
-                  onClick={() => setCalendarOpen(true)}
-                />
-              </td>
-            </tr>
+        {endDate && (
+          <div className="form-row leave-days-row">
+            <label>Total Leave Days</label>
+            <strong>{totalLeaveDays}</strong>
+          </div>
+        )}
 
-            {/* ✅ SHOW ONLY WHEN END DATE EXISTS */}
-            {endDate && (
-              <tr className="leave-days-row">
-                <td>Total Leave Days</td>
-                <td><strong>{totalLeaveDays}</strong></td>
-              </tr>
+        <div className="form-row">
+          <label>Reason *</label>
+          <div className="reason-field">
+            <select
+              value={reason}
+              onChange={e => {
+                setReason(e.target.value);
+                if (e.target.value !== 'Others') setOtherReason('');
+              }}
+            >
+              <option value="">-- Select Reason --</option>
+              <option value="WFH Policy">As Per Home Office Policy</option>
+              <option value="Inclement Weather">Inclement Weather</option>
+              <option value="Medical Appointment">Medical Appointment</option>
+              <option value="Medical Procedure">Medical Procedure</option>
+              <option value="Medical Illness/Injury">Medical Illness/Injury</option>
+              <option value="Others">Others</option>
+            </select>
+
+            {reason === 'Others' && (
+              <textarea
+                rows={3}
+                placeholder="Please specify reason"
+                value={otherReason}
+                onChange={e => setOtherReason(e.target.value)}
+              />
             )}
-
-            <tr>
-              <td>Reason *</td>
-              <td>
-                <select
-                  value={reason}
-                  onChange={e => {
-                    setReason(e.target.value);
-                    if (e.target.value !== 'Others') setOtherReason('');
-                  }}
-                >
-                  <option value="">-- Select Reason --</option>
-                  <option value="Medical Appointment">Medical Appointment</option>
-                  <option value="Family Emergency">Family Emergency</option>
-                  <option value="Vacation">Vacation</option>
-                  <option value="Others">Others</option>
-                </select>
-
-                {reason === 'Others' && (
-                  <input
-                    type="text"
-                    placeholder="Please specify reason"
-                    value={otherReason}
-                    onChange={e => setOtherReason(e.target.value)}
-                  />
-                )}
-              </td>
-            </tr>
-
-            <tr>
-              <td>Attachment</td>
-              <td><input type="file" /></td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* 🔒 REAL HIDDEN DATEPICKER (NO INPUT RENDERED) */}
-       <DatePicker
-  selected={startDate}
-  onChange={handleDateChange}
-  startDate={startDate}
-  endDate={endDate}
-  selectsRange
-  open={calendarOpen}
-  monthsShown={1}
-  shouldCloseOnSelect={false}
-  dayClassName={getDayClass}
-  renderDayContents={renderDay}
-  customInput={<div />}
-  onClickOutside={() => setCalendarOpen(false)}
-
-  /* ✅ OPEN ON RIGHT SIDE OF START DATE */
-  popperPlacement="right-start"
-  popperProps={{
-    strategy: 'fixed',
-  }}
-  popperModifiers={[
-    {
-      name: 'flip',
-      enabled: true,
-      options: {
-        fallbackPlacements: ['left-start', 'bottom-start', 'top-start'],
-      },
-    },
-    {
-      name: 'preventOverflow',
-      enabled: true,
-      options: {
-        boundary: 'viewport',
-        padding: 8,
-      },
-    },
-  ]}
-/>
-
-
-
-
-        <div className="form-footer">
-          <button className="btn primary" onClick={handleSubmit}>Submit</button>
-          <button className="btn secondary">Save Draft</button>
+          </div>
         </div>
-      </section>
 
-      <section className="holiday-card">
-        <h3>Upcoming Holidays</h3>
-        <ul>
-          {HOLIDAY_LIST.map((h, i) => (
-            <li key={i}>{h}</li>
-          ))}
-        </ul>
-      </section>
+        <div className="form-row">
+          <label>Attachment</label>
+          <input type="file" />
+        </div>
+
+      </div>
+
+      {/* DATEPICKER */}
+      <DatePicker
+        selected={startDate}
+        onChange={handleDateChange}
+        startDate={startDate}
+        endDate={endDate}
+        selectsRange
+        open={calendarOpen}
+        shouldCloseOnSelect={false}
+        onClickOutside={() => setCalendarOpen(false)}
+        dayClassName={getDayClass}
+        renderDayContents={renderDay}
+
+        /* 🔑 THIS REMOVES THE EXTRA INPUT */
+        customInput={<div style={{ display: 'none' }} />}
+
+        popperPlacement="bottom-start"
+      />
+
+
+      <div className="form-footer">
+        <button className="btn primary" onClick={handleSubmit}>Submit</button>
+        <button className="btn secondary">Save Draft</button>
+      </div>
     </section>
+
   );
 }

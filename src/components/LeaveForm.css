@@ -125,3 +125,49 @@
   background-color: #d32f2f;
   border-radius: 50%;
 }
+.reason-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reason-field select,
+.reason-field textarea {
+  width: 170px;  
+  max-width: 100%;
+}
+.date-anchor {
+  position: relative;
+}
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.form-row label {
+  font-weight: 600;
+}
+
+.date-anchor {
+  position: relative;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+  width: 170px;
+}
+
+.leave-days-row {
+  color: #d32f2f;       
+  font-weight: 600;
+  background: #fff5f5;  
+}
