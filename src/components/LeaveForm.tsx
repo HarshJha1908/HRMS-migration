@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './LeaveForm.css';
+
 import { LEAVE_TYPES } from '../types/leave';
 
 type LeaveFormProps = {
@@ -11,6 +12,7 @@ type LeaveFormProps = {
     endDate: string;
     reason: string;
     otherReason: string;
+    totalDays: number;
     // totalDays: number;
   }) => void;
 };
@@ -19,10 +21,10 @@ const YEAR = 2026;
 
 const HOLIDAY_LIST = [
   'January 26, Monday - Republic Day',
-  'March 3, Tuesday - Doljatra',
+  'March 3, Tuesday - Holi',
   'April 15, Wednesday - Bengali New Year',
   'May 1, Friday - May Day',
-  'May 27, Wednesday - Bakr-Id',
+  'May 27, Wednesday - Ramzan',
   'October 2, Friday - Gandhi Jayanti',
   'October 19, Monday - Maha Astami',
   'October 20, Tuesday - Maha Navami',
@@ -30,38 +32,40 @@ const HOLIDAY_LIST = [
   'November 9, Monday - Kali Puja',
   'December 25, Friday - Christmas Day'
 ];
-// const calculateLeaveDays = (
-//   start: Date,
-//   end: Date,
-//   holidayDates: string[]
-// ): number => {
-//   let count = 0;
-//   const current = new Date(start);
 
-//   while (current <= end) {
-//     const day = current.getDay(); // 0=Sun, 6=Sat
-//     const iso = current.toISOString().split('T')[0];
+/* ---------- LEAVE DAY CALCULATION ---------- */
+const calculateLeaveDays = (
+  start: Date,
+  end: Date,
+  holidayDates: string[]
+): number => {
+  let count = 0;
+  const current = new Date(start);
 
-//     const isWeekend = day === 0 || day === 6;
-//     const isHoliday = holidayDates.includes(iso);
+  while (current <= end) {
+    const day = current.getDay();
+    const iso = current.toISOString().split('T')[0];
 
-//     if (!isWeekend && !isHoliday) count++;
+    const isWeekend = day === 0 || day === 6;
+    const isHoliday = holidayDates.includes(iso);
 
-//     current.setDate(current.getDate() + 1);
-//   }
+    if (!isWeekend && !isHoliday) count++;
+    current.setDate(current.getDate() + 1);
+  }
 
-//   return count;
-// };
+  return count;
+};
 
 export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const [leaveType, setLeaveType] = useState('WFH');
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [calendarOpen, setCalendarOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [otherReason, setOtherReason] = useState('');
   const [error, setError] = useState('');
 
-  // 🔹 Convert holiday strings → yyyy-mm-dd
+  /* ---------- HOLIDAYS ---------- */
   const holidayDates = useMemo(() => {
     return HOLIDAY_LIST.map(item => {
       const [monthDay] = item.split(',');
@@ -71,21 +75,67 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
     });
   }, []);
 
-  const isHoliday = (date: Date) => {
-    const d = date.toISOString().split('T')[0];
-    return holidayDates.includes(d);
+  const isHoliday = (date: Date) =>
+    holidayDates.includes(date.toISOString().split('T')[0]);
+
+  /* ---------- TOTAL DAYS ---------- */
+  const totalLeaveDays = useMemo(() => {
+    if (!startDate || !endDate) return 0;
+    return calculateLeaveDays(startDate, endDate, holidayDates);
+  }, [startDate, endDate, holidayDates]);
+
+  /* ---------- DAY CLASS ---------- */
+  const getDayClass = (date: Date) => {
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    if (isHoliday(date) && !isWeekend) return 'holiday-dot';
+    return undefined;
   };
 
-  //  const totalLeaveDays = useMemo(() => {
-  //   if (!startDate || !endDate) return 0;
-  //   return calculateLeaveDays(startDate, endDate, holidayDates);
-  // }, [startDate, endDate, holidayDates]);
+  /* ---------- CUSTOM DAY ---------- */
+  const renderDay = (day: number, date?: Date) => {
+  if (!date) return day;
 
-  //  if (totalLeaveDays <= 0) {
-  //     setError('No valid leave days selected.');
-  //     return;
-  //   }
+  const iso = date.toISOString().split('T')[0];
+  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+  const index = holidayDates.indexOf(iso);
 
+  const fullHolidayName =
+    index !== -1
+      ? HOLIDAY_LIST[index].split('-')[1]?.trim()
+      : '';
+
+  return (
+    <div
+      className="day-cell"
+      title={index !== -1 && !isWeekend ? fullHolidayName : undefined}
+    >
+      <span>{day}</span>
+
+      {index !== -1 && !isWeekend && (
+        <>
+          <span className="holiday-underline" />
+          <span className="holiday-label">
+            {fullHolidayName.slice(0, 4)}
+          </span>
+        </>
+      )}
+    </div>
+  );
+};
+
+
+  /* ---------- DATE CHANGE ---------- */
+  const handleDateChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates;
+    setStartDate(start);
+    setEndDate(end);
+
+    if (start && end) {
+      setCalendarOpen(false); // close after end date
+    }
+  };
+
+  /* ---------- SUBMIT ---------- */
   const handleSubmit = () => {
     setError('');
 
@@ -94,36 +144,29 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
       return;
     }
 
-    if (endDate < startDate) {
-      setError('End date must be greater than start date.');
-      return;
-    }
-
-    if (isHoliday(startDate) || isHoliday(endDate)) {
-      setError('Selected date falls on a holiday.');
-      return;
-    }
     if (reason === 'Others' && !otherReason.trim()) {
-      alert('Please specify the reason');
+      setError('Please specify the reason.');
       return;
     }
 
     onSubmit({
       leaveType,
-      startDate: startDate.toISOString().split('T')[0],
-      endDate: endDate.toISOString().split('T')[0],
+      startDate: startDate!.toISOString().split('T')[0],
+      endDate: endDate!.toISOString().split('T')[0],
       reason,
       otherReason: reason === 'Others' ? otherReason : '',
-      // totalDays: totalLeaveDays
+      totalDays: totalLeaveDays
     });
   };
 
-
   return (
     <section className="page-layout">
-      {/* LEFT : LEAVE FORM */}
       <section className="form-card">
         <h3>Apply For Leave : Tania Bhattacharjee</h3>
+
+        <div className="form-error-placeholder">
+          {error && <span className="form-error-text">{error}</span>}
+        </div>
 
         <table className="form-table">
           <tbody>
@@ -146,43 +189,36 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
             </tr>
 
             <tr>
-              <td>Start From *</td>
+              <td>Start Date *</td>
               <td>
-                <DatePicker
-                  selected={startDate}
-                  onChange={(date: Date | null) => setStartDate(date)}
-                  dayClassName={date =>
-                    isHoliday(date) ? 'holiday-day' : ''
-                  }
-                  filterDate={date => !isHoliday(date)}
-                  
-                  dateFormat="MM-dd-yyyy"
-                  maxDate={endDate || undefined}
+                <input
+                  readOnly
+                  value={startDate ? startDate.toLocaleDateString() : ''}
+                  placeholder="Select start date"
+                  onClick={() => setCalendarOpen(true)}
                 />
-                <label className="inline">
-                  <input type="checkbox" /> Half Day
-                </label>
               </td>
             </tr>
 
             <tr>
-              <td>Ends On *</td>
+              <td>End Date *</td>
               <td>
-                <DatePicker
-                  selected={endDate}
-                  onChange={(date: Date | null) => setEndDate(date)}
-                  dayClassName={date =>
-                    isHoliday(date) ? 'holiday-day' : ''
-                  }
-                  filterDate={date => !isHoliday(date)}
-                  dateFormat="MM-dd-yyyy"
-                  minDate={startDate || undefined}
+                <input
+                  readOnly
+                  value={endDate ? endDate.toLocaleDateString() : ''}
+                  placeholder="Select end date"
+                  onClick={() => setCalendarOpen(true)}
                 />
-                <label className="inline">
-                  <input type="checkbox" /> Half Day
-                </label>
               </td>
             </tr>
+
+            {/* ✅ SHOW ONLY WHEN END DATE EXISTS */}
+            {endDate && (
+              <tr className="leave-days-row">
+                <td>Total Leave Days</td>
+                <td><strong>{totalLeaveDays}</strong></td>
+              </tr>
+            )}
 
             {/* {startDate && endDate && (
               <tr className="leave-days-row">
@@ -194,103 +230,96 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
             )} */}
 
             <tr>
-              
               <td>Reason *</td>
               <td>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <select
                   value={reason}
-                  onChange={(e) => {
+                  onChange={e => {
                     setReason(e.target.value);
-                    if (e.target.value !== 'Others') {
-                      setOtherReason('');
-                    }
+                    if (e.target.value !== 'Others') setOtherReason('');
                   }}
-                  required
                 >
                   <option value="">-- Select Reason --</option>
-                  <option value="WFH Policy">As Per Home Office Policy</option>
-                  <option value="Inclement Weather">Inclement Weather</option>
                   <option value="Medical Appointment">Medical Appointment</option>
-                  <option value="Medical Procedure">Medical Procedure</option>
-                  <option value="Medical Illness/Injury">Medical Illness/Injury</option>
-                  <option value="Contractor Appointment">Contractor Appointment</option>
                   <option value="Family Emergency">Family Emergency</option>
-                  <option value="Jury Duty">Jury Duty</option>
-                  <option value="Funeral Attendance">Funeral Attendance</option>
-                  <option value="Home Emergency">Home Emergency</option>
-                  <option value="Sick Family Member">Sick Family Member</option>
-                  <option value="Sick Pet">Sick Pet</option>
-                  <option value="Legal Obligations">Legal Obligations</option>
                   <option value="Vacation">Vacation</option>
                   <option value="Others">Others</option>
                 </select>
 
                 {reason === 'Others' && (
-                  
-                    <textarea
-                      rows={4}
-                      placeholder="Please specify reason"
-                      value={otherReason}
-                      onChange={(e) => setOtherReason(e.target.value)}
-                      required
-                    />
-                 
+                  <input
+                    type="text"
+                    placeholder="Please specify reason"
+                    value={otherReason}
+                    onChange={e => setOtherReason(e.target.value)}
+                  />
                 )}
-                </div>
               </td>
             </tr>
-
-
-            {/* <tr>
-              <td>Contact during Leave</td>
-              <td><input type="text" /></td>
-            </tr> */}
-
-            {/* <tr>
-              <td>Schedule for Submit</td>
-              <td>
-                <input type="checkbox" />
-                <input type="date" />
-              </td>
-            </tr> */}
-
-            {/* <tr>
-              <td>Work Handed Over</td>
-              <td><input type="text" /></td>
-            </tr> */}
 
             <tr>
               <td>Attachment</td>
-
               <td><input type="file" /></td>
-
             </tr>
-
           </tbody>
         </table>
-        {/* ERROR MESSAGE */}
-        {error && (
-          <div className="form-error">
-            {error}
-          </div>
-        )}
+
+        {/* 🔒 REAL HIDDEN DATEPICKER (NO INPUT RENDERED) */}
+       <DatePicker
+  selected={startDate}
+  onChange={handleDateChange}
+  startDate={startDate}
+  endDate={endDate}
+  selectsRange
+  open={calendarOpen}
+  monthsShown={1}
+  shouldCloseOnSelect={false}
+  dayClassName={getDayClass}
+  renderDayContents={renderDay}
+  customInput={<div />}
+  onClickOutside={() => setCalendarOpen(false)}
+
+  /* ✅ OPEN ON RIGHT SIDE OF START DATE */
+  popperPlacement="right-start"
+  popperProps={{
+    strategy: 'fixed',
+  }}
+  popperModifiers={[
+    {
+      name: 'flip',
+      enabled: true,
+      options: {
+        fallbackPlacements: ['left-start', 'bottom-start', 'top-start'],
+      },
+    },
+    {
+      name: 'preventOverflow',
+      enabled: true,
+      options: {
+        boundary: 'viewport',
+        padding: 8,
+      },
+    },
+  ]}
+/>
+
+
+
+
         <div className="form-footer">
           <button className="btn primary" onClick={handleSubmit}>Submit</button>
           <button className="btn secondary">Save Draft</button>
         </div>
       </section>
-      {/* RIGHT : HOLIDAY LIST */}
+
       <section className="holiday-card">
         <h3>Upcoming Holidays</h3>
-
-        <ul className="holiday-list">
-          {HOLIDAY_LIST.map((holiday, index) => (
-            <li key={index}>{holiday}</li>
+        <ul>
+          {HOLIDAY_LIST.map((h, i) => (
+            <li key={i}>{h}</li>
           ))}
         </ul>
       </section>
     </section>
-
   );
 }
