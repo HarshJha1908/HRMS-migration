@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './LeaveForm.css';
@@ -24,6 +24,7 @@ const formatLocalDate = (date: Date) => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
 const HOLIDAY_LIST = [
   'January 26, Monday - Republic Day',
   'March 3, Tuesday - Holi',
@@ -38,7 +39,6 @@ const HOLIDAY_LIST = [
   'December 25, Friday - Christmas Day'
 ];
 
-/* ---------- LEAVE DAY CALCULATION ---------- */
 const calculateLeaveDays = (
   start: Date,
   end: Date,
@@ -49,7 +49,7 @@ const calculateLeaveDays = (
 
   while (current <= end) {
     const day = current.getDay();
-        const iso = formatLocalDate(current);
+    const iso = formatLocalDate(current);
 
     const isWeekend = day === 0 || day === 6;
     const isHoliday = holidayDates.includes(iso);
@@ -68,9 +68,12 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [reason, setReason] = useState('');
   const [otherReason, setOtherReason] = useState('');
+  const [isHalfDayStart, setIsHalfDayStart] = useState(false);
+  const [isHalfDayEnd, setIsHalfDayEnd] = useState(false);
   const [error, setError] = useState('');
 
-  /* ---------- HOLIDAYS ---------- */
+  const fileRef = useRef<HTMLInputElement | null>(null);
+
   const holidayDates = useMemo(() => {
     return HOLIDAY_LIST.map(item => {
       const [monthDay] = item.split(',');
@@ -78,43 +81,69 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
     });
   }, []);
 
-  const isHoliday = (date: Date) =>
-     holidayDates.includes(formatLocalDate(date));
+  const isHoliday = useCallback(
+    (date: Date) => holidayDates.includes(formatLocalDate(date)),
+    [holidayDates]
+  );
 
-  /* ---------- TOTAL DAYS ---------- */
+  const isWeekend = (date: Date) => date.getDay() === 0 || date.getDay() === 6;
+
+  const isHalfDayStartEligible =
+    !!startDate && !isWeekend(startDate) && !isHoliday(startDate);
+
+  const isHalfDayEndEligible =
+    !!endDate && !isWeekend(endDate) && !isHoliday(endDate);
+
   const totalLeaveDays = useMemo(() => {
     if (!startDate || !endDate) return 0;
-    return calculateLeaveDays(startDate, endDate, holidayDates);
-  }, [startDate, endDate, holidayDates]);
 
-  /* ---------- DAY CLASS ---------- */
+    let total = calculateLeaveDays(startDate, endDate, holidayDates);
+    const sameDay = formatLocalDate(startDate) === formatLocalDate(endDate);
+
+    const startWorking = !isWeekend(startDate) && !isHoliday(startDate);
+    const endWorking = !isWeekend(endDate) && !isHoliday(endDate);
+
+    if (sameDay) {
+      if ((isHalfDayStart || isHalfDayEnd) && startWorking) return 0.5;
+      return total;
+    }
+
+    if (isHalfDayStart && startWorking) total -= 0.5;
+    if (isHalfDayEnd && endWorking) total -= 0.5;
+
+    return Math.max(0, total);
+  }, [
+    startDate,
+    endDate,
+    holidayDates,
+    isHalfDayStart,
+    isHalfDayEnd,
+    isHoliday
+  ]);
+
   const getDayClass = (date: Date) => {
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-    if (isHoliday(date) && !isWeekend) return 'holiday-dot';
+    const isWeekendDay = date.getDay() === 0 || date.getDay() === 6;
+    if (isHoliday(date) && !isWeekendDay) return 'holiday-dot';
     return undefined;
   };
 
-  /* ---------- CUSTOM DAY ---------- */
   const renderDay = (day: number, date?: Date) => {
     if (!date) return day;
 
     const iso = formatLocalDate(date);
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const isWeekendDay = date.getDay() === 0 || date.getDay() === 6;
     const index = holidayDates.indexOf(iso);
 
     const fullHolidayName =
-      index !== -1
-        ? HOLIDAY_LIST[index].split('-')[1]?.trim()
-        : '';
+      index !== -1 ? HOLIDAY_LIST[index].split('-')[1]?.trim() : '';
 
     return (
       <div
         className="day-cell"
-        title={index !== -1 && !isWeekend ? fullHolidayName : undefined}
+        title={index !== -1 && !isWeekendDay ? fullHolidayName : undefined}
       >
         <span>{day}</span>
-
-        {index !== -1 && !isWeekend && (
+        {index !== -1 && !isWeekendDay && (
           <>
             <span className="holiday-underline" />
             <span className="holiday-label">
@@ -126,19 +155,24 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
     );
   };
 
-
-  /* ---------- DATE CHANGE ---------- */
   const handleDateChange = (dates: [Date | null, Date | null]) => {
     const [start, end] = dates;
     setStartDate(start);
     setEndDate(end);
 
-    if (start && end) {
-      setCalendarOpen(false); // close after end date
+    if (!start) setIsHalfDayStart(false);
+    if (!end) setIsHalfDayEnd(false);
+
+    if (start && (isWeekend(start) || isHoliday(start))) {
+      setIsHalfDayStart(false);
     }
+    if (end && (isWeekend(end) || isHoliday(end))) {
+      setIsHalfDayEnd(false);
+    }
+
+    if (start && end) setCalendarOpen(false);
   };
 
-  /* ---------- SUBMIT ---------- */
   const handleSubmit = () => {
     setError('');
 
@@ -154,7 +188,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
     onSubmit({
       leaveType,
-       startDate: formatLocalDate(startDate),
+      startDate: formatLocalDate(startDate),
       endDate: formatLocalDate(endDate),
       reason,
       otherReason: reason === 'Others' ? otherReason : '',
@@ -162,16 +196,26 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
     });
   };
 
+  const resetForm = () => {
+    setLeaveType('WFH');
+    setStartDate(null);
+    setEndDate(null);
+    setCalendarOpen(false);
+    setReason('');
+    setOtherReason('');
+    setIsHalfDayStart(false);
+    setIsHalfDayEnd(false);
+    setError('');
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
   return (
     <section className="form-card">
       <h3>Apply For Leave : Tania Bhattacharjee</h3>
 
-      <div className="form-error-placeholder">
-        {error && <span className="form-error-text">{error}</span>}
-      </div>
+      {error && <div className="form-error-text">{error}</div>}
 
       <div className="form-grid">
-
         <div className="form-row">
           <label>Leave Type *</label>
           <select value={leaveType} onChange={e => setLeaveType(e.target.value)}>
@@ -188,24 +232,46 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
           <strong>Snehashish Bhunia</strong>
         </div>
 
-        <div className="form-row date-anchor">
+        <div className="form-row date-row">
           <label>Start Date *</label>
-          <input
-            readOnly
-            value={startDate ? startDate.toLocaleDateString() : ''}
-            placeholder="Select start date"
-            onClick={() => setCalendarOpen(true)}
-          />
+          <div className="date-with-half">
+            <input
+              readOnly
+              value={startDate ? startDate.toLocaleDateString() : ''}
+              placeholder="Select start date"
+              onClick={() => setCalendarOpen(true)}
+            />
+            <label className="half-checkbox">
+              <input
+                type="checkbox"
+                checked={isHalfDayStart}
+                disabled={!isHalfDayStartEligible}
+                onChange={e => setIsHalfDayStart(e.target.checked)}
+              />
+              Half Day
+            </label>
+          </div>
         </div>
 
-        <div className="form-row">
+        <div className="form-row date-row">
           <label>End Date *</label>
-          <input
-            readOnly
-            value={endDate ? endDate.toLocaleDateString() : ''}
-            placeholder="Select end date"
-            onClick={() => setCalendarOpen(true)}
-          />
+          <div className="date-with-half">
+            <input
+              readOnly
+              value={endDate ? endDate.toLocaleDateString() : ''}
+              placeholder="Select end date"
+              onClick={() => setCalendarOpen(true)}
+            />
+            <label className="half-checkbox">
+              <input
+                type="checkbox"
+                checked={isHalfDayEnd}
+                disabled={!isHalfDayEndEligible}
+                onChange={e => setIsHalfDayEnd(e.target.checked)}
+              />
+              Half Day
+            </label>
+          </div>
         </div>
 
         {endDate && (
@@ -217,42 +283,38 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
         <div className="form-row">
           <label>Reason *</label>
-          <div className="reason-field">
-            <select
-              value={reason}
-              onChange={e => {
-                setReason(e.target.value);
-                if (e.target.value !== 'Others') setOtherReason('');
-              }}
-            >
-              <option value="">-- Select Reason --</option>
-              <option value="WFH Policy">As Per Home Office Policy</option>
-              <option value="Inclement Weather">Inclement Weather</option>
-              <option value="Medical Appointment">Medical Appointment</option>
-              <option value="Medical Procedure">Medical Procedure</option>
-              <option value="Medical Illness/Injury">Medical Illness/Injury</option>
-              <option value="Others">Others</option>
-            </select>
+          <select
+            value={reason}
+            onChange={e => {
+              setReason(e.target.value);
+              if (e.target.value !== 'Others') setOtherReason('');
+            }}
+          >
+            <option value="">-- Select Reason --</option>
+            <option value="WFH Policy">As Per Home Office Policy</option>
+            <option value="Inclement Weather">Inclement Weather</option>
+            <option value="Medical Appointment">Medical Appointment</option>
+            <option value="Medical Procedure">Medical Procedure</option>
+            <option value="Medical Illness/Injury">Medical Illness/Injury</option>
+            <option value="Others">Others</option>
+          </select>
 
-            {reason === 'Others' && (
-              <textarea
-                rows={3}
-                placeholder="Please specify reason"
-                value={otherReason}
-                onChange={e => setOtherReason(e.target.value)}
-              />
-            )}
-          </div>
+          {reason === 'Others' && (
+            <textarea
+              rows={3}
+              placeholder="Please specify reason"
+              value={otherReason}
+              onChange={e => setOtherReason(e.target.value)}
+            />
+          )}
         </div>
 
         <div className="form-row">
           <label>Attachment</label>
-          <input type="file" />
+          <input type="file" ref={fileRef} />
         </div>
-
       </div>
 
-      {/* DATEPICKER */}
       <DatePicker
         selected={startDate}
         onChange={handleDateChange}
@@ -264,19 +326,22 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
         onClickOutside={() => setCalendarOpen(false)}
         dayClassName={getDayClass}
         renderDayContents={renderDay}
-
-        /* 🔑 THIS REMOVES THE EXTRA INPUT */
         customInput={<div style={{ display: 'none' }} />}
-
         popperPlacement="bottom-start"
       />
 
-
       <div className="form-footer">
-        <button className="btn primary" onClick={handleSubmit}>Submit</button>
-        <button className="btn secondary">Save Draft</button>
+        <button className="btn primary" onClick={handleSubmit}>
+          Submit
+        </button>
+        <button
+          className="btn secondary"
+          type="button"
+          onClick={resetForm}
+        >
+          Cancel
+        </button>
       </div>
     </section>
-
   );
 }

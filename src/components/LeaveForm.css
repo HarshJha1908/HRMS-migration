@@ -1,65 +1,98 @@
 /* ---------- FORM CARD ---------- */
 .form-card {
   background: #fff;
-  padding: 12px;
+  padding: 24px;
   border: 1px solid #ccc;
-  margin-bottom: 16px;
-}
-
-.form-error-placeholder {
-  min-height: 18px;
-  margin-bottom: 10px;
+  max-width: 720px;
+  margin: 0 auto 16px;
 }
 
 .form-error-text {
   color: #d32f2f;
   font-size: 16px;
   font-weight: 600;
+  margin-bottom: 10px;
 }
 
-/* ---------- PAGE LAYOUT ---------- */
-.page-layout {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
+/* ---------- FORM GRID ---------- */
+.form-grid {
+  display: table;
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 12px;
 }
 
-.holiday-card {
-  background: #fff;
-  padding: 12px;
-  border: 1px solid #ccc;
+.form-row {
+  display: table-row;
+}
+
+.form-row > label {
+  display: table-cell;
+  width: 180px;
+  font-weight: 600;
+  vertical-align: middle;
+  padding-right: 16px;
+}
+
+.form-row > :not(label) {
+  display: table-cell;
+  vertical-align: middle;
+}
+
+.form-row input,
+.form-row select,
+.form-row textarea {
+  width: 170px;
+}
+
+/* ---------- DATE + HALF DAY ---------- */
+.date-with-half {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.half-checkbox {
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 /* ---------- TOTAL LEAVE DAYS ---------- */
 .leave-days-row {
-  background-color: #fff5f5;
-}
-
-.leave-days-row td {
+  background: #fff5f5;
   color: #d32f2f;
   font-weight: 600;
 }
 
-.leave-days-value {
-  font-size: 16px;
-  font-weight: 700;
-}
-
 /* ---------- BUTTONS ---------- */
 .form-footer {
-  margin-top: 12px;
   text-align: right;
+  margin-top: 12px;
 }
 
 .btn {
   padding: 6px 18px;
   margin-left: 8px;
+  border: none;
+  cursor: pointer;
 }
 
-.primary,
-.secondary {
+.primary {
   background: #174e72;
   color: #fff;
+}
+
+.primary:hover {
+  background: #0f3d5a;
+}
+
+.secondary {
+  background: #d32f2f;   /* 🔴 Cancel button */
+  color: #fff;
+}
+
+.secondary:hover {
+  background: #b71c1c;
 }
 
 /* ---------- REACT DATEPICKER ---------- */
@@ -89,6 +122,23 @@
   height: 36px;
 }
 
+/* ---------- RED DOT (WEEKDAY HOLIDAYS ONLY) ---------- */
+.holiday-dot {
+  position: relative;
+}
+
+.holiday-dot::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background-color: #d32f2f;
+  border-radius: 50%;
+}
+
 .holiday-underline {
   position: absolute;
   bottom: 6px;
@@ -106,25 +156,9 @@
   transform: translateX(-50%);
   font-size: 9px;
   color: #b26a00;
-  white-space: nowrap;
 }
 
-/* ---------- RED DOT (WEEKDAY HOLIDAYS ONLY) ---------- */
-.holiday-dot {
-  position: relative;
-}
-
-.holiday-dot::after {
-  content: '';
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 6px;
-  height: 6px;
-  background-color: #d32f2f;
-  border-radius: 50%;
-}
+/* ---------- REASON FIELD ---------- */
 .reason-field {
   display: flex;
   flex-direction: column;
@@ -133,41 +167,5 @@
 
 .reason-field select,
 .reason-field textarea {
-  width: 170px;  
-  max-width: 100%;
-}
-.date-anchor {
-  position: relative;
-}
-.form-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 160px 1fr;
-  align-items: center;
-  gap: 12px;
-}
-
-.form-row label {
-  font-weight: 600;
-}
-
-.date-anchor {
-  position: relative;
-}
-
-.form-row input,
-.form-row select,
-.form-row textarea {
   width: 170px;
-}
-
-.leave-days-row {
-  color: #d32f2f;       
-  font-weight: 600;
-  background: #fff5f5;  
 }
