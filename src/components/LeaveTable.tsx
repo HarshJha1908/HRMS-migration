@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import type { LeaveRequest } from '../types/leave';
 import './LeaveTable.css';
 
@@ -63,9 +64,9 @@ export default function LeaveTable() {
       </table>
 
       <div className="view-more">
-        <a href="/leave-details" aria-label="View more applied leave">
+         <Link to="/leave-details" aria-label="View more applied leave">
           View More..
-        </a>
+        </Link>
       </div>
     </section>
   );

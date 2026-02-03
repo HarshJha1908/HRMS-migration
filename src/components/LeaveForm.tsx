@@ -16,8 +16,14 @@ type LeaveFormProps = {
   }) => void;
 };
 
-const YEAR = 2026;
+const YEAR = new Date().getFullYear();
 
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 const HOLIDAY_LIST = [
   'January 26, Monday - Republic Day',
   'March 3, Tuesday - Holi',
@@ -43,7 +49,7 @@ const calculateLeaveDays = (
 
   while (current <= end) {
     const day = current.getDay();
-    const iso = current.toISOString().split('T')[0];
+        const iso = formatLocalDate(current);
 
     const isWeekend = day === 0 || day === 6;
     const isHoliday = holidayDates.includes(iso);
@@ -68,14 +74,12 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const holidayDates = useMemo(() => {
     return HOLIDAY_LIST.map(item => {
       const [monthDay] = item.split(',');
-      return new Date(`${monthDay} ${YEAR}`)
-        .toISOString()
-        .split('T')[0];
+      return formatLocalDate(new Date(`${monthDay} ${YEAR}`));
     });
   }, []);
 
   const isHoliday = (date: Date) =>
-    holidayDates.includes(date.toISOString().split('T')[0]);
+     holidayDates.includes(formatLocalDate(date));
 
   /* ---------- TOTAL DAYS ---------- */
   const totalLeaveDays = useMemo(() => {
@@ -94,7 +98,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const renderDay = (day: number, date?: Date) => {
     if (!date) return day;
 
-    const iso = date.toISOString().split('T')[0];
+    const iso = formatLocalDate(date);
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     const index = holidayDates.indexOf(iso);
 
@@ -150,8 +154,8 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
     onSubmit({
       leaveType,
-      startDate: startDate!.toISOString().split('T')[0],
-      endDate: endDate!.toISOString().split('T')[0],
+       startDate: formatLocalDate(startDate),
+      endDate: formatLocalDate(endDate),
       reason,
       otherReason: reason === 'Others' ? otherReason : '',
       totalDays: totalLeaveDays
