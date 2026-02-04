@@ -12,6 +12,7 @@
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 10px;
+  background: #fff5f5;
 }
 
 /* ---------- FORM GRID ---------- */
@@ -59,8 +60,8 @@
 
 /* ---------- TOTAL LEAVE DAYS ---------- */
 .leave-days-row {
-  background: #fff5f5;
-  color: #d32f2f;
+  background: #fff5f59a;
+  color: #174e72;
   font-weight: 600;
 }
 
