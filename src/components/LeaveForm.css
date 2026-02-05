@@ -3,9 +3,22 @@
   background: #fff;
   padding: 24px;
   border: 1px solid #ccc;
-  max-width: 720px;
+  max-width: 100%;
   margin: 0 auto 16px;
 }
+
+.form-card h3 {
+  margin: -24px -24px 20px;    
+  padding: 14px 24px;
+  background-color: #fff5f5cb;  /*0f5f7f75*/
+  color: #000; /*fff*/
+  font-size: 18px;
+  font-weight: 600;
+  /* border-bottom: 1px solid #ccc; */
+  /* text-align: center; */
+  /* border-radius: 5px; */
+}
+
 
 .form-error-text {
   color: #d32f2f;
@@ -32,7 +45,8 @@
   width: 180px;
   font-weight: 600;
   vertical-align: middle;
-  padding-right: 16px;
+  padding-right: 80px;
+  white-space: nowrap;
 }
 
 .form-row > :not(label) {
@@ -72,15 +86,16 @@
 }
 
 .btn {
-  padding: 6px 18px;
+  padding: 10px 36px;
   margin-left: 8px;
   border: none;
   cursor: pointer;
 }
 
 .primary {
-  background: #174e72;
+  background: #174e72; /* 🔴 Submit button */
   color: #fff;
+  font-size: 16px;
 }
 
 .primary:hover {
@@ -90,6 +105,7 @@
 .secondary {
   background: #d32f2f;   /* 🔴 Cancel button */
   color: #fff;
+  font-size: 16px;
 }
 
 .secondary:hover {
@@ -169,4 +185,24 @@
 .reason-field select,
 .reason-field textarea {
   width: 170px;
+}
+/* ---------- ATTACHMENT FIX ---------- */
+.attachment-wrap {
+  display: flex;
+  align-items: center;      
+  gap: 16px;
+  width: 100%;
+}
+
+.attachment-wrap input[type='file'] {
+  margin-top: 10px;
+  min-width: 200px;     
+  max-width: 300px;
+}
+
+.attachment-note {
+  font-size: 13px;
+  color: #d32f2f;
+  line-height: 1.4;
+  max-width: 600px;
 }

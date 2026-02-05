@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './LeaveForm.css';
@@ -73,6 +73,12 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   const [error, setError] = useState('');
 
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+  if (leaveType !== 'SL' && fileRef.current) {
+    fileRef.current.value = '';   
+  }
+}, [leaveType]);
 
   const holidayDates = useMemo(() => {
     return HOLIDAY_LIST.map(item => {
@@ -311,8 +317,26 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
         <div className="form-row">
           <label>Attachment</label>
-          <input type="file" ref={fileRef} />
+
+          <div className="attachment-wrap">
+            {/* <input type="file" ref={fileRef} /> */}
+            <input
+              type="file"
+              ref={fileRef}
+              disabled={leaveType !== 'SL'}        
+            />
+
+            <span className="attachment-note">
+              <strong>To be used for Sick Leaves only:</strong> While applying for Sick
+              Leaves, please upload the Leave of Absence Certificate, signed by a medical
+              practitioner. Only documents in <strong>PDF</strong> format can be
+              uploaded. Please <strong>DO NOT</strong> upload any medical prescriptions
+              or medical Test Records in the tool that contains personal medical data.
+            </span>
+          </div>
         </div>
+
+
       </div>
 
       <DatePicker

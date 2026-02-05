@@ -23,4 +23,5 @@ export const LEAVE_TYPES = [
   { value: 'COFF', label: 'Compensatory Off' },
   { value: 'BDL', label: 'Birthday Leave' },
   { value: 'ASL', label: 'Associate Special Leave' },
+  { value: 'SL', label: 'Sick Leave' },
 ] as const;
