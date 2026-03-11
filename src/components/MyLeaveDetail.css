@@ -1,0 +1,106 @@
+/* ===============================
+   Latest Applied Leave (Scoped)
+   =============================== */
+
+.leave-detail-page {
+  display: flex;
+  justify-content: center;
+}
+
+/* Card container */
+.leave-detail-card {
+  background: #ffffff;
+  border: 1px solid #dcdcdc;
+  padding: 16px;
+  width: 100%;
+  margin-bottom: 16px;
+  /* border-radius: 8px; */
+  /* max-width: 100%;    */
+}
+
+/* Section title */
+.section-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+/* Table wrapper (prevents page overflow) */
+.leave-table-wrapper {
+  overflow-x: auto;
+}
+
+/* Table */
+.leave-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+/* Header */
+.leave-table th {
+  background-color: #0f5f7f;
+  color: #ffffff;
+  text-align: left;
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+/* Body */
+.leave-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #e0e0e0;
+  white-space: nowrap;
+}
+
+/* Status badge */
+.status {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status.approved {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+/* View more */
+.view-more {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #1a0dab;
+  cursor: pointer;
+}
+
+.view-more:hover {
+  text-decoration: underline;
+}
+
+
+.top-success-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #28a745;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 6px;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  animation: slideIn 0.4s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

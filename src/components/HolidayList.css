@@ -1,0 +1,76 @@
+/* ===============================
+   Holiday List (Scoped Module)
+   =============================== */
+
+.holidayRoot {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  background-color: #e6e6e6;
+  min-height: 100%;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* Card */
+.holidayCard {
+  background: #ffffff;
+  border: 1px solid #dcdcdc;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 100%;
+  padding: 20px;
+}
+
+/* Title */
+.holidayTitle {
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2b6f8a;
+}
+
+/* Status text */
+.status {
+  font-size: 14px;
+}
+
+.error {
+  color: #d32f2f;
+  font-weight: 500;
+}
+
+/* Table */
+.holidayTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.holidayTable thead {
+  background-color: #0f5f7f;
+  color: #ffffff;
+}
+
+.holidayTable th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.past-holiday {
+  color: #999999;
+  /* text-decoration: line-through; */
+}
+
+.holidayTable td {
+  padding: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.holidayTable tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.holidayTable tbody tr:hover {
+  background-color: #e6edf5;
+}

@@ -1,0 +1,118 @@
+.view-leave-page {
+  width: 100%;
+  padding: 16px 0;
+  box-sizing: border-box;
+}
+
+.details-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.details-card {
+  width: 100%;
+  max-width: none;
+  background: #fff;
+  padding: 14px;
+}
+
+.details-title {
+  font-size: 30px;
+  margin-bottom: 12px;
+  color: #1f2937;
+}
+
+.leave-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  border: 1px solid #3e3e3e;
+}
+
+.leave-details-table td {
+  border: 1px solid #3e3e3e;
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+.leave-details-table .top-row td {
+  min-height: 88px;
+  height: 94px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 4px;
+  color: #1782b8;
+  font-size: 16px;
+  line-height: 1.25;
+  font-weight: 600;
+}
+
+.value {
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 10px;
+  text-align: center;
+  height: 22px;
+  min-width: 74px;
+}
+
+.status-badge.Pending {
+  background: #ffc107;
+  color: #1f2937;
+}
+
+.status-badge.Approved {
+  background: #28a745;
+  color: #fff;
+}
+
+.status-badge.Rejected {
+  background: #dc3545;
+  color: #fff;
+}
+
+.status-badge.Cancelled {
+  background: #e74bb5;
+  color: #fff;
+}
+
+.status-badge.Drafted {
+  background: #6c757d;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .view-leave-page {
+    padding: 12px;
+  }
+
+  .details-card {
+    padding: 8px;
+  }
+
+  .details-title {
+    font-size: 26px;
+  }
+
+  .label {
+    font-size: 14px;
+  }
+
+  .value {
+    font-size: 13px;
+  }
+}
+

@@ -2,15 +2,14 @@ html, body, #root {
   height: 100%;
   margin: 0;
 }
-
-.app-layout {
+ 
+.layout {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
-
+ 
 .main-layout {
-  flex: 1;
-  padding: 16px 24px;
-  background-color: #f3f4f6;
+  flex: 1;              
+  padding: 20px;
 }

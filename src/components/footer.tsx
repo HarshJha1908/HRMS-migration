@@ -1,4 +1,4 @@
-import './Footer.css';
+import './footer.css';
  
 const Footer = () => {
   return (
@@ -6,12 +6,11 @@ const Footer = () => {
       <div className="footer-line">
         Copyright © 2026 · All Rights Reserved · Linde IT, Kolkata Center
       </div>
-      <div className="footer-subline">
+      {/* <div className="footer-subline">
         Designed and managed by Tania & Harsh
-      </div>
+      </div> */}
     </footer>
   );
 };
  
 export default Footer;
-// hlo checking

@@ -1,0 +1,55 @@
+/* Card container */
+.filter-card {
+  background: #ffffff;
+  padding: 30px;
+  margin: 16px auto;
+  /* border-radius: 8px; */
+  /* box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08); */
+  border: 1px solid #dcdcdc;
+  max-width: 100%;
+}
+
+/* Title */
+.filter-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 25px;
+}
+
+/* Row layout */
+.filter-container {
+  display: flex;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+/* Each field */
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Label */
+.filter-field label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* Select dropdown */
+.filter-field select {
+  min-width: 220px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  background: #fff;
+  transition: border 0.2s ease;
+}
+
+.filter-field select:focus {
+  outline: none;
+  border-color: #2563eb;
+}

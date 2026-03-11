@@ -1,153 +1,521 @@
-import { useState } from 'react';
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 import './LeaveForm.css';
-import { LEAVE_TYPES } from '../types/leave';
+import { getLeaveReasons, getLeaveTypes, saveLeaveRequest, getNoOfDays, getHolidays, getApprover } from '../services/apiService';
+// import { getHolidays, type Holiday } from '../services/holidayService';
+import { useNavigate } from 'react-router-dom';
+import type { LeaveTypeApi, Holiday, NoOfDaysApi, ReasonApi, LeaveDetailsApi, ApproverApi } from '../types/apiTypes';
+import type { LeaveFormProps } from '../types/props';
+import { useUser } from "../context/UserContext";
 
-type LeaveFormProps = {
-  onSubmit: (data: {
-    leaveType: string;
-    startDate: string;
-    endDate: string;
-    reason: string;
-  }) => void;
+
+
+// const username = sessionStorage.getItem("username");
+// console.log("Username from sessionStorage:", username);
+
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 
+
 export default function LeaveForm({ onSubmit }: LeaveFormProps) {
-  const [leaveType, setLeaveType] = useState('WFH');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [leaveTypes, setLeaveTypes] = useState<LeaveTypeApi[]>([]);
+  const [loadingTypes, setLoadingTypes] = useState(false);
+  const [leaveType, setLeaveType] = useState('');
+
+  const [approver, setApprover] = useState<ApproverApi | null>(null);
+  const [loadingApprover, setLoadingApprover] = useState(false);
+  // const [managerName, setManagerName] = useState('');
+
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [noOfDays, setNoOfDays] = useState<NoOfDaysApi | null>(null);
+  const [loadDays, setLoadDays] = useState(false);
+  
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [reasons, setReasons] = useState<ReasonApi[]>([]);
+  const [loadingReasons, setLoadingReasons] = useState(false);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [reason, setReason] = useState('');
+  const [otherReason, setOtherReason] = useState('');
+  const [isHalfDayStart, setIsHalfDayStart] = useState(false);
+  const [isHalfDayEnd, setIsHalfDayEnd] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = () => {
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  // const [username, setUsername] = useState<string | null>(null);
+
+// useEffect(() => {
+//   const user = sessionStorage.getItem("username");
+//   console.log("Username from sessionStorage:", user);
+//   // console.log(sessionStorage.getItem("username"));
+//   setUsername(user);
+// }, []);
+
+const { username } = useUser();
+
+  // ✅ Fetch Leave Types by User ID
+  useEffect(() => {
+    const loadLeaveTypes = async () => {
+      try {
+        setLoadingTypes(true);
+
+        const result = await getLeaveTypes("a2ef46");
+        console.log("Leave Types API response:", result);
+        if (result.isSuccess && result.data) {
+          const cleaned = result.data.map((item: any) => ({
+            leaveTypeCode: item.leaveTypeCode.trim(),
+            leaveTypeName: item.leaveTypeName.trim()
+          }));
+
+          setLeaveTypes(cleaned);
+
+          if (cleaned.length > 0) {
+            setLeaveType(cleaned[0].leaveTypeCode);
+          }
+        }
+      } catch (err) {
+        console.error("Leave type fetch failed", err);
+      } finally {
+        setLoadingTypes(false);
+      }
+    };
+
+    loadLeaveTypes();
+  }, []);
+  
+
+
+  useEffect(() => {
+    if (leaveType !== 'SL' && fileRef.current) {
+      fileRef.current.value = '';
+    }
+  }, [leaveType]);
+
+  
+  useEffect(() => {
+    const loadApprover = async () => {
+      try {
+        setLoadingApprover(true);
+
+        const result = await getApprover("a2ef46");
+        console.log("Leave Approver API response:", result);
+        if (result.isSuccess && result.data) {
+
+          setApprover(result.data);
+          console.log("Approver Name:", result.data.managerName);
+        }
+      } catch (err) {
+        console.error("Leave approver fetch failed", err);
+      } finally {
+        setLoadingApprover(false);
+      }
+    };
+
+    loadApprover();
+  
+  }, []);
+
+
+  useEffect(() => {
+    const loadReasons = async () => {
+      try {
+        setLoadingReasons(true);
+
+        const result = await getLeaveReasons();
+        console.log("Leave Reasons API response:", result);
+        if (result.isSuccess && result.data) {
+          const cleaned = result.data
+            .filter((r: any) => r.isActive)
+            .map((r: any) => ({
+              reason: r.reason.trim()
+            }));
+
+          setReasons(cleaned);
+        }
+      } catch (err) {
+        console.error("Reason fetch failed", err);
+      } finally {
+        setLoadingReasons(false);
+      }
+    };
+
+    loadReasons();
+  }, []);
+
+  useEffect(() => {
+  if (!startDate || !endDate) return;
+  const loadDays = async () => {
+    try {
+      setLoadDays(true);
+      const result = await getNoOfDays({
+        startDate: formatLocalDate(startDate),
+        endDate: formatLocalDate(endDate),
+        totalHalfDays:
+          (isHalfDayStart ? 0.5 : 0) +
+          (isHalfDayEnd ? 0.5 : 0),
+      });
+      console.log("Leave Days API response:", result);
+      if (result?.isSuccess && result?.data) {
+        setNoOfDays(result.data);
+      }
+    } catch (err) {
+      console.error("Leave days fetch failed", err);
+    } finally {
+      setLoadDays(false);
+    }
+  };
+  loadDays();
+}, [startDate, endDate, isHalfDayStart, isHalfDayEnd]);
+        
+  
+
+  useEffect(() => {
+    const loadHolidays = async () => {
+      try {
+        const result = await getHolidays();
+        if (result?.isSuccess && result.data) {
+          setHolidays(result.data);
+        }
+      } catch (err) {
+        console.error("Holiday fetch failed", err);
+      }
+    };
+
+    loadHolidays();
+  }, []);
+
+
+  const holidayDates = useMemo(() => {
+    return holidays.map((h) => formatLocalDate(new Date(h.date)));
+  }, [holidays]);
+
+  const holidayNameByDate = useMemo(() => {
+    return new Map(
+      holidays.map((h) => [formatLocalDate(new Date(h.date)), h.description])
+    );
+  }, [holidays]);
+
+  const isHoliday = useCallback(
+    (date: Date) => holidayDates.includes(formatLocalDate(date)),
+    [holidayDates]
+  );
+
+  const isWeekend = (date: Date) =>
+    date.getDay() === 0 || date.getDay() === 6;
+
+  const isHalfDayStartEligible =
+    !!startDate && !isWeekend(startDate) && !isHoliday(startDate);
+
+  const isHalfDayEndEligible =
+    !!endDate && !isWeekend(endDate) && !isHoliday(endDate);
+
+ 
+  const handleDateChange = (dates: [Date | null, Date | null]) => {
+    const [start, end] = dates;
+    setStartDate(start);
+    setEndDate(end);
+
+    if (!start) setIsHalfDayStart(false);
+    if (!end) setIsHalfDayEnd(false);
+
+    if (start && (isWeekend(start) || isHoliday(start)))
+      setIsHalfDayStart(false);
+
+    if (end && (isWeekend(end) || isHoliday(end)))
+      setIsHalfDayEnd(false);
+
+    if (start && end) setCalendarOpen(false);
+  };
+
+  const getDayClass = (date: Date) => {
+    const isWeekendDay = date.getDay() === 0 || date.getDay() === 6;
+
+    if (isHoliday(date) && !isWeekendDay) {
+      return "holiday-dot";
+    }
+
+    return "";
+  };
+  const renderDay = (day: number, date?: Date) => {
+    if (!date) return day;
+
+    const iso = formatLocalDate(date);
+    const isWeekendDay = date.getDay() === 0 || date.getDay() === 6;
+    const fullHolidayName = holidayNameByDate.get(iso) || '';
+    return (
+      <div
+        className="day-cell"
+        title={fullHolidayName && !isWeekendDay ? fullHolidayName : undefined}
+      >
+        <span>{day}</span>
+
+        {fullHolidayName && !isWeekendDay && (
+          <>
+            <span className="holiday-underline" />
+            <span className="holiday-label">
+              {fullHolidayName.slice(0, 4)}
+            </span>
+          </>
+        )}
+      </div>
+    );
+
+  }
+  const navigate = useNavigate();
+  const handleSubmit = async () => {
+
     setError('');
 
-    // Required field validation (as per UI)
     if (!leaveType || !startDate || !endDate || !reason.trim()) {
-      setError('Please fill the required details....');
+      setError('Please fill the required details.');
       return;
     }
 
-    // Date validation
-    if (new Date(endDate) < new Date(startDate)) {
-      setError('End date must be greater than start date...');
+    if (reason === 'Others' && !otherReason.trim()) {
+      setError('Please specify the reason.');
       return;
+    }
+    try {
+      const payload = {
+
+        userADId: "name",
+        startDate: formatLocalDate(startDate),
+        endDate: formatLocalDate(endDate),
+        // noOfDays: noOfDays?.noOfDays || 0,
+        reason: reason === 'Others' ? otherReason : reason,
+        leaveTypeCode: leaveType.trim(),
+        workHandedOver: '',
+        contactNo: '',
+        isHalfStartDay: isHalfDayStart,
+        isHalfEndDay: isHalfDayEnd,
+        approverRemarks: 'XXXXXXXXXXXXX',
+        isSchedule: false,
+        scheduleDate: new Date().toISOString().split("T")[0],
+        statusChangeDate: new Date().toISOString().split("T")[0],
+        leaveStatus: 'D',
+        applyforother: false,
+        applyforotheradid: '',
+
+      };
+
+      console.log("FINAL PAYLOAD:", JSON.stringify(payload, null, 2));
+
+      const response = await saveLeaveRequest(payload);
+
+      console.log("Leave submitted successfully:", response);
+
+    } catch (error) {
+      console.error("Submit failed:", error);
+      setError("Failed to submit leave.");
     }
 
     onSubmit({
-  leaveType,
-  startDate,
-  endDate,
-  reason,
-});
+      leaveType,
+      startDate: formatLocalDate(startDate),
+      endDate: formatLocalDate(endDate),
+      reason: reason === 'Others' ? otherReason : reason,
+      otherReason: otherReason,
+      totalDays: noOfDays?.noOfDays || 0
 
+    });
+
+
+    navigate("/leave-details", {
+      state: { message: "Leave has been applied successfully!" }
+    });
   };
 
+  const resetForm = () => {
+    setLeaveType(leaveTypes[0]?.leaveTypeCode || '');
+    setStartDate(null);
+    setEndDate(null);
+    setCalendarOpen(false);
+    setReason('');
+    setOtherReason('');
+    setIsHalfDayStart(false);
+    setIsHalfDayEnd(false);
+    setError('');
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+
+
+
   return (
-    <section className="form-card">
-      <h3 className="section-title">Apply For Leave : Harsh Kumar Jha</h3>
+    <section className="leave-form-page">
+      <div className="form-card">
+        <h3>Apply For Leave : Tania Bhattacharjee</h3>
 
-      <div className="form-grid">
-        {/* Leave Type */}
-        <label htmlFor="leaveType">Leave Type *</label>
-        <select
-          id="leaveType"
-          value={leaveType}
-          onChange={e => setLeaveType(e.target.value)}
-        >
-          {LEAVE_TYPES.map(t => (
-            <option key={t.value} value={t.value}>
-              {t.label}
-            </option>
-          ))}
-        </select>
+        {error && <div className="form-error-text">{error}</div>}
 
-        {/* Approver Name */}
-        <label>Approver Name</label>
-        <span className="readonly">Rajeev Kalleparambil</span>
+        <div className="form-grid">
 
-        {/* Start Date */}
-        <label htmlFor="startDate">Start From (dd/mm/yyyy) *</label>
-        <input
-          id="startDate"
-          type="date"
-          value={startDate}
-          onChange={e => setStartDate(e.target.value)}
+          <div className="form-row">
+            <label>Leave Type *</label>
+            <select
+              value={leaveType}
+              disabled={loadingTypes}
+              onChange={e => setLeaveType(e.target.value)}
+            >
+              {loadingTypes ? (
+                <option>Loading...</option>
+              ) : (
+                leaveTypes.map(type => (
+                  <option
+                    key={type.leaveTypeCode}
+                    value={type.leaveTypeCode}
+                  >
+                    {type.leaveTypeName}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
+          <div className="form-row">
+            <label>Approver Name</label>
+            <strong>{approver?.managerName || 'N/A'}</strong>
+          </div>
+
+          <div className="form-row">
+            <label>Start Date *</label>
+            <div className="date-with-half">
+              <input
+                readOnly
+                value={startDate ? startDate.toLocaleDateString() : ''}
+                placeholder="Select start date"
+                onClick={() => setCalendarOpen(true)}
+              />
+              <label className="half-checkbox">
+                <input
+                  type="checkbox"
+                  checked={isHalfDayStart}
+                  disabled={!isHalfDayStartEligible}
+                  onChange={e => setIsHalfDayStart(e.target.checked)}
+                />
+                Half Day
+              </label>
+            </div>
+          </div>
+
+          <div className="form-row">
+            <label>End Date *</label>
+            <div className="date-with-half">
+              <input
+                readOnly
+                value={endDate ? endDate.toLocaleDateString() : ''}
+                placeholder="Select end date"
+                onClick={() => setCalendarOpen(true)}
+              />
+              <label className="half-checkbox">
+                <input
+                  type="checkbox"
+                  checked={isHalfDayEnd}
+                  disabled={!isHalfDayEndEligible}
+                  onChange={e => setIsHalfDayEnd(e.target.checked)}
+                />
+                Half Day
+              </label>
+            </div>
+          </div>
+
+          {endDate && (
+            <div className="form-row leave-days-row">
+              <label>Total Leave Days</label>
+              <strong>{noOfDays?.noOfDays || 0}</strong>
+            </div>
+          )}
+
+          <div className="form-row">
+            <label>Reason *</label>
+            <select
+              value={reason}
+              disabled={loadingReasons}
+              onChange={e => {
+                setReason(e.target.value);
+                if (e.target.value !== 'Others') {
+                  setOtherReason('');
+                }
+              }}
+            >
+              <option value="">-- Select Reason --</option>
+
+              {loadingReasons ? (
+                <option>Loading...</option>
+              ) : (
+                reasons.map(r => (
+                  <option
+                    key={r.reason}
+                    value={r.reason}
+                  >
+                    {r.reason}
+                  </option>
+                ))
+              )}
+            </select>
+
+            {reason === 'Others' && (
+              <textarea
+                rows={3}
+                placeholder="Please specify reason"
+                value={otherReason}
+                onChange={e => setOtherReason(e.target.value)}
+              />
+            )}
+          </div>
+
+          <div className="form-row">
+            <label>Attachment</label>
+            <div className="attachment-wrap">
+              <input
+                type="file"
+                ref={fileRef}
+                disabled={leaveType !== 'SL'}
+              />
+              <span className="attachment-note">
+                <strong>To be used for Sick Leaves only:</strong> While applying for Sick
+                Leaves, please upload the Leave of Absence Certificate, signed by a medical
+                practitioner. Only documents in <strong>PDF</strong> format can be
+                uploaded. Please <strong>DO NOT</strong> upload any medical prescriptions
+                or medical Test Records in the tool that contains personal medical data.
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <DatePicker
+          selected={startDate}
+          onChange={handleDateChange}
+          startDate={startDate}
+          endDate={endDate}
+          selectsRange
+          open={calendarOpen}
+          shouldCloseOnSelect={false}
+          onClickOutside={() => setCalendarOpen(false)}
+          dayClassName={getDayClass}
+          renderDayContents={renderDay}
+          customInput={<div style={{ display: 'none' }} />}
+          popperPlacement="bottom-start"
         />
 
-        {/* Half Day (Start) */}
-        <label htmlFor="halfDayStart">Half Day</label>
-        <input id="halfDayStart" type="checkbox" />
-
-        {/* End Date */}
-        <label htmlFor="endDate">Ends on (dd/mm/yyyy) *</label>
-        <input
-          id="endDate"
-          type="date"
-          value={endDate}
-          onChange={e => setEndDate(e.target.value)}
-        />
-
-        {/* Half Day (End) */}
-        <label htmlFor="halfDayEnd">Half Day</label>
-        <input id="halfDayEnd" type="checkbox" />
-
-        {/* Reason */}
-        <label htmlFor="reason">Reason *</label>
-        <input
-          id="reason"
-          type="text"
-          value={reason}
-          onChange={e => setReason(e.target.value)}
-        />
-
-        {/* Contact */}
-        <label htmlFor="contact">
-          My Contact during Leave (Phone# only)
-        </label>
-        <input id="contact" type="text" />
-
-        {/* Schedule for Submit */}
-        <label htmlFor="scheduleSubmit">Schedule for Submit</label>
-        <input id="scheduleSubmit" type="checkbox" />
-
-        {/* Schedule Date */}
-        <label htmlFor="scheduleDate">Schedule Date (dd/mm/yyyy)</label>
-        <input id="scheduleDate" type="date" />
-
-        {/* Work Handed Over */}
-        <label htmlFor="workHandedOver">Work Handed Over</label>
-        <input id="workHandedOver" type="text" />
-      </div>
-
-      {/* Sick Leave Note */}
-      <div className="sick-note">
-        To be used for Sick Leaves only: While applying for Sick Leaves, please
-        upload the Leave of Absence Certificate, signed by a medical practitioner.
-        Only documents in PDF format can be uploaded. Please DO NOT upload any
-        medical prescriptions or medical Test Records in the tool that contains
-        personal medical data.
-      </div>
-
-      {/* File Upload (accessible) */}
-      <div className="upload-row">
-        <label htmlFor="medicalUpload" className="visually-hidden">
-          Upload medical certificate
-        </label>
-        <input id="medicalUpload" type="file" />
-      </div>
-
-      {/* Error Message */}
-      {error && <p className="error">{error}</p>}
-
-      {/* Footer Buttons */}
-      <div className="form-footer">
-        <button type="button" className="btn primary" onClick={handleSubmit}>
-          Submit
-        </button>
-        <button type="button" className="btn secondary">
-          Save Draft
-        </button>
+        <div className="form-footer">
+          <button className="btn primary" onClick={handleSubmit}>
+            Submit
+          </button>
+          <button
+            className="btn secondary"
+            type="button"
+            onClick={resetForm}
+          >
+            Cancel
+          </button>
+        </div>
       </div>
     </section>
   );

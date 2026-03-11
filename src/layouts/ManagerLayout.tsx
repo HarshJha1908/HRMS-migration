@@ -1,16 +1,13 @@
 // import type { ReactNode } from 'react';
 import Navbar from '../components/Navbar';
-import './MainLayout.css';
+import './ManagerLayout.css';
 import { Outlet } from 'react-router-dom';
 import Footer from '../components/footer';
 
-// type Props = {
-//   children: ReactNode;
-// };
 
-export default function MainLayout() {
+export default function ManagerLayout() {
   return (
-    <div className="app-layout">
+    <div className="layout">
       <Navbar />
       <main className="main-layout">
         <Outlet />

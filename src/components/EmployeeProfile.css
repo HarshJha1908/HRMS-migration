@@ -1,0 +1,148 @@
+/* ===============================
+   Create Employee Leave Profile
+   =============================== */
+
+
+/* Page title */
+.page-title {
+  font-size: 20px;
+  color: #2b6f8a;
+  margin-bottom: 12px;
+}
+
+/* Scoped card for this form ONLY */
+.employee-form-card {
+  background: #ffffff;
+  border: 1px solid #dcdcdc;
+  padding: 20px;
+  border-radius: 4px;
+}
+
+/* ===============================
+   TOP FORM GRID
+   =============================== */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  column-gap: 24px;
+  row-gap: 16px;
+}
+
+/* Form groups */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 13px;
+  color: #2b6f8a;
+  margin-bottom: 4px;
+}
+
+.form-group label span {
+  color: red;
+}
+
+/* Inputs & selects */
+.form-group input,
+.form-group select {
+  height: 30px;
+  padding: 4px 6px;
+  border: 1px solid #c9c9c9;
+  border-radius: 2px;
+  font-size: 13px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+/* Checkbox group */
+.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.checkbox-group label {
+  margin: 0;
+}
+
+/* Full width field */
+.full-width {
+  grid-column: span 3;
+}
+
+/* ===============================
+   LEAVE BALANCE SECTION (BOTTOM)
+   =============================== */
+
+/* Wrapper */
+.leave-balance-wrapper {
+  margin-top: 32px;
+}
+
+/* Grid: label | spacer | input */
+.leave-section {
+  display: grid;
+  grid-template-columns: 360px 120px 220px;
+  row-gap: 14px;
+  align-items: center;
+}
+
+/* Each row uses the grid */
+.leave-row {
+  display: contents;
+}
+
+/* Labels – same position as before */
+.leave-row label {
+  grid-column: 1;
+  font-size: 13px;
+  color: #2b6f8a;
+}
+
+.leave-row label span {
+  color: red;
+}
+
+/* Inputs – moved to mid section & stretched */
+.leave-row input {
+  grid-column: 3;
+  height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #c9c9c9;
+  width: 100%;
+  font-size: 13px;
+}
+
+
+/* ===============================
+   ACTION BAR
+   =============================== */
+
+.action-bar {
+  margin-top: 28px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Primary button */
+.create-employee-form .btn-primary {
+  background-color: #1f4e6d;
+  color: #ffffff;
+  border: none;
+  padding: 8px 32px;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.create-employee-form .btn-primary:hover {
+  background-color: #163a52;
+}
