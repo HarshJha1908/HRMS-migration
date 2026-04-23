@@ -7,9 +7,11 @@ export default function LeaveFilterHeader({
   leaveType,
   status,
   leaveTypes,
+  leaveStatuses,
   onYearChange,
   onLeaveTypeChange,
-  onStatusChange
+  onStatusChange,
+  onApplyFilters
 }: FilterProps) {
 
   const currentYear = new Date().getFullYear();
@@ -60,14 +62,22 @@ export default function LeaveFilterHeader({
           onChange={(e) => onStatusChange(e.target.value)}
         >
           <option value="">All Status</option>
-          <option value="A">Approved</option>
-          <option value="P">Pending</option>
-          <option value="R">Rejected</option>
-          <option value="D">Drafted</option>
-          <option value="C">Cancelled</option>
+          {leaveStatuses.map((ls) => (
+            <option
+              key={ls.statusCode}
+              value={ls.statusCode}
+            >
+              {ls.statusName}
+            </option>
+          ))}
         </select>
       </div>
 
+      <div className="filter-action">
+        <button type="button" className="filter-go-btn" onClick={onApplyFilters}>
+          Go
+        </button>
+      </div>
     </div>
   </div>
 );

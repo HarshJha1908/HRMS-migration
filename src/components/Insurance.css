@@ -85,6 +85,13 @@
   background: #e4e4e4;
 }
 
+.nominee-table tfoot td {
+  padding: 12px 10px;
+  background: #e6e6e6;
+  border-top: 1px solid #cfcfcf;
+  border-right: 1px solid #d3d3d3;
+}
+
 .nominee-table th:last-child,
 .nominee-table td:last-child {
   border-right: none;
@@ -101,6 +108,27 @@
   box-sizing: border-box;
 }
 
+.share-input {
+  text-align: right;
+}
+
+.nominee-total-label {
+  color: #2f6f9d;
+  font-weight: 700;
+  text-align: right;
+}
+
+.nominee-total-value {
+  color: #2f6f9d;
+  font-weight: 700;
+  text-align: right;
+}
+
+.na-share-input {
+  color: #ff3b30;
+  font-weight: 600;
+}
+
 .serial-cell {
   color: #3a6f98;
   font-size: 1rem;
@@ -112,19 +140,48 @@
 }
 
 .col-name {
-  width: 37%;
+  width: 26%;
+}
+
+.col-dob {
+  width: 16%;
 }
 
 .col-type {
-  width: 23%;
+  width: 18%;
 }
 
 .col-relationship {
-  width: 13%;
+  width: 16%;
 }
 
 .col-share {
-  width: 23%;
+  width: 20%;
+}
+
+.ghi-note {
+  margin-top: 16px;
+  padding: 10px 16px;
+  color: #326d99;
+  background: #e4e4e4;
+  border-top: 1px solid #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
+}
+
+.insurance-terms {
+  margin-top: 18px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
+  background: #e4e4e4;
+  color: #47789f;
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.insurance-terms-label {
+  font-weight: 700;
+  text-decoration: underline;
 }
 
 .bottom-section {
@@ -149,6 +206,11 @@
   color: #2f6f9d;
   font-size: 1rem;
   font-weight: 400;
+}
+
+.required-asterisk {
+  color: #d93025;
+  font-weight: 700;
 }
 
 .reason-field input {
@@ -198,6 +260,11 @@
   background: linear-gradient(180deg, #2d5379 0%, #234667 100%);
 }
 
+.buttons button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .save {
   background: linear-gradient(180deg, #2d5379 0%, #234667 100%);
 }
@@ -237,5 +304,51 @@
   .buttons {
     justify-content: flex-start;
     flex-wrap: wrap;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .insurance-wrapper,
+  .insurance-wrapper * {
+    visibility: visible;
+  }
+
+  .insurance-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    background: #fff;
+  }
+
+  .insurance-card {
+    width: 100%;
+    border: 1px solid #c8c8c8;
+    box-shadow: none;
+    background: #fff;
+  }
+
+  .insurance-title-band,
+  .insurance-content,
+  .nominee-table,
+  .nominee-table th,
+  .nominee-table td,
+  .insurance-terms {
+    background: #fff;
+  }
+
+  .bottom-section {
+    display: none;
+  }
+
+  .insurance-type-row select,
+  .nominee-table input,
+  .nominee-table select {
+    border-color: #b5b5b5;
   }
 }

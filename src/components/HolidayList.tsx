@@ -1,30 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import './HolidayList.css';
-import { getHolidays } from "../services/apiService";
-import type { Holiday } from "../types/apiTypes";
+import { useHolidays } from "../hooks/useHolidays";
 
 const HolidayList: React.FC = () => {
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    const fetchHolidays = async () => {
-      try {
-        const result = await getHolidays();
-        if (!result?.isSuccess) {
-          throw new Error(result?.message || "API request failed");
-        }
-        setHolidays(result.data ?? []);
-      } catch (err: any) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHolidays();
-  }, []);
+  const { holidays, loading, error } = useHolidays();
 
   const formatDate = (value: string) => {
     const date = new Date(value);
@@ -50,8 +29,8 @@ const HolidayList: React.FC = () => {
           <table className="holidayTable">
             <thead>
               <tr>
-                <th>Date</th>
                 <th>Holiday Name</th>
+                <th>Date</th>
               </tr>
             </thead>
             <tbody>
@@ -61,10 +40,10 @@ const HolidayList: React.FC = () => {
                 return (
                   <tr key={index}>
                     <td className={isPastHoliday ? "past-holiday" : ""}>
-                      {formatDate(holiday.date)}
+                      {holiday.description}
                     </td>
                     <td className={isPastHoliday ? "past-holiday" : ""}>
-                      {holiday.description}
+                      {formatDate(holiday.date)}
                     </td>
                   </tr>
                 );

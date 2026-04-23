@@ -1,4 +1,4 @@
-import type { LeaveTypeApi } from "../types/apiTypes";
+import type { LeaveStatusApi, LeaveTypeApi } from "../types/apiTypes";
 
 
 //Leave form
@@ -28,10 +28,12 @@ export type FilterProps = {
   status: string;
 
   leaveTypes: LeaveTypeApi[];
+  leaveStatuses: LeaveStatusApi[];
 
   onYearChange: (value: number) => void;
   onLeaveTypeChange: (value: string) => void;
   onStatusChange: (value: string) => void;
+  onApplyFilters: () => void;
 };
 
 //Pagination Props

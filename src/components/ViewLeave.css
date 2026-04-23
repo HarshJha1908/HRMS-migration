@@ -23,6 +23,141 @@
   color: #1f2937;
 }
 
+.details-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.details-title-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.details-title-row .details-title {
+  margin-bottom: 0;
+}
+
+.calendar-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+.calendar-toggle-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #b9c4cc;
+  border-radius: 4px;
+  background: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.calendar-toggle-btn:hover {
+  border-color: #2b5d7a;
+}
+
+.calendar-toggle-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: #2b5d7a;
+}
+
+.details-calendar-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 1000;
+  border: 1px solid #d7d7d7;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+.view-leave-page .react-datepicker {
+  font-size: 13px;
+}
+
+.view-leave-page .react-datepicker__month-container {
+  width: 280px;
+}
+
+.view-leave-page .day-cell {
+  position: relative;
+  height: 36px;
+}
+
+.view-leave-page .holiday-dot::after {
+  color: #d97706 !important;
+  font-weight: 600;
+}
+
+.view-leave-page .holiday-underline {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  width: 10px;
+  height: 2px;
+  background: #f4a000;
+  transform: translateX(-50%);
+}
+
+.view-leave-page .holiday-label {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  color: #b26a00;
+}
+
+.leave-actions {
+  display: flex;
+  gap: 10px;
+  margin: 0;
+}
+
+.view-leave-page .btn {
+  min-width: 130px;
+  padding: 10px 26px;
+  border: none;
+  border-radius: 4px;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-leave-page .btn.approve,
+.view-leave-page .btn.reject {
+  background: #2b5d7a;
+}
+
+.view-leave-page .btn.approve:hover,
+.view-leave-page .btn.reject:hover {
+  background: #1f4a63;
+}
+
+.view-leave-page .btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.approver-remark-input {
+  width: 100%;
+  min-height: 64px;
+  border: 1px solid #b9c4cc;
+  border-radius: 4px;
+  padding: 8px 10px;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
 .leave-details-table {
   width: 100%;
   border-collapse: collapse;
@@ -105,6 +240,19 @@
 
   .details-title {
     font-size: 26px;
+  }
+
+  .details-calendar-popover {
+    left: auto;
+    right: 0;
+  }
+
+  .leave-actions {
+    justify-content: flex-end;
+  }
+
+  .view-leave-page .btn {
+    flex: 0 0 auto;
   }
 
   .label {

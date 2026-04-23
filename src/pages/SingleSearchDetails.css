@@ -1,0 +1,205 @@
+.single-search-details-page {
+  margin: 14px;
+}
+
+.ssd-panel {
+  border: 1px solid #cfd3d6;
+  background: #efefef;
+  margin-bottom: 14px;
+}
+
+.ssd-title {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 33px;
+  font-weight: 400;
+  color: #2b6a88;
+  background: #d4d4d4;
+}
+
+.ssd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+}
+
+.ssd-grid > div {
+  border: 1px solid #e0e0e0;
+  padding: 10px;
+  color: #4d7181;
+  background: #f4f4f4;
+  font-size: 14px;
+}
+
+.ssd-table-wrap {
+  padding: 8px;
+}
+
+.ssd-filter-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 170px;
+  gap: 10px;
+  align-items: end;
+  background: #efefef;
+  border: 1px solid #d5d5d5;
+  margin: 10px 8px 0;
+  padding: 8px;
+}
+
+.ssd-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ssd-filter-field label {
+  font-size: 14px;
+  color: #4d7181;
+}
+
+.ssd-filter-field select {
+  height: 44px;
+  border: 1px solid #bfcdd6;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #0f172a;
+  padding: 0 12px;
+  background: #fff;
+}
+
+.ssd-filter-action button {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 4px;
+  background: #1f5d83;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.ssd-filter-action button:hover {
+  background: #174969;
+}
+
+.ssd-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ssd-table thead {
+  background: #1f5579;
+}
+
+.ssd-table th {
+  border: 1px solid #d3d3d3;
+  padding: 10px 8px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.ssd-table td {
+  border: 1px solid #d3d3d3;
+  padding: 8px;
+  color: #4d7181;
+  font-size: 14px;
+}
+
+.ssd-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.ssd-actions button,
+.ssd-back-row button {
+  border: none;
+  background: transparent;
+  color: #4d8fb0;
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+}
+
+.ssd-actions button:hover,
+.ssd-back-row button:hover {
+  text-decoration: underline;
+}
+
+.ssd-actions button:disabled {
+  opacity: 0.6;
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+.ssd-status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 110px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.ssd-status-badge.pending {
+  background: #ffc107;
+  border-color: #f3b600;
+  color: #1f2937;
+}
+
+.ssd-status-badge.approved {
+  background: #28a745;
+  border-color: #22913b;
+  color: #ffffff;
+}
+
+.ssd-status-badge.rejected {
+  background: #dc3545;
+  border-color: #bf2f3d;
+  color: #ffffff;
+}
+
+.ssd-status-badge.cancelled {
+  background: #e74bb5;
+  border-color: #cf419f;
+  color: #ffffff;
+}
+
+.ssd-status-badge.drafted {
+  background: #6c757d;
+  border-color: #5b636a;
+  color: #ffffff;
+}
+
+.ssd-back-row {
+  margin-top: 8px;
+}
+
+.ssd-error {
+  margin: 12px;
+  color: #b42318;
+}
+
+@media (max-width: 1024px) {
+  .ssd-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ssd-title {
+    font-size: 26px;
+  }
+
+  .ssd-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ssd-filter-action button {
+    font-size: 26px;
+  }
+}

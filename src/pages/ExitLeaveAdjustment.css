@@ -1,0 +1,226 @@
+.ela-page {
+  margin: 12px;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.ela-wrap {
+  border: 1px solid #cfd7de;
+  background: #f8fafc;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(18, 48, 70, 0.08);
+}
+
+.ela-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: linear-gradient(to bottom, #f3f6f9 0%, #e9eef3 100%);
+  border-bottom: 1px solid #d8e0e6;
+}
+
+.ela-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 400;
+  color: #1f6589;
+}
+
+.ela-subtitle {
+ margin: 0;
+  font-size: 20px;
+  font-weight: 200;
+  color: #1f6589;
+}
+
+.ela-board {
+  width: 100%;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.ela-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.ela-col {
+  border: 1px solid #dbe3e9;
+  border-radius: 8px;
+  background: #ffffff;
+  overflow: visible;
+}
+
+.ela-top {
+  padding: 14px;
+  border-bottom: 1px solid #dbe3e9;
+  background: #f8fafc;
+}
+
+.ela-label {
+  display: block;
+  margin-bottom: 6px;
+  color: #2b6f8a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ela-required {
+  color: #b32020;
+}
+
+.ela-input,
+.ela-textarea {
+  width: 100%;
+  border: 1px solid #c9c9c9;
+  border-radius: 2px;
+  font-size: 13px;
+}
+
+.ela-input {
+  max-width: 260px;
+  height: 36px;
+  padding: 4px 8px;
+}
+
+.ela-textarea {
+  min-height: 78px;
+  padding: 8px;
+  resize: vertical;
+}
+
+.ela-input:focus,
+.ela-textarea:focus {
+  outline: none;
+  border-color: #4a90e2;
+}
+
+.ela-right-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  min-height: 70px;
+}
+
+.ela-btn {
+  background: #174e72;
+  color: #ffffff;
+  border: none;
+  border-radius: 2px;
+  height: 42px;
+  padding: 0 28px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.ela-btn:hover {
+  background: #0f3d5a;
+}
+
+.ela-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ela-section {
+  padding: 14px 18px 14px 14px;
+}
+
+.ela-section-title {
+  margin: 0 0 10px;
+  padding: 6px 8px;
+  color: #2b6f8a;
+  font-size: 18px;
+  font-weight: 600;
+  border-left: 3px solid #8fb6cc;
+  border-bottom: 1px solid #e4edf3;
+  background: #f8fbfd;
+  letter-spacing: 0;
+  /* text-align: center; */
+}
+
+.ela-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eceff3;
+}
+
+.ela-row:last-child {
+  border-bottom: 0;
+}
+
+.ela-key,
+.ela-value {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.ela-key {
+  color: #2b6f8a;
+  font-weight: 500;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ela-value {
+  color: #174e72;
+  font-weight: 600;
+  min-width: 52px;
+  text-align: right;
+  white-space: nowrap;
+  padding-right: 8px;
+}
+
+.ela-remarks-label {
+  display: block;
+  width: 100%;
+}
+
+.ela-row-remarks {
+  display: block;
+}
+
+.ela-help-text {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #b32020;
+}
+
+.ela-success-text {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #1f7a3d;
+}
+
+@media (max-width: 900px) {
+  .ela-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .ela-page {
+    margin: 10px;
+  }
+
+  .ela-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .ela-input {
+    max-width: none;
+  }
+
+  .ela-btn {
+    width: 100%;
+  }
+}

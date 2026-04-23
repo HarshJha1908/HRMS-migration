@@ -1,50 +1,50 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import { getLoginUser } from "../services/apiService";
+// import { createContext, useContext, useEffect, useState } from "react";
+// // import { getLoginUser } from "../services/apiService";
 
-type UserContextType = {
-  username: string | null;
-  loading: boolean;
-};
+// type UserContextType = {
+//   username: string | null;
+//   loading: boolean;
+// };
 
-const UserContext = createContext<UserContextType>({
-  username: null,
-  loading: true
-});
+// const UserContext = createContext<UserContextType>({
+//   username: null,
+//   loading: true
+// });
 
-export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+// export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
-  const [username, setUsername] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+//   const [username, setUsername] = useState<string | null>(null);
+//   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+//   useEffect(() => {
 
-    const loadUser = async () => {
-      try {
+//     const loadUser = async () => {
+//       try {
 
-        const data = await getLoginUser();
+//         // const data = await getLoginUser();
 
-        if (data?.username) {
-          setUsername(data.username);
-          sessionStorage.setItem("username", data.username);
+//         if (data?.username) {
+//           setUsername(data.username);
+//           sessionStorage.setItem("username", data.username);
           
-        }
+//         }
 
-      } catch (err) {
-        console.error("User fetch failed", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+//       } catch (err) {
+//         console.error("User fetch failed", err);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
 
-    loadUser();
+//     loadUser();
 
-  }, []);
+//   }, []);
 
-  return (
-    <UserContext.Provider value={{ username, loading }}>
-      {children}
-    </UserContext.Provider>
-  );
-};
+//   return (
+//     <UserContext.Provider value={{ username, loading }}>
+//       {children}
+//     </UserContext.Provider>
+//   );
+// };
 
-export const useUser = () => useContext(UserContext);
+// export const useUser = () => useContext(UserContext);

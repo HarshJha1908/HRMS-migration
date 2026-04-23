@@ -1,0 +1,113 @@
+.leave-rules-page {
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  background-color: #e6e6e6;
+  min-height: 100%;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.leave-rules-card {
+  background: #ffffff;
+  border: 1px solid #dcdcdc;
+  border-radius: 4px;
+  width: 100%;
+  max-width: 100%;
+  padding: 20px;
+}
+
+.leave-rules-title {
+  margin-bottom: 16px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #2b6f8a;
+}
+
+.leave-rules-state,
+.leave-rules-error {
+  margin: 16px 10px;
+  font-size: 14px;
+}
+
+.leave-rules-error {
+  color: #b32020;
+}
+
+.leave-rules-table-wrapper {
+  overflow-x: auto;
+}
+
+.leave-rules-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.leave-rules-table thead {
+  background-color: #0f5f7f;
+  color: #ffffff;
+}
+
+.leave-rules-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.leave-rules-table td {
+  color: #2176a5;
+  border: none;
+  border-bottom: 1px solid #e0e0e0;
+  padding: 12px;
+  vertical-align: top;
+}
+
+.leave-rules-table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.leave-rules-table td:nth-child(1),
+.leave-rules-table td:nth-child(2) {
+  text-align: left;
+}
+
+.leave-rules-table td:nth-child(3),
+.leave-rules-table td:nth-child(4),
+.leave-rules-table td:nth-child(5),
+.leave-rules-table td:nth-child(6),
+.leave-rules-table td:nth-child(7) {
+  text-align: center;
+}
+
+.leave-rules-table tbody tr:hover {
+  background-color: #e6edf5;
+}
+
+@media (max-width: 1024px) {
+  .leave-rules-title {
+    font-size: 18px;
+  }
+
+  .leave-rules-table {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 768px) {
+  .leave-rules-page {
+    padding: 10px;
+  }
+
+  .leave-rules-card {
+    padding: 12px;
+  }
+
+  .leave-rules-title {
+    font-size: 17px;
+  }
+
+  .leave-rules-table {
+    font-size: 12px;
+  }
+}

@@ -7,6 +7,17 @@ import Pagination from "./Pagination";
 import type { LeaveDetailsApi } from "../types/apiTypes";
 import type { LeaveDetailProps } from "../types/props";
 
+const toStatusKey = (value?: string | null) => {
+  const normalized = String(value || "").trim().toLowerCase();
+  if (normalized === "a" || normalized === "approved") return "a";
+  if (normalized === "p" || normalized === "pending") return "p";
+  if (normalized === "r" || normalized === "rejected") return "r";
+  if (normalized === "c" || normalized === "cancelled") return "c";
+  if (normalized === "d" || normalized === "draft" || normalized === "drafted") return "d";
+  if (normalized === "s" || normalized === "schedule" || normalized === "scheduled") return "s";
+  return normalized;
+};
+
 
 export default function MyLeaveDetail({
   showLatestOnly = false,
@@ -22,6 +33,7 @@ export default function MyLeaveDetail({
   const [data, setData] = useState<LeaveDetailsApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const currentUserAdId = "a2ef46";
   const currentYear = new Date().getFullYear();
   const selectedYear = year ?? currentYear;
   const selectedLeaveType = leaveType ?? "";
@@ -34,7 +46,7 @@ export default function MyLeaveDetail({
 
         const payload = {
           year: selectedYear,
-          adid: "a2ef46",
+          adid: currentUserAdId,
           leaveTypeCode: selectedLeaveType,
           status: selectedStatus
         };
@@ -45,9 +57,14 @@ export default function MyLeaveDetail({
         // console.log("API FULL RESPONSE:", response);
         console.log("API DATA:", response?.data);
 
-        if (response && response.data) {
-          setData(response.data);
-        }
+        const rows = Array.isArray(response?.data) ? response.data : [];
+        const selectedStatusKey = toStatusKey(selectedStatus);
+
+        const filteredRows = selectedStatus
+          ? rows.filter((row: LeaveDetailsApi) => toStatusKey(row.statusCode) === selectedStatusKey)
+          : rows;
+
+        setData(filteredRows);
       } catch (err) {
         console.error(err);
         setError("Failed to load leave details.");
@@ -155,7 +172,7 @@ export default function MyLeaveDetail({
                           <button
                             className="view-btn"
                             onClick={() => navigate("/leave-view", {
-                              state: { leaveId: l.leaveId }
+                              state: { leaveId: l.leaveId, userId: currentUserAdId }
                             })}
                           >
                             View
@@ -180,7 +197,7 @@ export default function MyLeaveDetail({
                           <button
                             className="view-btn"
                             onClick={() => navigate("/leave-view", {
-                              state: { leaveId: l.leaveId }
+                              state: { leaveId: l.leaveId, userId: currentUserAdId }
                             })}
                           >
                             View

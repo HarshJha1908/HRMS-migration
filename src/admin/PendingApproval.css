@@ -3,77 +3,76 @@
    =============================== */
 
 .pending-page .container {
-  padding: 20px;
-  display: flex;
-  justify-content: center;
+  width: 100%;
+  padding: 14px;
+  box-sizing: border-box;
 }
 
 /* Card */
 .pending-page .card {
   background: #ffffff;
   border: 1px solid #dcdcdc;
-  border-radius: 4px;
+  border-radius: 2px;
   width: 100%;
-  max-width: 1200px;
+  max-width: none;
+  box-shadow: none;
 }
 
 /* Header */
 .pending-page .card-header {
-  padding: 14px 18px;
-  font-size: 20px;
-  font-weight: 600;
-  color: #2b6f8a;
+  padding: 18px 20px 14px;
+  font-size: 36px;
+  font-weight: 400;
+  color: #1d6d98;
   border-bottom: 1px solid #e0e0e0;
 }
 
 /* Body */
 .pending-page .card-body {
-  padding: 18px;
+  padding: 12px;
 }
 
 /* ===============================
-   Controls Section
+   Controls Section (UPDATED)
    =============================== */
 
 .pending-page .controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  background: #f6f6f6;
+  border: 1px solid #dcdcdc;
+  border-radius: 2px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
 }
 
-.pending-page .controls select {
-  margin-left: 8px;
-  padding: 6px 8px;
-  border: 1px solid #c9c9c9;
-  font-size: 13px;
-  height: 32px;
+/* buttons */
+.pending-page .action-buttons {
+  display: flex;
+  gap: 10px;
 }
 
 .pending-page .btn {
-  padding: 8px 26px;
+  min-width: 110px;
+  padding: 10px 20px;
   border: none;
   border-radius: 4px;
   color: #ffffff;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  margin-left: 8px;
 }
 
-.pending-page .btn.approve {
-  background: #5cb85c;
-}
-
-.pending-page .btn.approve:hover {
-  background: #4cae4c;
-}
-
+/* match screenshot color */
+.pending-page .btn.approve,
 .pending-page .btn.reject {
-  background: #d9534f;
+  background: #2b5d7a;
 }
 
+.pending-page .btn.approve:hover,
 .pending-page .btn.reject:hover {
-  background: #c9302c;
+  background: #1f4a63;
 }
 
 /* ===============================
@@ -81,57 +80,111 @@
    =============================== */
 
 .pending-page .select-all {
-  margin-bottom: 12px;
   font-size: 14px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .pending-page .select-all input {
-  margin-right: 6px;
+  margin: 0;
 }
 
 /* ===============================
-   Table Section (Scoped)
+   Table Section
    =============================== */
 
-.pending-page .card-body table {
+.pending-page .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.pending-page table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  table-layout: fixed;
+  min-width: 1200px;
 }
 
-.pending-page .card-body thead {
-  background: #0f5f7f;
+.pending-page thead {
+  background: #1d5579;
   color: #ffffff;
 }
 
-.pending-page .card-body th,
-.pending-page .card-body td {
+.pending-page th,
+.pending-page td {
   border: 1px solid #dcdcdc;
-  padding: 10px;
+  padding: 10px 12px;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
+  word-break: break-word;
 }
 
-.pending-page .card-body tbody tr:nth-child(even) {
+.pending-page tbody tr:nth-child(even) {
   background: #f7f7f7;
 }
 
+.pending-page th:nth-child(1),
+.pending-page td:nth-child(1),
+.pending-page th:nth-child(5),
+.pending-page td:nth-child(5),
+.pending-page th:nth-child(6),
+.pending-page td:nth-child(6) {
+  text-align: center;
+}
+
 /* Remark Input */
-.pending-page .card-body input[type="text"] {
-  width: 95%;
-  padding: 6px;
+.pending-page .remark-input {
+  width: 100%;
+  padding: 7px 8px;
   border: 1px solid #c9c9c9;
   font-size: 13px;
-  border-radius: 2px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  display: block;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.pending-page th:last-child,
+.pending-page td:last-child {
+  min-width: 210px;
 }
 
 /* Links */
 .pending-page .view-link {
+  border: none;
+  background: transparent;
+  padding: 0;
   font-size: 13px;
   color: #1a73e8;
-  text-decoration: none;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .pending-page .view-link:hover {
-  text-decoration: underline;
+  color: #0f5f7f;
+}
+
+.pending-page .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .pending-page .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .pending-page .action-buttons {
+    width: 100%;
+  }
+
+  .pending-page .btn {
+    flex: 1;
+  }
 }

@@ -16,16 +16,35 @@ export default function Navbar() {
 
           <Link className="nav-item" to="/">Home</Link>
 
+          <div className="dropdown">
+            <span className="nav-item dropdown-toggle">Career</span>
+            <div className="dropdown-menu qr-dropdown">
+              <Link to="/job-vacancy" className="dropdown-item">Job Vacancy</Link>
+              <Link to="/manage-job-vacancy" className="dropdown-item">Manage Job Vacancy</Link>
+            </div>
+          </div>
+
           {/* Leave dropdown (unchanged) */}
           <div className="dropdown">
             <span className="nav-item dropdown-toggle">Leave</span>
             <div className="dropdown-menu qr-dropdown">
-              <Link to="/profile" className="dropdown-item">My Profile</Link>
+              <Link to="/my-profile" className="dropdown-item">My Profile</Link>
               <Link to="/apply-leave" className="dropdown-item">Apply Leave</Link>
               <Link to="/leave-details" className="dropdown-item">Leave Details</Link>
               <Link to="/holiday-list" className="dropdown-item">Holiday List</Link>
+              <Link to="/leave-rules" className="dropdown-item">Leave Rules</Link>
             </div>
           </div>
+
+          <div className="dropdown">
+            <span className="nav-item dropdown-toggle">Manager</span>
+            <div className="dropdown-menu qr-dropdown">
+              <Link to="/pending-approval" className="dropdown-item">Pending Approval</Link>
+              <Link to="/team-leave-details" className="dropdown-item">Team Leave Details</Link>
+              <Link to="/emergency-contact" className="dropdown-item">Emergency Contact</Link>
+            </div>
+          </div>
+
 
           {/* Quick Reference Accordion Dropdown */}
           <div className="dropdown">
@@ -78,8 +97,16 @@ export default function Navbar() {
             </div>
           </div>
 
-          <Link className="nav-item" to="/pending-approval">Pending Approval</Link>
+          {/* Report dropdown */}
+          <div className="dropdown">
+            <div className="nav-item dropdown-toggle">HR</div>
+            <div className="dropdown-menu">
+              <Link to="/profile" className="dropdown-item">Create Profile</Link>
+              <Link to="/Single-search" className="dropdown-item">Single Search</Link>
+              <Link to="/special-leave-entry" className="dropdown-item">Special Leave Entry</Link>
+            </div>
 
+          </div>
         </div>
 
         <div className="navbar-right">

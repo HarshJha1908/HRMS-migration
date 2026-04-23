@@ -1,0 +1,178 @@
+.team-leave-page {
+  padding: 14px;
+  background: #e9e9e9;
+}
+
+.team-leave-card {
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  padding: 0;
+}
+
+.team-leave-header {
+  background: #ffffff;
+  border-bottom: 1px solid #d9d9d9;
+  padding: 18px 20px 14px;
+}
+
+.team-leave-title {
+  margin: 0;
+  color: #1d6d98;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.team-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.3fr) minmax(220px, 1fr) minmax(220px, 1fr) 150px;
+  gap: 10px;
+  align-items: end;
+  background: #f6f6f6;
+  border: 1px solid #d4d4d4;
+  padding: 12px;
+  margin: 12px 10px;
+}
+
+.team-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.team-filter-field label {
+  font-size: 14px;
+  color: #4d6f81;
+}
+
+.team-filter-field select {
+  height: 40px;
+  border: 1px solid #bfcdd6;
+  border-radius: 4px;
+  padding: 0 10px;
+  font-size: 16px;
+}
+
+.team-filter-action {
+  display: flex;
+  align-items: flex-end;
+}
+
+.team-go-btn {
+  width: 100%;
+  height: 40px;
+  border: none;
+  border-radius: 4px;
+  background: #1f5d83;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.team-go-btn:hover {
+  background: #174969;
+}
+
+.team-table-wrap {
+  overflow-x: auto;
+  margin: 0 10px 10px;
+}
+
+.team-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1050px;
+}
+
+.team-table th {
+  background: #14597b;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 500;
+  text-align: center;
+  padding: 12px 10px;
+  border: 1px solid #2e7192;
+  white-space: nowrap;
+}
+
+.team-table td {
+  border: 1px solid #d6dbe0;
+  padding: 10px;
+  font-size: 15px;
+  color: #3b5668;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.team-table td:first-child {
+  text-align: left;
+}
+
+.team-status {
+  display: inline-block;
+  min-width: 90px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.team-status.pending {
+  background: #ffe466;
+  color: #6f5600;
+}
+
+.team-status.approved {
+  background: #e4f9ea;
+  color: #20753b;
+}
+
+.team-status.rejected {
+  background: #fde8e8;
+  color: #8b1e1e;
+}
+
+.team-status.cancelled {
+  background: #eceff2;
+  color: #3f4e58;
+}
+
+.team-status.schedule {
+  background: #e9f1ff;
+  color: #1f4e9c;
+}
+
+.team-status.draft {
+  background: #f3f5f7;
+  color: #586877;
+}
+
+.team-view-btn {
+  border: none;
+  background: transparent;
+  color: #2b7bd9;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+@media (max-width: 1024px) {
+  .team-filter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-filter-action {
+    align-items: stretch;
+  }
+
+  .team-go-btn {
+    width: 100%;
+    font-size: 22px;
+  }
+
+  .team-leave-title {
+    font-size: 30px;
+  }
+}

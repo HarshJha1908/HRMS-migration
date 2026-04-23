@@ -1,0 +1,248 @@
+.special-leave-page {
+  padding: 14px;
+  background: #e8e8e8;
+}
+
+.special-leave-card {
+  background: #f6f6f6;
+  border: 1px solid #d1d1d1;
+  padding: 8px 8px 20px;
+}
+
+.special-leave-header {
+  background: #d4d4d4;
+  border: 1px solid #c7c7c7;
+  padding: 14px 18px;
+  text-align: center;
+}
+
+.special-leave-header h2 {
+  margin: 0;
+  color: #1e759e;
+  font-size: 42px;
+  font-weight: 400;
+}
+
+.special-leave-filter {
+  background: #ececec;
+  border: 1px solid #d5d5d5;
+  border-top: none;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.special-leave-filter label {
+  color: #2a708f;
+  font-size: 16px;
+}
+
+.special-leave-filter select {
+  min-width: 260px;
+  height: 36px;
+  font-size: 16px;
+  color: #3e81a4;
+  border: 1px solid #9eb0ba;
+  border-radius: 4px;
+  background: #fff;
+  padding: 0 8px;
+}
+
+.special-leave-table-wrap {
+  overflow-x: auto;
+  margin: 12px 8px 0;
+}
+
+.special-leave-table {
+  width: 100%;
+  min-width: 1200px;
+  border-collapse: collapse;
+}
+
+.special-leave-table th {
+  background: #16577a;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 14px 10px;
+  border: 1px solid #5f87a1;
+  text-align: center;
+}
+
+.special-leave-table td {
+  border: 1px solid #cfd5d8;
+  padding: 12px 8px;
+  font-size: 15px;
+  color: #3f7495;
+  text-align: center;
+  background: #f7f7f7;
+}
+
+.special-leave-table tbody tr:nth-child(even) td {
+  background: #f0f0f0;
+}
+
+.special-leave-table tr.special-leave-row-inactive td {
+  background: #dddddd;
+  color: #8c8c8c;
+}
+
+.special-leave-table tr.special-leave-row-inactive input[type="checkbox"] {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.special-leave-table input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+.special-leave-actions {
+  display: flex;
+  gap: 14px;
+  margin: 26px 8px 0;
+}
+
+.special-leave-actions button {
+  background: #1c5f87;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 22px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.special-leave-actions button:hover {
+  background: #174d6e;
+}
+
+.special-leave-actions button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.special-leave-error {
+  margin: 10px 12px 0;
+  color: #b00020;
+  font-size: 14px;
+}
+
+.assign-card .special-leave-header h2 {
+  font-size: 40px;
+}
+
+.assign-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  gap: 0;
+  border: 1px solid #cfd6db;
+  margin-top: 10px;
+}
+
+.assign-field {
+  padding: 10px;
+  border-right: 1px solid #d6dde1;
+  background: #efefef;
+}
+
+.assign-field:last-child {
+  border-right: none;
+}
+
+.assign-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: #2e7292;
+  font-size: 16px;
+}
+
+.assign-field label span,
+.assign-team-section label span {
+  color: #e53935;
+}
+
+.assign-field input,
+.assign-field select {
+  width: 100%;
+  height: 38px;
+  border: 1px solid #b6c3cc;
+  background: #fff;
+  font-size: 16px;
+  padding: 0 8px;
+}
+
+.assign-team-section {
+  border: 1px solid #cfd6db;
+  border-top: 2px solid #1b7097;
+  margin-top: 8px;
+  padding: 8px 10px 10px;
+  background: #f5f5f5;
+}
+
+.assign-team-section label {
+  display: block;
+  text-align: center;
+  color: #2e7292;
+  font-size: 17px;
+  margin-bottom: 8px;
+}
+
+.assign-team-section select {
+  width: 55%;
+  min-width: 300px;
+  display: block;
+  margin: 0 auto;
+  height: 38px;
+  border: 1px solid #b6c3cc;
+  background: #fff;
+  font-size: 16px;
+  padding: 0 8px;
+}
+
+@media (max-width: 1024px) {
+  .special-leave-header h2 {
+    font-size: 32px;
+  }
+
+  .special-leave-filter label {
+    font-size: 22px;
+  }
+
+  .special-leave-filter select {
+    font-size: 20px;
+    height: 40px;
+  }
+
+  .special-leave-table th {
+    font-size: 18px;
+  }
+
+  .special-leave-table td {
+    font-size: 16px;
+  }
+
+  .special-leave-actions button {
+    font-size: 18px;
+  }
+
+  .assign-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .assign-field {
+    border-right: none;
+    border-bottom: 1px solid #d6dde1;
+  }
+
+  .assign-field:last-child {
+    border-bottom: none;
+  }
+
+  .assign-team-section select {
+    width: 100%;
+    min-width: 0;
+  }
+}
