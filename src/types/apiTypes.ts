@@ -455,3 +455,15 @@ export type AddBulkSpecialLeaveResponse = {
   data?: unknown;
 };
 
+export type InsuranceRelationApi = {
+  code: string;
+  relationName: string;
+  insuranceType: string;
+};
+
+export type InsuranceRelationResponse = {
+  statusCode: number;
+  isSuccess: boolean;
+  message: string;
+  data: InsuranceRelationApi[] | null;
+};

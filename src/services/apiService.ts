@@ -25,7 +25,8 @@ import type {
   DeactivateBulkSpecialLeavesResponse,
   EmployeeByTeamApi,
   AddBulkSpecialLeaveRequestItem,
-  AddBulkSpecialLeaveResponse
+  AddBulkSpecialLeaveResponse,
+  InsuranceRelationApi
 } from "../types/apiTypes";
 import { apiClient } from "./apiClient";
 
@@ -529,4 +530,48 @@ export const addBulkSpecialLeaveRequest = async (
   });
 
   return res as AddBulkSpecialLeaveResponse;
+};
+
+export const getInsuranceRelation = async (insuranceCode: string): Promise<InsuranceRelationApi[]> => {
+  const res = await apiClient(
+    `/api/Insurance/GetInsuranceRelation?InsuranceCode=${encodeURIComponent(insuranceCode)}`
+  );
+
+  const normalizeRelations = (items: unknown[]): InsuranceRelationApi[] =>
+    items
+      .map((item) => {
+        const relation = item as Record<string, unknown>;
+        const relationName = String(
+          relation?.relationName ?? relation?.relation ?? relation?.name ?? ""
+        ).trim();
+        const code = String(relation?.code ?? relation?.relationCode ?? relationName).trim();
+
+        return {
+          code,
+          relationName,
+          insuranceType: String(
+            relation?.insuranceType ?? relation?.insuranceCode ?? insuranceCode
+          ).trim()
+        };
+      })
+      .filter((item) => Boolean(item.relationName));
+
+  if (Array.isArray(res)) {
+    return normalizeRelations(res);
+  }
+
+  if (res && typeof res === "object") {
+    const payload = res as Record<string, unknown>;
+    const candidates = [
+      payload.data,
+      payload.Data,
+      payload.relations,
+      payload.relationships
+    ];
+
+    const relationList = candidates.find((candidate) => Array.isArray(candidate));
+    return Array.isArray(relationList) ? normalizeRelations(relationList) : [];
+  }
+
+  return [];
 };
