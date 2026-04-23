@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import "./Insurance.css";
+import { getInsuranceRelation } from "../services/apiService";
+import type { InsuranceRelationApi } from "../types/apiTypes";
 
 const Insurance = () => {
   const nomineeRows = [1, 2, 3, 4];
@@ -9,6 +11,7 @@ const Insurance = () => {
   const [nomineeDobs, setNomineeDobs] = useState(["", "", "", ""]);
   const [dobInputTypes, setDobInputTypes] = useState(["text", "text", "text", "text"]);
   const [relationships, setRelationships] = useState(["", "", "", ""]);
+  const [relationshipOptions, setRelationshipOptions] = useState<InsuranceRelationApi[]>([]);
   const [reasonForChange, setReasonForChange] = useState("");
   const [acceptTerms, setAcceptTerms] = useState(false);
   const today = new Date().toISOString().split("T")[0];
@@ -18,6 +21,7 @@ const Insurance = () => {
     { label: "Group Term Life", value: "GTL" },
     { label: "Group Health Insurance", value: "GHI" },
   ];
+  const defaultRelationshipOptions = ["Father", "Mother", "Spouse", "Child"];
 
   const insuranceTermsByType: Record<string, string> = {
     GPA: "I hereby declare that in the event of my death or permanent disability by way of accident or otherwise during the tenure of my service with Linde Global Support Services Pvt. Ltd., the following person(s) are entitled to receive the compensations paid by the company as my nominee(s) arising out of the insurance policies taken out by the Company under the GPA (Group Personal Accident) Scheme. I also confirm that in case I wish to change the nominees, I shall submit an updated version for records and in the absence of an updated version of this signed document, the last updated signed version as available in HR records will be considered as final nomination in case of any eventuality.",
@@ -37,6 +41,37 @@ const Insurance = () => {
   const handlePrint = () => {
     window.print();
   };
+
+  useEffect(() => {
+    if (!insuranceType) {
+      setRelationshipOptions([]);
+      setRelationships(["", "", "", ""]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadInsuranceRelations = async () => {
+      try {
+        const response = await getInsuranceRelation(insuranceType);
+        const options = response?.isSuccess && Array.isArray(response.data) ? response.data : [];
+
+        if (!isMounted) return;
+        setRelationshipOptions(options);
+        setRelationships(["", "", "", ""]);
+      } catch (error) {
+        if (!isMounted) return;
+        setRelationshipOptions([]);
+      }
+    };
+
+    void loadInsuranceRelations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [insuranceType]);
+
   const handleSave = () => {
     if (!reasonForChange.trim()) {
       window.alert("Reason For Change is mandatory");
@@ -213,11 +248,15 @@ const Insurance = () => {
                         handleRelationshipChange(index, e.target.value)
                       }
                     >
-                      <option>---SELECT---</option>
-                      <option>Father</option>
-                      <option>Mother</option>
-                      <option>Spouse</option>
-                      <option>Child</option>
+                      <option value="">---SELECT---</option>
+                      {(relationshipOptions.length > 0
+                        ? relationshipOptions.map((relationshipOption) => relationshipOption.relationName)
+                        : defaultRelationshipOptions
+                      ).map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
                     </select>
                   </td>
 

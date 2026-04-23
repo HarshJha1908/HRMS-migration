@@ -25,7 +25,8 @@ import type {
   DeactivateBulkSpecialLeavesResponse,
   EmployeeByTeamApi,
   AddBulkSpecialLeaveRequestItem,
-  AddBulkSpecialLeaveResponse
+  AddBulkSpecialLeaveResponse,
+  InsuranceRelationResponse
 } from "../types/apiTypes";
 import { apiClient } from "./apiClient";
 
@@ -529,4 +530,10 @@ export const addBulkSpecialLeaveRequest = async (
   });
 
   return res as AddBulkSpecialLeaveResponse;
+};
+
+export const getInsuranceRelation = (insuranceCode: string): Promise<InsuranceRelationResponse> => {
+  return apiClient(
+    `/api/Insurance/GetInsuranceRelation?InsuranceCode=${encodeURIComponent(insuranceCode)}`
+  );
 };
