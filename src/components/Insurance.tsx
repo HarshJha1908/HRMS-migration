@@ -53,8 +53,7 @@ const Insurance = () => {
 
     const loadInsuranceRelations = async () => {
       try {
-        const response = await getInsuranceRelation(insuranceType);
-        const options = response?.isSuccess && Array.isArray(response.data) ? response.data : [];
+        const options = await getInsuranceRelation(insuranceType);
 
         if (!isMounted) return;
         setRelationshipOptions(options);
