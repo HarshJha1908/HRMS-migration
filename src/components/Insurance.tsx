@@ -112,22 +112,13 @@ const Insurance = () => {
         );
 
   useEffect(() => {
-    const fetchInsuranceData = async () => {
-      if (!insuranceType || !userId) {
-        setRelationshipOptions([]);
+    const fetchEmployeeProfile = async () => {
+      if (!userId) {
+        setEmployeeNumber("");
         return;
       }
 
       try {
-        setLoadingRelations(true);
-
-        const relations =
-          await getInsuranceRelations(
-            insuranceType
-          );
-
-        setRelationshipOptions(relations);
-
         const empProfile =
           await getEmpProfileByAdId(
             userId
@@ -139,12 +130,40 @@ const Insurance = () => {
               ""
           )
         );
+      } catch (error) {
+        console.error(
+          "Failed to load employee profile",
+          error
+        );
+        setEmployeeNumber("");
+      }
+    };
 
-        const nominationDetails =
-          await getInsuranceNominationDetails(
-            insuranceType,
-            userId
-          );
+    fetchEmployeeProfile();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchInsuranceData = async () => {
+      if (!insuranceType || !userId) {
+        setRelationshipOptions([]);
+        return;
+      }
+
+      try {
+        setLoadingRelations(true);
+
+        const [relations, nominationDetails] =
+          await Promise.all([
+            getInsuranceRelations(
+              insuranceType
+            ),
+            getInsuranceNominationDetails(
+              insuranceType,
+              userId
+            ),
+          ]);
+
+        setRelationshipOptions(relations);
 
         setEmployeeName(
           nominationDetails.employeeName || ""
