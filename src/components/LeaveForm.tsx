@@ -54,8 +54,6 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
   // useEffect(() => {
   //   const user = sessionStorage.getItem("username");
-  //   console.log("Username from sessionStorage:", user);
-  //   // console.log(sessionStorage.getItem("username"));
   //   setUsername(user);
   // }, []);
 
@@ -65,9 +63,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
     const loadLeaveTypes = async () => {
       try {
         setLoading(true);
-        console.log("Username:", user?.loginUserAdID);
         const result = await getLeaveTypes(user?.loginUserAdID || '');
-        console.log("Leave Types API response:", result);
         if (result.isSuccess && result.data) {
           const cleaned = result.data.map((item: any) => ({
             leaveTypeCode: item.leaveTypeCode.trim(),
@@ -105,11 +101,9 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
         setLoading(true);
 
         const result = await getApprover(user?.loginUserAdID || '');
-        console.log("Leave Approver API response:", result);
         if (result.isSuccess && result.data) {
 
           setApprover(result.data);
-          // console.log("Approver Name:", result.data.managerName);
         }
       } catch (err) {
         console.error("Leave approver fetch failed", err);
@@ -129,7 +123,6 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
         setLoading(true);
 
         const result = await getLeaveReasons();
-        console.log("Leave Reasons API response:", result);
         if (result.isSuccess && result.data) {
           const cleaned = result.data
             .filter((r: any) => r.isActive)
@@ -161,7 +154,6 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
             (isHalfDayStart ? 0.5 : 0) +
             (isHalfDayEnd ? 0.5 : 0),
         });
-        console.log("Leave Days API response:", result);
         if (result?.isSuccess && result?.data) {
           setNoOfDays(result.data);
         }
@@ -289,7 +281,6 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
       };
 
-      console.log("FINAL PAYLOAD:", JSON.stringify(payload, null, 2));
 
       const response = await saveLeaveRequest(payload);
 
@@ -297,14 +288,11 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
         throw new Error(response?.message || "Failed to submit leave.");
       }
 
-      console.log("Leave submitted successfully:", response);
 
       const attachment = fileRef.current?.files?.[0] || null;
 
       if (response?.isSuccess === true && attachment) {
-        console.log("response",response);
         const leaveId = getSavedLeaveId(response);
-        console.log("Extracted Leave ID:", leaveId);
 
         if (!leaveId) {
           throw new Error("Leave submitted, but leave ID was not returned for attachment upload.");
@@ -319,7 +307,6 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
           throw new Error(attachmentResponse?.message || "Leave submitted, but attachment upload failed.");
         }
 
-        console.log("Leave attachment saved successfully:", attachmentResponse);
       }
 
       onSubmit({

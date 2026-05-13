@@ -63,13 +63,11 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
 
           if (attachmentData && attachmentData.blob && attachmentData.blob.size > 0) {
 
-            console.log("Attachment found:", attachmentData.blob.type);
 
             const pdfBlob = new Blob(
               [attachmentData.blob],
               { type: "application/pdf" }
             );
-            console.log("Attachment found:", pdfBlob.type);
             setAttachmentFile(pdfBlob);
             setAttachmentFileName(attachmentData.filename);
           }

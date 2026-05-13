@@ -284,8 +284,6 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         const profileByEmpId = employeeNoFromState
           ? await getEmpProfileByEmpId(employeeNoFromState)
           : null;
-        console.log("PROFILE RESPONSE");
-        console.log(profileByEmpId);
         const merged = {
           ...employeeFromState,
           ...(profileByEmpId || {})
@@ -329,8 +327,6 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
 
         const assignmentTeamId = String(merged.assignmentTeamId || "").trim();
         const teamName = String(merged.teamName || "").trim();
-        console.log("assignmnet team name" ,teamName);
-         console.log("assignmnet team id" ,assignmentTeamId);
         if (assignmentTeamId) {
          
           setSelectedemployeeTeam(assignmentTeamId);
@@ -535,12 +531,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
     try {
       setIsSaving(true);
       if (isUpdateMode) {
-        console.log("Update payload:", payload);
-        console.log("FINAL GENDER");
-        console.log(gender);
 
-        console.log("FINAL PAYLOAD");
-        console.log(JSON.stringify(payload, null, 2));
         await updateEmpProfile(payload);
       }
       else {

@@ -52,11 +52,8 @@ export default function MyLeaveDetail({
           status: selectedStatus
         };
 
-        console.log("Request Payload:", payload);
 
         const response = await getLeaveDetails(payload);
-        // console.log("API FULL RESPONSE:", response);
-        console.log("API DATA:", response?.data);
 
         const rows = Array.isArray(response?.data) ? response.data : [];
         const selectedStatusKey = toStatusKey(selectedStatus);
@@ -108,12 +105,10 @@ export default function MyLeaveDetail({
   const [currentPage, setCurrentPage] = useState(1);
   const dataPerPage = 15;
   const totalPages = Math.ceil(data.length / dataPerPage);
-  console.log("Total Pages:", totalPages);
 
   const lastIndex = currentPage * dataPerPage;
   const firstIndex = lastIndex - dataPerPage;
   const displayData = data.slice(firstIndex, lastIndex);
-  console.log("Display Data for Page", currentPage, displayData);
 
   useEffect(() => {
     setCurrentPage(1);

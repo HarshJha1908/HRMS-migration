@@ -102,7 +102,6 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
         }
 
         const blob = await getDocumentFile(selectedDocument.id);
-        console.log('Fetched PDF blob:', blob);
         const fixedBlob = new Blob([blob], { type: "application/pdf" });
         // const excelBlob=new Blob([blob], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
         pdfObjectUrl = URL.createObjectURL(fixedBlob);

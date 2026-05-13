@@ -1,9 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
-import JobVacancy from "./pages/JobVacancy";
-import LeaveBalance from "./components/LeaveBalance";
-import LockedScreen from "./components/LockedScreen";
 import AuthGate from "./auth/AuthGate";
 import { UserProvider } from "./context/UserContext";
 // import { getLoginUser } from './services/apiService';
@@ -11,6 +8,9 @@ import { UserProvider } from "./context/UserContext";
 // import { useEffect } from 'react';
 
 const HomePage = lazy(() => import("./pages/HomePage"));
+const JobVacancy = lazy(() => import("./pages/JobVacancy"));
+const LeaveBalance = lazy(() => import("./components/LeaveBalance"));
+const LockedScreen = lazy(() => import("./components/LockedScreen"));
 const ApplyLeave = lazy(() => import("./pages/ApplyLeave"));
 const LeaveDetails = lazy(() => import("./pages/LeaveDetails"));
 const LeaveRules = lazy(() => import("./pages/LeaveRules"));
@@ -41,7 +41,6 @@ export default function App() {
 
 //     sessionStorage.setItem("username", user.username);
 
-//     console.log("Logged in user:", user.username);
 
 //   };
 
@@ -77,7 +76,7 @@ export default function App() {
         <Route path="/special-leave-entry" element={<SpecialLeaveEntry />} />
         <Route path="/documents/:documentType" element={<ViewDocuments />} />
         <Route path="/documents" element={<ViewDocuments />} />
-        <Route path ="/locked" element={<LockedScreen></LockedScreen>}/>
+        <Route path="/locked" element={<LockedScreen />} />
         </Route>
         </Routes>
         </UserProvider>

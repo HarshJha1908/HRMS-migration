@@ -265,6 +265,32 @@ const Insurance = () => {
     window.print();
   };
 
+  const parseDateOnly = (value: string) => {
+    const [year, month, day] = value
+      .split("-")
+      .map(Number);
+
+    if (!year || !month || !day) {
+      return null;
+    }
+
+    const date = new Date(
+      year,
+      month - 1,
+      day
+    );
+
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return null;
+    }
+
+    return date;
+  };
+
   const handleSave = async () => {
     if (!reasonForChange.trim()) {
   window.alert(
@@ -369,9 +395,10 @@ if (!acceptTerms) {
           continue;
         }
 
-        const dob = new Date(dobValue);
+        const dob =
+          parseDateOnly(dobValue);
 
-        if (isNaN(dob.getTime())) {
+        if (!dob) {
           continue;
         }
 
@@ -428,11 +455,8 @@ if (!acceptTerms) {
         .map((row, index) => ({
           sequence: row,
 
-          memberDOB: nomineeDobs[index]
-            ? new Date(
-                nomineeDobs[index]
-              ).toISOString()
-            : "",
+          memberDOB:
+            nomineeDobs[index] || "",
 
           relationCode:
             relationships[index],
@@ -725,7 +749,7 @@ if (!acceptTerms) {
                 </th>
 
                 <th className="col-dob">
-                  DOB (dd/mm/yyyy)
+                  DOB
                 </th>
 
                 <th className="col-type">
