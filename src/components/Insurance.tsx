@@ -112,22 +112,13 @@ const Insurance = () => {
         );
 
   useEffect(() => {
-    const fetchInsuranceData = async () => {
-      if (!insuranceType || !userId) {
-        setRelationshipOptions([]);
+    const fetchEmployeeProfile = async () => {
+      if (!userId) {
+        setEmployeeNumber("");
         return;
       }
 
       try {
-        setLoadingRelations(true);
-
-        const relations =
-          await getInsuranceRelations(
-            insuranceType
-          );
-
-        setRelationshipOptions(relations);
-
         const empProfile =
           await getEmpProfileByAdId(
             userId
@@ -139,12 +130,40 @@ const Insurance = () => {
               ""
           )
         );
+      } catch (error) {
+        console.error(
+          "Failed to load employee profile",
+          error
+        );
+        setEmployeeNumber("");
+      }
+    };
 
-        const nominationDetails =
-          await getInsuranceNominationDetails(
-            insuranceType,
-            userId
-          );
+    fetchEmployeeProfile();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchInsuranceData = async () => {
+      if (!insuranceType || !userId) {
+        setRelationshipOptions([]);
+        return;
+      }
+
+      try {
+        setLoadingRelations(true);
+
+        const [relations, nominationDetails] =
+          await Promise.all([
+            getInsuranceRelations(
+              insuranceType
+            ),
+            getInsuranceNominationDetails(
+              insuranceType,
+              userId
+            ),
+          ]);
+
+        setRelationshipOptions(relations);
 
         setEmployeeName(
           nominationDetails.employeeName || ""
@@ -282,6 +301,56 @@ if (!acceptTerms) {
         "No changes detected"
       );
       return;
+    }
+
+    for (
+      let index = 0;
+      index < nomineeRows.length;
+      index++
+    ) {
+      const nomineeName =
+        nomineeNames[index].trim();
+
+      const dobValue =
+        nomineeDobs[index].trim();
+
+      const relationship =
+        relationships[index].trim();
+
+      const shareValue =
+        percentageShares[index].trim();
+
+      const hasRowData = isHealthInsurance
+        ? Boolean(
+            nomineeName ||
+              dobValue ||
+              relationship
+          )
+        : Boolean(
+            nomineeName ||
+              dobValue ||
+              relationship ||
+              shareValue
+          );
+
+      const isMissingRequiredField =
+        !nomineeName ||
+        !dobValue ||
+        !relationship ||
+        (!isHealthInsurance &&
+          !shareValue);
+
+      if (
+        hasRowData &&
+        isMissingRequiredField
+      ) {
+        window.alert(
+          `Please complete all mandatory fields for nominee row ${
+            index + 1
+          } before saving.`
+        );
+        return;
+      }
     }
 
     if (isHealthInsurance) {
