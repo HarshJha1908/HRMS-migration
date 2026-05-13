@@ -41,7 +41,6 @@ export default function App() {
 
 //     sessionStorage.setItem("username", user.username);
 
-//     console.log("Logged in user:", user.username);
 
 //   };
 

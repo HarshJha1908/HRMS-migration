@@ -34,7 +34,6 @@ export default function JobVacancy() {
       setLoading(true);
       const response = await getJobVacancies();
 
-      console.log("Load vacancies response:", response);
 
       if (Array.isArray(response)) {
         setVacancies(response);
@@ -133,18 +132,12 @@ export default function JobVacancy() {
         isrrnum: Number(formData.isrr),
       };
 
-      console.log("Career object:", career);
 
       const submitFormData = new FormData();
       submitFormData.append("CareerJson", JSON.stringify(career));
 
       if (formData.file) {
         submitFormData.append("Attachment", formData.file);
-      }
-
-      console.log("FormData contents:");
-      for (const [key, value] of submitFormData.entries()) {
-        console.log(key, value);
       }
 
       let response;
@@ -155,7 +148,6 @@ export default function JobVacancy() {
         response = await addCareer(submitFormData);
       }
 
-      console.log("API Response:", response);
 
       if (response?.isSuccess) {
         alert(isEditing ? "Updated successfully!" : "Added successfully!");

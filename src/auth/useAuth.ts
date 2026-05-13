@@ -40,8 +40,6 @@ export const useAuth = (): { user: AuthUser | null; signOut: () => void } => {
     const familyName = (claims.family_name as string | undefined) ?? "";
     const composed = `${givenName} ${familyName}`.trim();
     const loginUserAdID = upn.includes("@") ? upn.split("@")[0] : upn;
-    // console.log("local",localPart);
-    // console.log("upn",upn);
     // const loginUserAdID = upn.includes("@") ? upn.split("@")[0] : upn;
     const prettifiedLocal = loginUserAdID
       .replace(/[._-]+/g, " ")
