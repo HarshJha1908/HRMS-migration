@@ -2,10 +2,15 @@ import { lazy, Suspense } from "react";
 import { Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import JobVacancy from "./pages/JobVacancy";
+import LeaveBalance from "./components/LeaveBalance";
+import LockedScreen from "./components/LockedScreen";
+import AuthGate from "./auth/AuthGate";
+import { UserProvider } from "./context/UserContext";
 // import { getLoginUser } from './services/apiService';
 // import { getLoginUser } from './services/apiService';
 // import { useEffect } from 'react';
 
+const HomePage = lazy(() => import("./pages/HomePage"));
 const ApplyLeave = lazy(() => import("./pages/ApplyLeave"));
 const LeaveDetails = lazy(() => import("./pages/LeaveDetails"));
 const LeaveRules = lazy(() => import("./pages/LeaveRules"));
@@ -15,12 +20,14 @@ const TeamLeaveDetails = lazy(() => import("./pages/TeamLeaveDetails"));
 const HolidayList = lazy(() => import("./components/HolidayList"));
 const EmployeeLeaveDetails = lazy(() => import("./pages/ViewEmployeeLeave"));
 const Insurance = lazy(() => import("./components/Insurance"));
-const EmergencyContact = lazy(() => import("./components/EmergencyContact"));
+const DownLoadCenter = lazy(() => import("./components/DownLoadCenter"));
+const QuickExport = lazy(() => import("./components/QuickExport"));
 const SingleSearch = lazy(() => import("./components/SingleSearch"));
 const SingleSearchDetails = lazy(() => import("./pages/SingleSearchDetails"));
 const SingleSearchCreateException = lazy(() => import("./pages/SingleSearchCreateException"));
 const ExitLeaveAdjustment = lazy(() => import("./pages/ExitLeaveAdjustment"));
 const MyProfile = lazy(() => import("./components/Myprofile"));
+const ViewDocuments = lazy(() => import("./pages/ViewDocuments"));
 
 const SpecialLeaveEntry = lazy(() => import("./pages/SpecialLeaveEntry"));
 
@@ -43,11 +50,14 @@ export default function App() {
 // }, []);
   return (
     <Suspense fallback={<div style={{ padding: "12px" }}>Loading...</div>}>
-      <Routes>
+      <AuthGate>
+        <UserProvider>
+        <Routes>
         <Route element={<MainLayout />}>
-          <Route path="/" element={<ApplyLeave />} />
+          <Route path="/" element={<HomePage />} />
           <Route path="/apply-leave" element={<ApplyLeave />} />
           <Route path="/leave-details" element={<LeaveDetails />} />
+          <Route path="/leave-balance" element={<LeaveBalance/>} />
           <Route path="/leave-rules" element={<LeaveRules />} />
           <Route path="/profile" element={<CreateEmployeeLeaveProfile />} />
           <Route path="/pending-approval" element={<PendingApproval />} />
@@ -56,7 +66,8 @@ export default function App() {
           <Route path="/leave-view" element={<EmployeeLeaveDetails />} />
           <Route path="/insurance" element={<Insurance />} />
           <Route path="*" element={<h1>404 - Not Found</h1>} />
-          <Route path="/emergency-contact" element={<EmergencyContact />} />
+          <Route path="/download-center" element={<DownLoadCenter />} />
+          <Route path="/quick-export" element={<QuickExport />} />
           <Route path="/single-search" element={<SingleSearch />} />
           <Route path="/single-search/details" element={<SingleSearchDetails />} />
           <Route path="/single-search/create-exception" element={<SingleSearchCreateException />} />
@@ -64,9 +75,13 @@ export default function App() {
           <Route path="/my-profile" element={<MyProfile />} />
         <Route path="/job-vacancy" element={<JobVacancy />} />
         <Route path="/special-leave-entry" element={<SpecialLeaveEntry />} />
-        
+        <Route path="/documents/:documentType" element={<ViewDocuments />} />
+        <Route path="/documents" element={<ViewDocuments />} />
+        <Route path ="/locked" element={<LockedScreen></LockedScreen>}/>
         </Route>
-      </Routes>
+        </Routes>
+        </UserProvider>
+      </AuthGate>
     </Suspense>
   );
 }

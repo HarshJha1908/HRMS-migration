@@ -6,10 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "deploy": "robocopy dist \"\\\\MLGCCUHRMSDEV03\\SubrataShare\\HRMSNewGen\\HRMSNewGenAPI\\dist\" /MIR /NFL /NDL /NJH /NJS /NP & if %ERRORLEVEL% LSS 8 exit /b 0",
+    "build:deploy": "npm run build && npm run deploy",
     "lint": "eslint .",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@azure/msal-browser": "^5.8.0",
+    "@azure/msal-react": "^5.3.1",
     "@fortawesome/free-brands-svg-icons": "^7.2.0",
     "@fortawesome/free-regular-svg-icons": "^7.2.0",
     "@fortawesome/free-solid-svg-icons": "^7.2.0",

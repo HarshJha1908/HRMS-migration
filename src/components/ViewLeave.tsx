@@ -5,17 +5,14 @@ import "react-datepicker/dist/react-datepicker.css";
 import "./ViewLeave.css";
 import {
   getViewLeaveDetailsByLeaveId,
-  savePendingLeaveRequestByOneLeaveId
+  savePendingLeaveRequestByOneLeaveId,
+  getLeaveAttachment
 } from "../services/apiService";
 import type { LeaveDetails } from "../types/apiTypes";
 import { useHolidays } from "../hooks/useHolidays";
-
-const formatLocalDate = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-};
+import { useUser } from "../context/UserContext";
+import { useAuth } from "../auth/useAuth";
+import { formatLocalDate } from "../utils/Utils";
 
 type ViewLeaveDetailsProps = {
   onDataLoaded?: (details: LeaveDetails | null) => void;
@@ -25,7 +22,15 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
   const location = useLocation();
   const navigate = useNavigate();
   const leaveId = location.state?.leaveId;
-  const isManager = Boolean(location.state?.isManager);
+  const { isManager } = useUser();
+  const { user } = useAuth();
+  const currentUserAdId =
+  user?.loginUserAdID || "";
+  const viewedUserId =
+  location.state?.userId || "";
+  const isOwnLeave =
+  currentUserAdId.trim().toLowerCase() ===
+  viewedUserId.trim().toLowerCase();
   const [data, setData] = useState<LeaveDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -33,6 +38,11 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
   const [remarks, setRemarks] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const { holidays } = useHolidays();
+  const [attachmentFile, setAttachmentFile] = useState<Blob | null>(null);
+  const [attachmentFileName, setAttachmentFileName] = useState<string>("");
+  const [showAttachmentModal, setShowAttachmentModal] = useState(false);
+  // const [attachmentLoading, setAttachmentLoading] = useState(false);
+  const [attachmentUrl, setAttachmentUrl] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,6 +55,29 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
         setData(result.data);
         setRemarks(result?.data?.approverRemarks || "");
         onDataLoaded?.((result?.data as LeaveDetails) || null);
+
+        // Fetch attachment
+        try {
+          
+          const attachmentData = await getLeaveAttachment(leaveId);
+
+          if (attachmentData && attachmentData.blob && attachmentData.blob.size > 0) {
+
+            console.log("Attachment found:", attachmentData.blob.type);
+
+            const pdfBlob = new Blob(
+              [attachmentData.blob],
+              { type: "application/pdf" }
+            );
+            console.log("Attachment found:", pdfBlob.type);
+            setAttachmentFile(pdfBlob);
+            setAttachmentFileName(attachmentData.filename);
+          }
+        } catch (attachmentError) {
+          console.error("Attachment fetch failed:", attachmentError);
+          setAttachmentFile(null);
+          setAttachmentFileName("");
+        }
       } catch (error) {
         console.error(error);
         onDataLoaded?.(null);
@@ -55,6 +88,21 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
 
     loadData();
   }, [leaveId, onDataLoaded]);
+
+  useEffect(() => {
+    if (!attachmentFile) {
+      setAttachmentUrl("");
+      return;
+    }
+
+    const url = URL.createObjectURL(attachmentFile);
+    setAttachmentUrl(url);
+
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [attachmentFile]);
+
 
   const formatDate = (date: string | null) =>
     date ? new Date(date).toLocaleDateString("en-GB") : "-";
@@ -77,7 +125,11 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
   );
 
   const isPending = data?.statusCode?.toLowerCase() === "p";
-  const showManagerActions = isManager && isPending;
+  
+  const showManagerActions =
+  isManager &&
+  !isOwnLeave &&
+  isPending;
 
   const handleManagerAction = async (nextStatus: "A" | "R") => {
     if (!leaveId) {
@@ -107,10 +159,10 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
       setData((prev) =>
         prev
           ? {
-              ...prev,
-              statusCode: nextStatus,
-              approverRemarks: trimmedRemarks || prev.approverRemarks
-            }
+            ...prev,
+            statusCode: nextStatus,
+            approverRemarks: trimmedRemarks || prev.approverRemarks
+          }
           : prev
       );
 
@@ -167,6 +219,23 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
 
     return "Drafted";
   };
+
+  const handleViewAttachment = () => {
+    if (attachmentFile) {
+      setShowAttachmentModal(true);
+    }
+  };
+
+  const closeAttachmentModal = () => {
+    setShowAttachmentModal(false);
+  };
+
+  // const getAttachmentUrl = () => {
+  //   if (attachmentFile) {
+  //     return URL.createObjectURL(attachmentFile);
+  //   }
+  //   return "";
+  // };
 
   if (loading) return <p>Loading...</p>;
   if (!data) return <p>No data found.</p>;
@@ -308,13 +377,66 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
               <tr>
                 <td colSpan={2}>
                   <span className="label">Attachment:</span>
-                  <span className="value">-</span>
+                  {attachmentFile ? (
+                    <button
+                      type="button"
+                      onClick={handleViewAttachment}
+                      className="attachment-link"
+                      title="Click to view attachment"
+                    >
+                      {attachmentFileName}
+                    </button>
+                  ) : (
+                    <span className="value">-</span>
+                  )}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
+
+      {/* Attachment Modal */}
+      {showAttachmentModal && attachmentFile && (
+        <div className="attachment-modal-overlay" onClick={closeAttachmentModal}>
+          <div className="attachment-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="attachment-modal-header">
+              <h3>{attachmentFileName}</h3>
+              <button
+                type="button"
+                className="attachment-modal-close"
+                onClick={closeAttachmentModal}
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="attachment-modal-body">
+              <iframe
+                src={attachmentUrl}
+                className="attachment-viewer"
+                title="Attachment Viewer"
+              />
+            </div>
+            <div className="attachment-modal-footer">
+              <a
+                href={attachmentUrl}
+                download={attachmentFileName}
+                className="btn-download"
+              >
+                Download
+              </a>
+              <button
+                type="button"
+                className="btn-close-modal"
+                onClick={closeAttachmentModal}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

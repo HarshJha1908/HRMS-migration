@@ -1,4 +1,15 @@
-
+//Login User Info
+export interface LoginUserInfo {
+  user_Employee_No: number;
+  sex: string;
+  eligibleTypeCode: string;
+  isTeamMager: boolean;
+  user_Mat_Pat_Applicable: boolean;
+  isTeamHead: boolean;
+  isCenterHead: boolean;
+  isAdmin: boolean;
+  isDisplayReport: boolean;
+}
 //Leave Balance
 export type LeaveBalanceItem = {
   type: string;
@@ -57,6 +68,7 @@ export type LeaveRequest = {
   approver: string;
   submittedOn: string;
 };
+
 
 //LeaveType field
 export type LeaveTypeApi = {
@@ -193,6 +205,72 @@ export type EmployeeContactResponse={
   employeeEmergencyContactDetails: EmployeeContactApi[];
 }
 
+export type ManagerLeaveDetailsExcelApi = {
+  requesterName: string | null;
+  employeeId: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  submitionDate?: string | null;
+  submissionDate?: string | null;
+  dateofapproved?: string | null;
+  dateOfApproved?: string | null;
+  leaveTypeName: string | null;
+  status: string | null;
+  approverName: string | null;
+  teamName: string | null;
+  noOfDays: number | string | null;
+};
+
+export type ManagerLeaveDetailsExcelResponse = {
+  statusCode?: number;
+  isSuccess?: boolean;
+  message?: string;
+  data?: ManagerLeaveDetailsExcelApi[] | null;
+};
+
+export type ManagerLeaveBalanceExcelApi = {
+  employeeName: string | null;
+  employeeID: number | string | null;
+  bdL_Total: string | null;
+  bdL_Submitted: string | null;
+  bdL_Balance: string | null;
+  cL_Total: string | null;
+  cL_Submitted: string | null;
+  cL_Balance: string | null;
+  pL_Total: string | null;
+  pL_Submitted: string | null;
+  pL_Balance: string | null;
+  asL_Total: string | null;
+  asL_Submitted: string | null;
+  asL_Balance: string | null;
+  isPTLApplicable?: boolean | null;
+  isPTLapplicable?: boolean | null;
+  ptL_Total: string | null;
+  ptL_Submitted: string | null;
+  ptL_Balance: string | null;
+  isMTLApplicable?: boolean | null;
+  isMTLapplicable?: boolean | null;
+  mtL_Total: string | null;
+  mtL_Submitted: string | null;
+  mtL_Balance: string | null;
+  sL_Total: string | null;
+  sL_Submitted: string | null;
+  sL_Balance: string | null;
+  wfH_Total: string | null;
+  wfH_Submitted: string | null;
+  wfH_Balance: string | null;
+  wfhX_Total: string | null;
+  wfhX_Submitted: string | null;
+  wfhX_Balance: string | null;
+};
+
+export type ManagerLeaveBalanceExcelResponse = {
+  statusCode?: number;
+  isSuccess?: boolean;
+  message?: string;
+  data?: ManagerLeaveBalanceExcelApi[] | null;
+};
+
 //Create Employee 
   //Employee Type
 export type EmployeeTypeApi={
@@ -223,8 +301,8 @@ export type SaveNewEmployeeProfileRequest = {
     isActive: boolean;
     eligibleTypeCode: string;
     lwd: string;
-    user_Sex: string;
-    user_Mat_Pat_Applicable: boolean;
+    User_Sex?: string;
+    User_Mat_Pat_Applicable?: boolean;
     emergencyContactNo1: string;
     emergencyContactNo2: string;
     contactName2: string;
@@ -234,6 +312,7 @@ export type SaveNewEmployeeProfileRequest = {
   isManager: boolean;
   assignmentTeamId: string;
   cl: number;
+  sl: number;
   pl: number;
   asl: number;
 };
@@ -455,15 +534,34 @@ export type AddBulkSpecialLeaveResponse = {
   data?: unknown;
 };
 
-export type InsuranceRelationApi = {
-  code: string;
-  relationName: string;
-  insuranceType: string;
+export type DocumentTypeApi = {
+  docCode: string;
+  typeName: string;
+  isActive: boolean;
 };
 
-export type InsuranceRelationResponse = {
-  statusCode: number;
-  isSuccess: boolean;
-  message: string;
-  data: InsuranceRelationApi[] | null;
+export type DocumentTypeResponse = {
+  statusCode?: number;
+  isSuccess?: boolean;
+  message?: string;
+  data?: DocumentTypeApi[] | null;
 };
+
+export type DocumentApi = {
+  id: number;
+  fileName: string;
+  title: string;
+  type:string;
+  link: string;
+  isLink: boolean;
+  isActive: boolean;
+  attachmentData: string | null;
+};
+
+export type DocumentsResponse = {
+  statusCode?: number;
+  isSuccess?: boolean;
+  message?: string;
+  data?: DocumentApi[] | null;
+};
+

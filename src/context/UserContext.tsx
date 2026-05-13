@@ -1,50 +1,112 @@
-// import { createContext, useContext, useEffect, useState } from "react";
-// // import { getLoginUser } from "../services/apiService";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode
+} from "react";
 
-// type UserContextType = {
-//   username: string | null;
-//   loading: boolean;
-// };
+import { useAuth, type AuthUser } from "../auth/useAuth";
+import { getLoginUserInfoByUserid } from "../services/apiService";
 
-// const UserContext = createContext<UserContextType>({
-//   username: null,
-//   loading: true
-// });
+export interface LoginUserInfo {
+  user_Employee_No: number;
+  sex: string;
+  eligibleTypeCode: string;
+  isTeamMager: boolean;
+  user_Mat_Pat_Applicable: boolean;
+  isTeamHead: boolean;
+  isCenterHead: boolean;
+  isAdmin: boolean;
+  isDisplayReport: boolean;
+}
 
-// export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+type UserContextType = {
+  user: AuthUser | null;
+  username: string | null;
 
-//   const [username, setUsername] = useState<string | null>(null);
-//   const [loading, setLoading] = useState(true);
+  userInfo: LoginUserInfo | null;
 
-//   useEffect(() => {
+  isManager: boolean;
+  isAdmin: boolean;
 
-//     const loadUser = async () => {
-//       try {
+  loading: boolean;
+};
 
-//         // const data = await getLoginUser();
+const UserContext = createContext<UserContextType>({
+  user: null,
+  username: null,
+  userInfo: null,
+  isManager: false,
+  isAdmin: false,
+  loading: true
+});
 
-//         if (data?.username) {
-//           setUsername(data.username);
-//           sessionStorage.setItem("username", data.username);
-          
-//         }
+export const UserProvider = ({
+  children
+}: {
+  children: ReactNode;
+}) => {
+  const { user } = useAuth();
 
-//       } catch (err) {
-//         console.error("User fetch failed", err);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
+  const [userInfo, setUserInfo] =
+    useState<LoginUserInfo | null>(null);
 
-//     loadUser();
+  const [loading, setLoading] =
+    useState(true);
 
-//   }, []);
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      try {
+        if (!user?.loginUserAdID) return;
 
-//   return (
-//     <UserContext.Provider value={{ username, loading }}>
-//       {children}
-//     </UserContext.Provider>
-//   );
-// };
+        setLoading(true);
 
-// export const useUser = () => useContext(UserContext);
+        const response =
+          await getLoginUserInfoByUserid(
+            user.loginUserAdID
+          );
+
+        setUserInfo(response.data);
+      } catch (error) {
+        console.error(
+          "Failed to load user info",
+          error
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUserInfo();
+  }, [user]);
+
+  const isManager =
+    Boolean(userInfo?.isTeamMager) ||
+    Boolean(userInfo?.isTeamHead) ||
+    Boolean(userInfo?.isCenterHead);
+
+  const isAdmin =
+    Boolean(userInfo?.isAdmin);
+
+  return (
+    <UserContext.Provider
+      value={{
+        user,
+        username: user?.username ?? null,
+
+        userInfo,
+
+        isManager,
+        isAdmin,
+
+        loading
+      }}
+    >
+      {children}
+    </UserContext.Provider>
+  );
+};
+
+export const useUser = () =>
+  useContext(UserContext);

@@ -1,11 +1,13 @@
 .emergency-page {
-  width: calc(100% + 48px);
-  margin: -16px -24px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .emergency-page .emergency-container {
   padding: 0;
   width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .emergency-page .emergency-card {
@@ -13,7 +15,7 @@
   border: 1px solid #dcdcdc;
   border-radius: 0;
   width: 100%;
-  max-width: none;
+  max-width: 1400px;
   box-shadow: none;
 }
 
@@ -31,12 +33,44 @@
 
 .viewer-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
   padding: 12px 16px;
   border-bottom: 1px solid #e0e0e0;
   background-color: #f8fbfd;
   min-height: 52px;
+}
+
+.report-tabs {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.report-tab-button {
+  min-width: 220px;
+  padding: 18px 24px;
+  border: 1px solid #1f5e86;
+  border-radius: 8px;
+  background: #2a648a;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.report-tab-button:hover {
+  background: #205574;
+  border-color: #205574;
+}
+
+.report-tab-button.active {
+  background: #154563;
+  border-color: #154563;
 }
 
 .download-menu {
@@ -196,6 +230,21 @@
   .emergency-page {
     width: calc(100% + 24px);
     margin: -16px -12px;
+  }
+
+  .viewer-actions {
+    align-items: stretch;
+  }
+
+  .report-tabs {
+    width: 100%;
+  }
+
+  .report-tab-button {
+    width: 100%;
+    min-width: 0;
+    font-size: 16px;
+    padding: 14px 16px;
   }
 
   .csv-report-stage {

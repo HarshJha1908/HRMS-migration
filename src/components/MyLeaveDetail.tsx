@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Pagination from "./Pagination";
 import type { LeaveDetailsApi } from "../types/apiTypes";
 import type { LeaveDetailProps } from "../types/props";
+import { useAuth } from "../auth/useAuth";
 
 const toStatusKey = (value?: string | null) => {
   const normalized = String(value || "").trim().toLowerCase();
@@ -26,14 +27,14 @@ export default function MyLeaveDetail({
   status
 }: LeaveDetailProps) {
 
-
+  const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [showMessage, setShowMessage] = useState(true);
   const [data, setData] = useState<LeaveDetailsApi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const currentUserAdId = "a2ef46";
+  const currentUserAdId = user?.loginUserAdID || ''; //user?.loginUserAdID || '';
   const currentYear = new Date().getFullYear();
   const selectedYear = year ?? currentYear;
   const selectedLeaveType = leaveType ?? "";
@@ -46,7 +47,7 @@ export default function MyLeaveDetail({
 
         const payload = {
           year: selectedYear,
-          adid: currentUserAdId,
+          adid: currentUserAdId || '',
           leaveTypeCode: selectedLeaveType,
           status: selectedStatus
         };

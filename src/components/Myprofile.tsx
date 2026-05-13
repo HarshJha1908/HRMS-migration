@@ -2,10 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import "../pages/SingleSearchDetails.css";
 import "./Myprofile.css";
 import {
-    getEmpProfileByEmpId,
+    getEmpProfileByAdId,
     getEmployeeContact,
     updateEmergencyContactDetails
 } from "../services/apiService";
+import { useAuth } from "../auth/useAuth";
 
 type EmployeeSearchItem = {
     user_Employee_No?: string | number;
@@ -149,6 +150,7 @@ const validateEmergencyContactForm = (form: EmergencyContactForm): EmergencyCont
 
  
 export default function MyProfile() {
+    const { user } = useAuth();
     const [profile, setProfile] = useState<EmployeeSearchItem | null>(null);
     const [contact, setContact] = useState<ContactDetails | null>(null);
     const [contactForm, setContactForm] = useState<EmergencyContactForm>({
@@ -181,8 +183,8 @@ export default function MyProfile() {
             try {
                 setLoading(true);
                 setError("");
-                const empId = "90001199"; // This should ideally come from auth context or route state
-                const profileResponse = await getEmpProfileByEmpId(empId);    
+                const adID = user?.loginUserAdID; // This should ideally come from auth context or route state
+                const profileResponse = await getEmpProfileByAdId(adID||'');    
                 setProfile(profileResponse);
 
                 const adId = pickAdId(profileResponse);

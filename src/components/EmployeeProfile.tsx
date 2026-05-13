@@ -15,6 +15,7 @@ import type {
   SaveNewEmployeeProfileRequest
 } from "../types/apiTypes";
 
+
 type EmployeeTeamOption = {
   teamId: string;
   teamName: string;
@@ -41,14 +42,26 @@ type PrefillEmployee = Partial<{
   user_Doj: string;
   user_Email_Id: string;
   user_Sex: string;
+  User_Sex: string;
   user_Mat_Pat_Applicable: boolean;
+  User_Mat_Pat_Applicable: boolean;
+
   emergencyContactNo1: string;
   emergencyContactNo2: string;
   contactName1: string;
   contactName2: string;
+
   eligibleTypeCode: string;
   assignmentTeamId: string | number;
   teamName: string;
+  isManager: boolean;
+  IsManager: boolean;
+  is_Manager: boolean;
+
+  cl: number;
+  sl: number;
+  pl: number;
+  asl: number;
 }>;
 
 const extractUserSeqNo = (payload: unknown): number => {
@@ -81,71 +94,56 @@ const extractUserSeqNo = (payload: unknown): number => {
   return 0;
 };
 
-const toIsoDateTime = (value: string) => {
+const toApiDateTime = (value: string) => {
   const trimmed = value.trim();
 
-  if (!trimmed) {
-    return "";
-  }
+  if (!trimmed) return "";
 
   const slashDate = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-  const match = trimmed.match(slashDate);
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})/;
+  const slashMatch = trimmed.match(slashDate);
+  const isoMatch = trimmed.match(isoDate);
 
-  if (match) {
-    const day = Number(match[1]);
-    const month = Number(match[2]);
-    const year = Number(match[3]);
-    const parsed = new Date(Date.UTC(year, month - 1, day));
+  const year = slashMatch ? Number(slashMatch[3]) : isoMatch ? Number(isoMatch[1]) : 0;
+  const month = slashMatch ? Number(slashMatch[2]) : isoMatch ? Number(isoMatch[2]) : 0;
+  const day = slashMatch ? Number(slashMatch[1]) : isoMatch ? Number(isoMatch[3]) : 0;
 
-    if (
-      parsed.getUTCFullYear() === year &&
-      parsed.getUTCMonth() === month - 1 &&
-      parsed.getUTCDate() === day
-    ) {
-      return parsed.toISOString();
-    }
+  if (!year || !month || !day) return "";
 
-    return "";
-  }
+  const checkDate = new Date(year, month - 1, day);
+  const isValidDate =
+    checkDate.getFullYear() === year &&
+    checkDate.getMonth() === month - 1 &&
+    checkDate.getDate() === day;
 
-  const isoLikeMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if (isoLikeMatch) {
-    const year = Number(isoLikeMatch[1]);
-    const month = Number(isoLikeMatch[2]);
-    const day = Number(isoLikeMatch[3]);
-    const parsed = new Date(Date.UTC(year, month - 1, day));
+  if (!isValidDate) return "";
 
-    if (
-      parsed.getUTCFullYear() === year &&
-      parsed.getUTCMonth() === month - 1 &&
-      parsed.getUTCDate() === day
-    ) {
-      return parsed.toISOString();
-    }
-
-    return "";
-  }
-
-  const parsed = new Date(trimmed);
-  if (Number.isNaN(parsed.getTime())) {
-    return "";
-  }
-
-  return new Date(
-    Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate())
-  ).toISOString();
+  return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}T00:00:00`;
 };
 
 const toDisplayDate = (value: string | undefined) => {
   const trimmed = String(value || "").trim();
   if (!trimmed) return "";
 
+  const isoDate = /^(\d{4})-(\d{2})-(\d{2})/;
+  const slashDate = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+  const isoMatch = trimmed.match(isoDate);
+  const slashMatch = trimmed.match(slashDate);
+
+  if (isoMatch) {
+    return `${isoMatch[3]}/${isoMatch[2]}/${isoMatch[1]}`;
+  }
+
+  if (slashMatch) {
+    return trimmed;
+  }
+
   const date = new Date(trimmed);
   if (Number.isNaN(date.getTime())) return "";
 
-  const day = String(date.getUTCDate()).padStart(2, "0");
-  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const year = String(date.getUTCFullYear());
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
   return `${day}/${month}/${year}`;
 };
 
@@ -170,10 +168,32 @@ const splitFullName = (fullName: string) => {
   };
 };
 
+const toGenderCode = (value: unknown) => {
+  const normalized = String(value || "").trim().toLowerCase();
+
+  if (normalized === "male" || normalized === "m") return "M";
+  if (normalized === "female" || normalized === "f") return "F";
+
+  return "";
+};
+
+const toBoolean = (value: unknown) => {
+  if (typeof value === "boolean") return value;
+  const normalized = String(value || "").trim().toLowerCase();
+
+  return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "y";
+};
+
+const toOptionalBoolean = (value: unknown) => {
+  if (value === undefined || value === null || String(value).trim() === "") return undefined;
+  return toBoolean(value);
+};
+
 const CreateEmployeeLeaveProfile: React.FC = () => {
+
   const location = useLocation();
   const isUpdateMode = location.state?.mode === "update";
-  
+
 
   const [employeeType, setEmployeeType] = useState<EmployeeTypeApi[]>([]);
   const [selectedEmployeeType, setSelectedEmployeeType] = useState("");
@@ -197,7 +217,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
   const [employeeNo, setEmployeeNo] = useState("");
   const [userId, setUserId] = useState("");
   const [emailId, setEmailId] = useState("");
-  const [gender, setGender] = useState("M");
+  const [gender, setGender] = useState("");
   const [isMatPatApplicable, setIsMatPatApplicable] = useState(false);
   const [joiningDate, setJoiningDate] = useState("");
   const [clBalance, setClBalance] = useState("0");
@@ -244,7 +264,19 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
   }, [isAssociateType]);
 
   useEffect(() => {
+    if (!saveMessage) return;
+
+    const timer = window.setTimeout(() => {
+      setSaveMessage(null);
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [saveMessage]);
+
+  useEffect(() => {
     const applyPrefill = async () => {
+
+
       if (!employeeFromState) return;
 
       try {
@@ -252,7 +284,8 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         const profileByEmpId = employeeNoFromState
           ? await getEmpProfileByEmpId(employeeNoFromState)
           : null;
-
+        console.log("PROFILE RESPONSE");
+        console.log(profileByEmpId);
         const merged = {
           ...employeeFromState,
           ...(profileByEmpId || {})
@@ -275,24 +308,38 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         setEmployeeNo(String(merged.user_Employee_No || ""));
         setUserId(String(merged.user_Id || ""));
         setEmailId(String(merged.user_Email_Id || ""));
-        setGender(String(merged.user_Sex || "M"));
-        setIsMatPatApplicable(Boolean(merged.user_Mat_Pat_Applicable));
+        setGender(toGenderCode(merged.User_Sex || merged.user_Sex));
+        setIsMatPatApplicable(toBoolean(merged.User_Mat_Pat_Applicable ?? merged.user_Mat_Pat_Applicable));
         setJoiningDate(toDisplayDate(merged.user_Doj));
+        setClBalance(String(merged.cl ?? 0));
+        setSlBalance(String(merged.sl ?? 0));
+        setPlBalance(String(merged.pl ?? 0));
+        setAslBalance(String(merged.asl ?? 0));
         setEmergencyContactNo1(String(merged.emergencyContactNo1 || ""));
         setEmergencyContactNo2(String(merged.emergencyContactNo2 || ""));
         setContactName1(String(merged.contactName1 || ""));
         setContactName2(String(merged.contactName2 || ""));
         setSelectedEmployeeType(String(merged.eligibleTypeCode || "").trim().toUpperCase());
 
+        const resolvedIsManager = toOptionalBoolean(
+          merged.isManager ?? merged.IsManager ?? merged.is_Manager
+        );
+        const managerValue = resolvedIsManager ?? false;
+        setIsManager(managerValue);
+
         const assignmentTeamId = String(merged.assignmentTeamId || "").trim();
         const teamName = String(merged.teamName || "").trim();
-
+        console.log("assignmnet team name" ,teamName);
+         console.log("assignmnet team id" ,assignmentTeamId);
         if (assignmentTeamId) {
+         
           setSelectedemployeeTeam(assignmentTeamId);
-          setPrefillTeamName("");
+          setPrefillTeamName(teamName);
         } else if (teamName) {
           setPrefillTeamName(teamName);
         }
+
+        void fetchEmployeeTeamOptions(managerValue);
       } catch {
         // Keep form usable for manual update even when prefill fetch fails.
       }
@@ -419,7 +466,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
   };
 
   const validateForm = () => {
-    const isoDoj = toIsoDateTime(joiningDate);
+    const apiDoj = toApiDateTime(joiningDate);
     const empNo = Number(employeeNo);
     const cl = Number(clBalance);
     const sl = Number(slBalance);
@@ -433,7 +480,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
     if (!userId.trim()) return "User Id is required.";
     if (!emailId.trim()) return "Email Id is required.";
     if (!gender.trim()) return "Gender is required.";
-    if (!joiningDate.trim() || !isoDoj) return "Joining Date must be valid (dd/mm/yyyy or yyyy-mm-dd).";
+    if (!joiningDate.trim() || !apiDoj) return "Joining Date must be valid (dd/mm/yyyy or yyyy-mm-dd).";
     if (!selectedEmployeeTeam.trim() || selectedEmployeeTeam.trim() === "-1") {
       return "Valid Assignment Team is required.";
     }
@@ -462,15 +509,15 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         user_Fname: firstName.trim(),
         user_Mname: middleName.trim(),
         user_Lname: lastName.trim(),
-        user_Doj: toIsoDateTime(joiningDate),
+        user_Doj: toApiDateTime(joiningDate),
         user_Email_Id: emailId.trim(),
         user_Line_Mng: 0,
         user_Line_Mng_1: 0,
         isActive: true,
         eligibleTypeCode: selectedEmployeeType.trim().toUpperCase(),
         lwd: "",
-        user_Sex: gender,
-        user_Mat_Pat_Applicable: isMatPatApplicable,
+        User_Sex: gender,
+        User_Mat_Pat_Applicable: isMatPatApplicable,
         emergencyContactNo1: emergencyContactNo1.trim(),
         emergencyContactNo2: emergencyContactNo2.trim(),
         contactName2: contactName2.trim(),
@@ -480,6 +527,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
       isManager,
       assignmentTeamId: selectedEmployeeTeam.trim(),
       cl: disableClBalance ? 0 : Number(clBalance),
+      sl: Number(slBalance),
       pl: disablePlBalance ? 0 : Number(plBalance),
       asl: disableAslBalance ? 0 : Number(aslBalance)
     };
@@ -487,6 +535,12 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
     try {
       setIsSaving(true);
       if (isUpdateMode) {
+        console.log("Update payload:", payload);
+        console.log("FINAL GENDER");
+        console.log(gender);
+
+        console.log("FINAL PAYLOAD");
+        console.log(JSON.stringify(payload, null, 2));
         await updateEmpProfile(payload);
       }
       else {
@@ -509,13 +563,18 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
     }
   };
 
+  const handleCancel = () => {
+    window.location.reload();
+  };
+
   return (
     <section className="create-employee-form">
       <h2 className="page-title">
-        {isUpdateMode ? "Update Employee Leave Profile" : "Create Employee Leave Profile"}
+        {isUpdateMode ? "Update Employee Profile" : "Create Employee Profile"}
       </h2>
       {/* <LockedScreen/> */}
       <div className="employee-form-card">
+        {saveError && <div className="form-error-text">{saveError}</div>}
         <div className="form-grid">
           {/* Row 1 */}
           <div className="form-group checkbox-group">
@@ -768,10 +827,21 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
           </div>
         </div>
 
-        {saveError && <p style={{ color: "red" }}>{saveError}</p>}
-        {saveMessage && <p style={{ color: "green" }}>{saveMessage}</p>}
+        {saveMessage && (
+          <div className="employee-success-toast">
+            {saveMessage}
+          </div>
+        )}
 
         <div className="action-bar">
+          <button
+            className="btn-secondary"
+            type="button"
+            onClick={handleCancel}
+            disabled={isSaving}
+          >
+            Cancel
+          </button>
           <button className="btn-primary" onClick={handleCreate} disabled={isSaving}>
             {isSaving ? "Saving..." : isUpdateMode ? "Update" : "Create"}
           </button>

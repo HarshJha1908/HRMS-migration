@@ -1,13 +1,85 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import './Navbar.css';
 import { Link } from 'react-router-dom';
+import { getDocumentTypes } from "../services/apiService";
+
+type QuickReferenceSection = {
+  id: string;
+  label: string;
+  to?: string;
+  links?: Array<{ to: string; label: string }>;
+  alwaysVisible?: boolean;
+};
+
+const QUICK_REFERENCE_CONFIG: Record<string, QuickReferenceSection> = {
+  KP: {
+    id: "KP",
+    label: "Kolkata Center HR Policies",
+    to: "/documents/KP"
+  },
+  HZ: {
+    id: "HZ",
+    label: "Hospitalization",
+    to: "/documents/HZ"
+  },
+  STATIC1: {
+    id: "STATIC1",
+    label: "Important Links",
+    links: [
+      { to: "/something", label: "Claims Portal" },
+      { to: "/something-else", label: "Training & Certifications" },
+      { to: "/another-link", label: "Rewards & Recognition" },
+      { to: "/one-more-link", label: "Payroll Portal" }
+
+
+    ],
+    alwaysVisible: true
+  }
+};
+
+const QUICK_REFERENCE_ORDER = ["KP", "HZ", "STATIC1"];
 
 export default function Navbar() {
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const [documentTypeCodes, setDocumentTypeCodes] = useState<string[]>([]);
 
   const toggleSection = (section: string) => {
     setOpenSection(openSection === section ? null : section);
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDocumentTypes = async () => {
+      try {
+        const items = await getDocumentTypes();
+        if (!isMounted) return;
+
+        setDocumentTypeCodes(items.map((item) => item.docCode));
+      } catch {
+        if (!isMounted) return;
+        setDocumentTypeCodes([]);
+      }
+    };
+
+    void loadDocumentTypes();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const quickReferenceSections = useMemo(
+    () =>
+      QUICK_REFERENCE_ORDER
+        .filter((docCode) => {
+          const section = QUICK_REFERENCE_CONFIG[docCode];
+          return section?.alwaysVisible || documentTypeCodes.includes(docCode);
+        })
+        .map((docCode) => QUICK_REFERENCE_CONFIG[docCode])
+        .filter((section): section is QuickReferenceSection => Boolean(section)),
+    [documentTypeCodes]
+  );
 
   return (
     <header className="navbar">
@@ -16,13 +88,13 @@ export default function Navbar() {
 
           <Link className="nav-item" to="/">Home</Link>
 
-          <div className="dropdown">
+          {/* <div className="dropdown">
             <span className="nav-item dropdown-toggle">Career</span>
             <div className="dropdown-menu qr-dropdown">
               <Link to="/job-vacancy" className="dropdown-item">Job Vacancy</Link>
               <Link to="/manage-job-vacancy" className="dropdown-item">Manage Job Vacancy</Link>
             </div>
-          </div>
+          </div> */}
 
           {/* Leave dropdown (unchanged) */}
           <div className="dropdown">
@@ -37,11 +109,12 @@ export default function Navbar() {
           </div>
 
           <div className="dropdown">
-            <span className="nav-item dropdown-toggle">Manager</span>
+            <span className="nav-item dropdown-toggle">My Team</span>
             <div className="dropdown-menu qr-dropdown">
               <Link to="/pending-approval" className="dropdown-item">Pending Approval</Link>
               <Link to="/team-leave-details" className="dropdown-item">Team Leave Details</Link>
-              <Link to="/emergency-contact" className="dropdown-item">Emergency Contact</Link>
+              <Link to="/quick-export" className="dropdown-item">Quick Export</Link>
+              <Link to="/download-center" className="dropdown-item">Download Center</Link>
             </div>
           </div>
 
@@ -51,49 +124,33 @@ export default function Navbar() {
             <span className="nav-item dropdown-toggle">Quick Reference</span>
 
             <div className="dropdown-menu qr-dropdown">
-
-              {/* HR Policies */}
-              <div
-                className={`qr-parent ${openSection === "hr" ? "active" : ""}`}
-                onClick={() => toggleSection("hr")}
-              >
-                HR Policies
-              </div>
-              {openSection === "hr" && (
-                <div className="qr-children">
-                  <Link to="/lgss-policies" className="qr-child">LGSS Policies</Link>
+              {quickReferenceSections.map((section) => (
+                <div key={section.id}>
+                  {section.to ? (
+                    <Link to={section.to} className="qr-parent no-children">
+                      {section.label}
+                    </Link>
+                  ) : (
+                    <>
+                      <div
+                        className={`qr-parent ${openSection === section.id ? "active" : ""} ${section.links?.length ? "" : "no-children"}`.trim()}
+                        onClick={() => section.links?.length && toggleSection(section.id)}
+                      >
+                        {section.label}
+                      </div>
+                      {section.links?.length && openSection === section.id && (
+                        <div className="qr-children">
+                          {section.links.map((link) => (
+                            <Link key={link.to} to={link.to} className="qr-child">
+                              {link.label}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-              )}
-
-              {/* Payroll Portal */}
-              <div
-                className={`qr-parent ${openSection === "payroll" ? "active" : ""}`}
-                onClick={() => toggleSection("payroll")}
-              >
-                Payroll Portal
-              </div>
-              {openSection === "payroll" && (
-                <div className="qr-children">
-                  <Link to="/payroll-portal" className="qr-child">Payroll Portal</Link>
-                </div>
-              )}
-
-              {/* Hospitalization */}
-              <div
-                className={`qr-parent ${openSection === "hospital" ? "active" : ""}`}
-                onClick={() => toggleSection("hospital")}
-              >
-                Hospitalization
-              </div>
-              {openSection === "hospital" && (
-                <div className="qr-children">
-                  <Link to="/reimbursement" className="qr-child">Reimbursement Claim Form</Link>
-                  <Link to="/network-hospital" className="qr-child">Network Hospital List</Link>
-                  <Link to="/hospital-info" className="qr-child">All Hospitalization Related Information</Link>
-                  <Link to="/insurance" className="qr-child">GPA/GTL Declaration</Link>
-                </div>
-              )}
-
+              ))}
             </div>
           </div>
 

@@ -9,8 +9,8 @@ import Pagination from "../components/Pagination";
 import type { LeaveDetailsApi, LeaveTypeApi, TeamMemberApi } from "../types/apiTypes";
 import "./TeamLeaveDetails.css";
 import { useLeaveStatusCodes } from "../hooks/useLeaveStatusCodes";
+import { useAuth } from "../auth/useAuth";
 
-const MANAGER_USER_ID = "in091a";
 
 const normalize = (value: string | null | undefined) => (value || "").trim();
 const normalizeCode = (value: string | null | undefined) => normalize(value).toUpperCase();
@@ -54,6 +54,7 @@ const statusClass = (statusCode: string) => {
 export default function TeamLeaveDetails() {
   const navigate = useNavigate();
   const { leaveStatuses } = useLeaveStatusCodes();
+  const { user } = useAuth();
 
   const [teamMembers, setTeamMembers] = useState<TeamMemberApi[]>([]);
   const [leaveTypes, setLeaveTypes] = useState<LeaveTypeApi[]>([]);
@@ -77,9 +78,9 @@ export default function TeamLeaveDetails() {
         setError("");
 
         const [memberRes, leaveTypeRes, managerRows] = await Promise.all([
-          getAllTeamMembersByManagerId(MANAGER_USER_ID),
-          getLeaveTypes(MANAGER_USER_ID),
-          getAllLeaveRequestByManagerId(MANAGER_USER_ID)
+          getAllTeamMembersByManagerId(user?.loginUserAdID || ''),
+          getLeaveTypes(user?.loginUserAdID || ''),
+          getAllLeaveRequestByManagerId(user?.loginUserAdID || '')
         ]);
 
         const memberData = (memberRes?.data ?? []).map((m: TeamMemberApi) => ({
@@ -162,7 +163,7 @@ export default function TeamLeaveDetails() {
         !leaveTypeFilter ||
         normalizeCode(row.leaveTypeName) === normalizeCode(leaveTypeFilter) ||
         normalize(row.leaveTypeName).toLowerCase() ===
-          (leaveTypeMap.get(normalizeCode(leaveTypeFilter)) || "").toLowerCase();
+        (leaveTypeMap.get(normalizeCode(leaveTypeFilter)) || "").toLowerCase();
 
       const statusOk = !statusFilter || normalizeCode(row.statusCode) === normalizeCode(statusFilter);
 
@@ -188,7 +189,7 @@ export default function TeamLeaveDetails() {
     <section className="team-leave-page">
       <div className="team-leave-card">
         <div className="team-leave-header">
-          <h2 className="team-leave-title">Leave Details - At A Glance</h2>
+          <h2 className="team-leave-title">Approval History</h2>
         </div>
 
         <div className="team-filter-grid">
@@ -286,10 +287,12 @@ export default function TeamLeaveDetails() {
                           navigate("/leave-view", {
                             state: {
                               leaveId: row.leaveId,
-                              isManager: true,
                               userId:
                                 pickRowUserId(row) ||
-                                memberNameToAdId.get(normalize(row.requesterName).toLowerCase()) ||
+                                memberNameToAdId.get(
+                                  normalize(row.requesterName)
+                                    .toLowerCase()
+                                ) ||
                                 undefined
                             }
                           })

@@ -222,7 +222,7 @@ export default function SingleSearchCreateException() {
   return (
     <section className="ssce-page">
       <div className="ssce-panel">
-        <h2 className="ssce-title">New Exception Rule :</h2>
+        <h2 className="ssce-title">Create New Exception</h2>
 
         <div className="ssce-form-grid">
           <div className="ssce-left-col">

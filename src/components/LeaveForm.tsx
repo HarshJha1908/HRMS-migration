@@ -3,29 +3,28 @@ import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './LeaveForm.css';
-import { getLeaveReasons, getLeaveTypes, saveLeaveRequest, getNoOfDays, getApprover } from '../services/apiService';
+import { getLeaveReasons, getLeaveTypes, saveLeaveRequest, getNoOfDays, getApprover, saveLeaveRequestAttachment } from '../services/apiService';
 // import { getHolidays, type Holiday } from '../services/holidayService';
 import { useNavigate } from 'react-router-dom';
 import type { LeaveTypeApi, NoOfDaysApi, ReasonApi, ApproverApi } from '../types/apiTypes';
 import type { LeaveFormProps } from '../types/props';
 import { useHolidays } from '../hooks/useHolidays';
 // import { useUser } from "../context/UserContext";
+import { useAuth } from '../auth/useAuth';
+import { formatLocalDate } from '../utils/Utils';
 
 
 
-// const username = sessionStorage.getItem("username");
-// console.log("Username from sessionStorage:", username);
-
-const formatLocalDate = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+const getSavedLeaveId = (response: any) => {
+  const leaveId = response?.message;
+  return leaveId !== undefined && leaveId !== null ? String(leaveId).trim() : '';
 };
 
 
 
 export default function LeaveForm({ onSubmit }: LeaveFormProps) {
+  const { user } = useAuth();
+
   const [leaveTypes, setLeaveTypes] = useState<LeaveTypeApi[]>([]);
 
   const [leaveType, setLeaveType] = useState('');
@@ -66,8 +65,8 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
     const loadLeaveTypes = async () => {
       try {
         setLoading(true);
-
-        const result = await getLeaveTypes("a2ef46");
+        console.log("Username:", user?.loginUserAdID);
+        const result = await getLeaveTypes(user?.loginUserAdID || '');
         console.log("Leave Types API response:", result);
         if (result.isSuccess && result.data) {
           const cleaned = result.data.map((item: any) => ({
@@ -105,7 +104,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
       try {
         setLoading(true);
 
-        const result = await getApprover("a2ef46");
+        const result = await getApprover(user?.loginUserAdID || '');
         console.log("Leave Approver API response:", result);
         if (result.isSuccess && result.data) {
 
@@ -270,7 +269,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
       const payload = {
 
-        userADId: "a2ef46",
+        userADId: user?.loginUserAdID || '',
         startDate: formatLocalDate(startDate),
         endDate: formatLocalDate(endDate),
         // noOfDays: noOfDays?.noOfDays || 0,
@@ -300,6 +299,29 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
 
       console.log("Leave submitted successfully:", response);
 
+      const attachment = fileRef.current?.files?.[0] || null;
+
+      if (response?.isSuccess === true && attachment) {
+        console.log("response",response);
+        const leaveId = getSavedLeaveId(response);
+        console.log("Extracted Leave ID:", leaveId);
+
+        if (!leaveId) {
+          throw new Error("Leave submitted, but leave ID was not returned for attachment upload.");
+        }
+
+        const attachmentResponse = await saveLeaveRequestAttachment({
+          leaveId,
+          file: attachment
+        });
+
+        if (attachmentResponse?.isSuccess === false) {
+          throw new Error(attachmentResponse?.message || "Leave submitted, but attachment upload failed.");
+        }
+
+        console.log("Leave attachment saved successfully:", attachmentResponse);
+      }
+
       onSubmit({
         leaveType,
         startDate: formatLocalDate(startDate),
@@ -307,7 +329,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
         reason: reason === 'Others' ? otherReason : reason,
         otherReason: otherReason,
         totalDays: noOfDays?.noOfDays || 0
-
+        
       });
 
 
@@ -346,7 +368,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   return (
     <section className="leave-form-page">
       <div className="form-card">
-        <h3>Apply For Leave : Tania Bhattacharjee</h3>
+        <h3>Apply For Leave : {user?.name}</h3>
 
         {error && <div className="form-error-text">{error}</div>}
 
@@ -386,7 +408,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
             <div className="date-with-half">
               <input
                 readOnly
-                value={startDate ? startDate.toLocaleDateString() : ''}
+                value={startDate ? formatLocalDate(startDate) : ''}
                 placeholder="Select start date"
                 onClick={() => setCalendarOpen(true)}
               />
@@ -407,7 +429,7 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
             <div className="date-with-half">
               <input
                 readOnly
-                value={endDate ? endDate.toLocaleDateString() : ''}
+                value={endDate ? formatLocalDate(endDate) : ''}
                 placeholder="Select end date"
                 onClick={() => setCalendarOpen(true)}
               />

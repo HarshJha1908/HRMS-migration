@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { getLeaveBalance } from "../services/apiService";
 import type { LeaveBalanceApiData } from "../types/apiTypes";
 import "./LeaveBalance.css";
+import { useAuth } from "../auth/useAuth";
 
 type LeaveBalanceProps = {
   userId?: string;
 };
 
-const DEFAULT_USER_ID = "in091a";
 
 const asDisplay = (value: string | null | undefined) => {
   const text = String(value ?? "").trim();
@@ -27,11 +27,32 @@ const renderLine = (
   balance: string | null | undefined
 ) => (
   <p>
-    {label}: {renderValue(total, "blue")} [ {renderValue(submitted, "blue")} / {renderValue(balance, "red")} ]
+    {label}: {renderValue(total, "blue")} [
+
+    <span className="tooltip-item">
+      {renderValue(submitted, "blue")}
+
+      <span className="custom-tooltip">
+        Availed/Submitted {label.split("(")[1]?.replace(")", "")}
+      </span>
+    </span>
+
+    {" / "}
+
+    <span className="tooltip-item">
+      {renderValue(balance, "red")}
+
+      <span className="custom-tooltip">
+        Balance {label.split("(")[1]?.replace(")", "")}
+      </span>
+    </span>
+
+    ]
   </p>
 );
 
-export default function LeaveBalance({ userId = DEFAULT_USER_ID }: LeaveBalanceProps) {
+export default function LeaveBalance({ userId }: LeaveBalanceProps) {
+  const {user} = useAuth();
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceApiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -44,7 +65,7 @@ export default function LeaveBalance({ userId = DEFAULT_USER_ID }: LeaveBalanceP
         setLoading(true);
         setError("");
 
-        const response = await getLeaveBalance(userId);
+        const response = await getLeaveBalance(user?.loginUserAdID || '');//user?.loginUserAdID || ''
         if (!active) return;
 
         if (!response?.isSuccess || !response?.data) {

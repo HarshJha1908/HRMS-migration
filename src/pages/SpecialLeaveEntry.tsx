@@ -15,6 +15,10 @@ import type {
   SpecialLeaveTypeApi
 } from "../types/apiTypes";
 import "./SpecialLeaveEntry.css";
+import { useSearchParams } from "react-router-dom";
+import { useRef } from "react";
+import { useUser } from "../context/UserContext";
+
 
 const DEFAULT_LEAVE_TYPES: SpecialLeaveTypeApi[] = [
   { leaveTypeCode: "LWP", leaveTypeName: "Leave Without Pay" },
@@ -49,6 +53,10 @@ type TeamOption = {
 };
 
 export default function SpecialLeaveEntry() {
+  const exportRef = useRef<HTMLDivElement | null>(null);
+  const { username: signedInUser } = useUser();
+ 
+  const [searchParams] = useSearchParams();
   const [leaveTypes, setLeaveTypes] = useState<SpecialLeaveTypeApi[]>([]);
   const [selectedLeaveTypeCode, setSelectedLeaveTypeCode] = useState("LWP");
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -284,8 +292,7 @@ export default function SpecialLeaveEntry() {
 
       const today = new Date().toISOString().split("T")[0];
       const currentUser =
-        String(sessionStorage.getItem("username") || "").trim() ||
-        String(sessionStorage.getItem("userId") || "").trim() ||
+        String(signedInUser || "").trim() ||
         "HR";
 
       const selectedSet = new Set(selectedRows);
@@ -362,8 +369,7 @@ export default function SpecialLeaveEntry() {
 
     const updatedOn = new Date().toISOString().split("T")[0];
     const updatedBy =
-      normalize(sessionStorage.getItem("username")) ||
-      normalize(sessionStorage.getItem("userId")) ||
+      normalize(signedInUser) ||
       "HR";
     const selectedLeaveType = leaveTypes.find(
       (item) => normalize(item.leaveTypeCode).toUpperCase() === normalize(assignLeaveTypeCode).toUpperCase()
@@ -479,12 +485,24 @@ export default function SpecialLeaveEntry() {
     URL.revokeObjectURL(downloadUrl);
   };
 
+  useEffect(() => {
+  const type = searchParams.get("type");
+
+  if (type === "export" && exportRef.current) {
+    setTimeout(() => {
+      exportRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+    }, 300);
+  }
+}, [searchParams]);
   if (isAssignMode) {
     return (
       <section className="special-leave-page">
         <div className="special-leave-card assign-card">
           <div className="special-leave-header">
-            <h2>Assign Special Leaves</h2>
+            <h2>Assign Special Leaves </h2>
           </div>
 
           <div className="assign-form-grid">
@@ -697,14 +715,16 @@ export default function SpecialLeaveEntry() {
           </table>
         </div>
 
-        <div className="special-leave-actions">
+        <div className="special-leave-actions" ref={exportRef}>
           <button type="button" onClick={() => setIsAssignMode(true)}>
             Assign
           </button>
           <button type="button" onClick={handleRemoveSelected} disabled={isRemoving}>
             {isRemoving ? "Removing..." : "Remove Selected"}
           </button>
-          <button type="button" onClick={handleExport} disabled={loading || normalizedRows.length === 0}>
+          <button type="button" onClick={handleExport} disabled={loading || normalizedRows.length === 0}        
+              className={searchParams.get("type") === "export" ? "highlight" : ""}
+>
             Export
           </button>
         </div>

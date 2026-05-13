@@ -1,5 +1,5 @@
 // import type { ReactNode } from 'react';
-import Navbar from '../components/Navbar';
+import Navbar1 from '../components/Navbar 1';
 import './MainLayout.css';
 import { Outlet } from 'react-router-dom';
 import Footer from '../components/footer';
@@ -11,7 +11,7 @@ import Footer from '../components/footer';
 export default function MainLayout() {
   return (
     <div className="app-layout">
-      <Navbar />
+      <Navbar1 />
       <main className="main-layout">
         <Outlet />
       </main>

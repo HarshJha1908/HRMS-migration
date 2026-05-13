@@ -54,17 +54,46 @@
   white-space: nowrap;
 }
 
+
 /* Status badge */
-.status {
-  padding: 3px 8px;
-  border-radius: 12px;
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
+  display: inline-block;
+  min-width: 80px;
+  text-align: center;
 }
 
-.status.approved {
-  background: #e6f4ea;
-  color: #137333;
+/* Pending */
+.status-badge.Pending {
+  background-color: #ffc107;
+  color: #000;
+}
+
+/* Approved */
+.status-badge.Approved {
+  background-color: #28a745;
+  color: #fff;
+}
+
+/* Rejected */
+.status-badge.Rejected {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+/* Cancelled */
+.status-badge.Cancelled {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+/* Drafted */
+.status-badge.Drafted {
+  background-color: #17a2b8;
+  color: #fff;
 }
 
 /* View more */

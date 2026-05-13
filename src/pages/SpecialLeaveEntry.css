@@ -115,6 +115,10 @@
   cursor: pointer;
 }
 
+/* .special-leave-actions .highlight {
+  border: 2px solid #007bff;
+  background: #e6f0ff;
+} */
 .special-leave-actions button:hover {
   background: #174d6e;
 }

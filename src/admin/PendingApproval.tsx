@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./PendingApproval.css";
 import { getAllTeamMembersByManagerId, getPendingApprovals, bulkApproveReject } from "../services/apiService";
 import type { TeamMemberApi } from "../types/apiTypes";
+// import { useAuth } from "../auth/useAuth";
 
 type PendingApprovalApiItem = {
   leaveId: string;
@@ -36,13 +37,14 @@ type PendingRow = {
 };
 
 export default function PendingApproval() {
+  // const { user } = useAuth();
   const navigate = useNavigate();
   const [rows, setRows] = useState<PendingRow[]>([]);
   const [nameToAdId, setNameToAdId] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const userId = "in091a";
+  const userId = "IN091a";//user?.loginUserAdID
   const normalize = (value: string | null | undefined) => (value || "").trim();
   const normalizeNameKey = (value: string | null | undefined) => normalize(value).toLowerCase();
   const pickUserId = (item: PendingApprovalApiItem) =>
@@ -67,35 +69,35 @@ export default function PendingApproval() {
       setLoading(true);
       setError("");
 
-        const [data, teamRes] = await Promise.all([
-          getPendingApprovals(userId) as Promise<PendingApprovalApiItem[]>,
-          getAllTeamMembersByManagerId(userId)
-        ]);
+      const [data, teamRes] = await Promise.all([
+        getPendingApprovals(userId) as Promise<PendingApprovalApiItem[]>,
+        getAllTeamMembersByManagerId(userId)
+      ]);
 
-        const teamMap = new Map<string, string>();
-        (teamRes?.data ?? []).forEach((member: TeamMemberApi) => {
-          const nameKey = normalizeNameKey(member.name);
-          const adid = normalize(member.user_Id);
-          if (nameKey && adid && !teamMap.has(nameKey)) {
-            teamMap.set(nameKey, adid);
-          }
-        });
-        setNameToAdId(teamMap);
+      const teamMap = new Map<string, string>();
+      (teamRes?.data ?? []).forEach((member: TeamMemberApi) => {
+        const nameKey = normalizeNameKey(member.name);
+        const adid = normalize(member.user_Id);
+        if (nameKey && adid && !teamMap.has(nameKey)) {
+          teamMap.set(nameKey, adid);
+        }
+      });
+      setNameToAdId(teamMap);
 
-        const mapped = data.map((item, index) => ({
-          id: `${item.leaveId}-${index}`,
-          leaveId: item.leaveId,
-          name: item.requesterName,
+      const mapped = data.map((item, index) => ({
+        id: `${item.leaveId}-${index}`,
+        leaveId: item.leaveId,
+        name: item.requesterName,
         type: item.leaveTypeName?.trim() || "-",
         dateRange: `${formatDate(item.startDate)} to ${formatDate(item.endDate)}`,
         days: item.noOfDays,
         balance: "NA",
-          submitted: formatDate(item.submitionDate),
-          reason: item.reason || "-",
-          remark: "",
-          selected: false,
-          userId: pickUserId(item) || teamMap.get(normalizeNameKey(item.requesterName)) || ""
-        }));
+        submitted: formatDate(item.submitionDate),
+        reason: item.reason || "-",
+        remark: "",
+        selected: false,
+        userId: pickUserId(item) || teamMap.get(normalizeNameKey(item.requesterName)) || ""
+      }));
 
       setRows(mapped);
     } catch {
@@ -134,57 +136,57 @@ export default function PendingApproval() {
   };
 
   const handleAction = async (action: "Approve" | "Reject") => {
-  const selectedRows = rows.filter((r) => r.selected);
+    const selectedRows = rows.filter((r) => r.selected);
 
-  if (selectedRows.length === 0) {
-    alert("No rows selected");
-    return;
-  }
-
-  if (action === "Reject") {
-    const missingRemark = selectedRows.some((r) => !r.remark.trim());
-    if (missingRemark) {
-      alert("Please enter remark for rejection");
+    if (selectedRows.length === 0) {
+      alert("No rows selected");
       return;
     }
-  }
 
-  // Prepare payload (as per your API)
-  const payload = selectedRows.map((r) => ({
-    leaveId: r.leaveId,
-    status: action === "Approve" ? "A" : "R",
-    remarks: r.remark || ""
-  }));
+    if (action === "Reject") {
+      const missingRemark = selectedRows.some((r) => !r.remark.trim());
+      if (missingRemark) {
+        alert("Please enter remark for rejection");
+        return;
+      }
+    }
 
-  // Backup current state (for rollback)
-  const previousRows = rows;
+    // Prepare payload (as per your API)
+    const payload = selectedRows.map((r) => ({
+      leaveId: r.leaveId,
+      status: action === "Approve" ? "A" : "R",
+      remarks: r.remark || ""
+    }));
 
-  // 🔥 Optimistic update (instant UI change)
-  setRows((prev) => prev.filter((r) => !r.selected));
+    // Backup current state (for rollback)
+    const previousRows = rows;
 
-  try {
-    setLoading(true);
+    // 🔥 Optimistic update (instant UI change)
+    setRows((prev) => prev.filter((r) => !r.selected));
 
-    await bulkApproveReject(payload);
+    try {
+      setLoading(true);
 
-    alert(`${action} successful`);
+      await bulkApproveReject(payload);
 
-  } catch (err) {
-    console.error(err);
-    alert("Something went wrong");
+      alert(`${action} successful`);
 
-    // ❗ Rollback if API fails
-    setRows(previousRows);
-  } finally {
-    setLoading(false);
-  }
-};
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+
+      // ❗ Rollback if API fails
+      setRows(previousRows);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <section className="pending-page">
       <div className="container">
         <div className="card">
-          <div className="card-header">Pending Approval Details</div>
+          <div className="card-header">Pending Requests Details</div>
 
           <div className="card-body">
             <div className="controls">
@@ -279,8 +281,12 @@ export default function PendingApproval() {
                                 navigate("/leave-view", {
                                   state: {
                                     leaveId: row.leaveId,
-                                    isManager: true,
-                                    userId: row.userId || nameToAdId.get(normalizeNameKey(row.name)) || undefined
+                                    userId:
+                                      row.userId ||
+                                      nameToAdId.get(
+                                        normalizeNameKey(row.name)
+                                      ) ||
+                                      undefined
                                   }
                                 })
                               }

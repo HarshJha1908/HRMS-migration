@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./SingleSearch.css";
 import { getEmployeeByKeyword } from "../services/apiService"; // adjust path
 import { useNavigate } from "react-router-dom";
+// import { useAuth } from "../auth/useAuth";
 
 type EmployeeSearchItem = {
   user_Employee_No?: string | number;
@@ -17,6 +18,7 @@ type EmployeeSearchItem = {
 };
 
 const SingleSearch = () => {
+  // const {user} = useAuth();
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState("");
   const [employees, setEmployees] = useState<EmployeeSearchItem[]>([]);
@@ -41,7 +43,7 @@ const SingleSearch = () => {
       setError("");
 
       const data = await getEmployeeByKeyword(trimmedKeyword);
-
+      console.log("Search API Response:", data);
       setEmployees(data);
     } catch {
       setEmployees([]);

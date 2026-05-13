@@ -191,7 +191,7 @@
   line-height: 1.35;
 }
 
-.status-badge {
+/* .status-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -227,7 +227,7 @@
 .status-badge.Drafted {
   background: #6c757d;
   color: #fff;
-}
+} */
 
 @media (max-width: 768px) {
   .view-leave-page {
@@ -262,5 +262,145 @@
   .value {
     font-size: 13px;
   }
+}
+
+/* Attachment Link Styles */
+.attachment-link {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: inherit;
+  font-family: inherit;
+  transition: color 0.3s ease;
+}
+
+.attachment-link:hover {
+  color: #1d4ed8;
+  text-decoration: none;
+}
+
+.attachment-link:active {
+  color: #1e40af;
+}
+
+/* Attachment Modal Styles */
+.attachment-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.attachment-modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 900px;
+  height: 90vh;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.attachment-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.attachment-modal-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 18px;
+  word-break: break-word;
+}
+
+.attachment-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+}
+
+.attachment-modal-close:hover {
+  color: #1f2937;
+}
+
+.attachment-modal-body {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9fafb;
+}
+
+.attachment-viewer {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.attachment-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.btn-download,
+.btn-close-modal {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.btn-download {
+  background-color: #2563eb;
+  color: white;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-download:hover {
+  background-color: #1d4ed8;
+}
+
+.btn-close-modal {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.btn-close-modal:hover {
+  background-color: #d1d5db;
 }
 

@@ -43,3 +43,6 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
+export interface DocumentViewerProps2 {
+  docId: number;
+}
