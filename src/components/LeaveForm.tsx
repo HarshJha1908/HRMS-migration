@@ -274,8 +274,8 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
       const payload = {
 
         userADId: user?.loginUserAdID || '',
-        startDate: formatLocalDate(startDate),
-        endDate: formatLocalDate(endDate),
+        startDate: formatApiDate(startDate),
+        endDate: formatApiDate(endDate),
         // noOfDays: noOfDays?.noOfDays || 0,
         reason: reason === 'Others' ? otherReason : reason,
         leaveTypeCode: leaveType.trim(),
