@@ -112,22 +112,13 @@ const Insurance = () => {
         );
 
   useEffect(() => {
-    const fetchInsuranceData = async () => {
-      if (!insuranceType || !userId) {
-        setRelationshipOptions([]);
+    const fetchEmployeeProfile = async () => {
+      if (!userId) {
+        setEmployeeNumber("");
         return;
       }
 
       try {
-        setLoadingRelations(true);
-
-        const relations =
-          await getInsuranceRelations(
-            insuranceType
-          );
-
-        setRelationshipOptions(relations);
-
         const empProfile =
           await getEmpProfileByAdId(
             userId
@@ -139,12 +130,40 @@ const Insurance = () => {
               ""
           )
         );
+      } catch (error) {
+        console.error(
+          "Failed to load employee profile",
+          error
+        );
+        setEmployeeNumber("");
+      }
+    };
 
-        const nominationDetails =
-          await getInsuranceNominationDetails(
-            insuranceType,
-            userId
-          );
+    fetchEmployeeProfile();
+  }, [userId]);
+
+  useEffect(() => {
+    const fetchInsuranceData = async () => {
+      if (!insuranceType || !userId) {
+        setRelationshipOptions([]);
+        return;
+      }
+
+      try {
+        setLoadingRelations(true);
+
+        const [relations, nominationDetails] =
+          await Promise.all([
+            getInsuranceRelations(
+              insuranceType
+            ),
+            getInsuranceNominationDetails(
+              insuranceType,
+              userId
+            ),
+          ]);
+
+        setRelationshipOptions(relations);
 
         setEmployeeName(
           nominationDetails.employeeName || ""
@@ -246,6 +265,32 @@ const Insurance = () => {
     window.print();
   };
 
+  const parseDateOnly = (value: string) => {
+    const [year, month, day] = value
+      .split("-")
+      .map(Number);
+
+    if (!year || !month || !day) {
+      return null;
+    }
+
+    const date = new Date(
+      year,
+      month - 1,
+      day
+    );
+
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return null;
+    }
+
+    return date;
+  };
+
   const handleSave = async () => {
     if (!reasonForChange.trim()) {
   window.alert(
@@ -284,6 +329,56 @@ if (!acceptTerms) {
       return;
     }
 
+    for (
+      let index = 0;
+      index < nomineeRows.length;
+      index++
+    ) {
+      const nomineeName =
+        nomineeNames[index].trim();
+
+      const dobValue =
+        nomineeDobs[index].trim();
+
+      const relationship =
+        relationships[index].trim();
+
+      const shareValue =
+        percentageShares[index].trim();
+
+      const hasRowData = isHealthInsurance
+        ? Boolean(
+            nomineeName ||
+              dobValue ||
+              relationship
+          )
+        : Boolean(
+            nomineeName ||
+              dobValue ||
+              relationship ||
+              shareValue
+          );
+
+      const isMissingRequiredField =
+        !nomineeName ||
+        !dobValue ||
+        !relationship ||
+        (!isHealthInsurance &&
+          !shareValue);
+
+      if (
+        hasRowData &&
+        isMissingRequiredField
+      ) {
+        window.alert(
+          `Please complete all mandatory fields for nominee row ${
+            index + 1
+          } before saving.`
+        );
+        return;
+      }
+    }
+
     if (isHealthInsurance) {
       for (
         let index = 0;
@@ -300,9 +395,10 @@ if (!acceptTerms) {
           continue;
         }
 
-        const dob = new Date(dobValue);
+        const dob =
+          parseDateOnly(dobValue);
 
-        if (isNaN(dob.getTime())) {
+        if (!dob) {
           continue;
         }
 
@@ -359,11 +455,8 @@ if (!acceptTerms) {
         .map((row, index) => ({
           sequence: row,
 
-          memberDOB: nomineeDobs[index]
-            ? new Date(
-                nomineeDobs[index]
-              ).toISOString()
-            : "",
+          memberDOB:
+            nomineeDobs[index] || "",
 
           relationCode:
             relationships[index],
@@ -656,7 +749,7 @@ if (!acceptTerms) {
                 </th>
 
                 <th className="col-dob">
-                  DOB (dd/mm/yyyy)
+                  DOB
                 </th>
 
                 <th className="col-type">

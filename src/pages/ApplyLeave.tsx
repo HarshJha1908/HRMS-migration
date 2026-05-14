@@ -10,8 +10,7 @@ export default function ApplyLeave() {
     <>
       <LeaveBalance />
      <LeaveForm
-  onSubmit={(data) => {
-    console.log('Submitted leave:', data);
+  onSubmit={() => {
     // next: update table & balance
   }}
 />
