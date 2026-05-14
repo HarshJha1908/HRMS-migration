@@ -43,7 +43,6 @@ const SingleSearch = () => {
       setError("");
 
       const data = await getEmployeeByKeyword(trimmedKeyword);
-      console.log("Search API Response:", data);
       setEmployees(data);
     } catch {
       setEmployees([]);

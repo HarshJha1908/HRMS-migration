@@ -20,7 +20,6 @@ export const useHolidays = (): UseHolidaysResult => {
       setError("");
 
       const result = await getHolidays();
-      console.log(result);
       if (!result?.isSuccess) {
         throw new Error(result?.message || "Holiday API request failed");
       }

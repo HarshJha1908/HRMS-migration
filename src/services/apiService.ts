@@ -81,7 +81,13 @@ export const getNoOfDays = (data: {
   endDate: string;
   totalHalfDays: number;
 }) => {
-  return apiClient(`api/Leave/GetNoOfWorkingDaysFromStartandEndDate?startDate=${data.startDate}&Enddate=${data.endDate}&Totalhalfdays=${data.totalHalfDays}`, {
+  const params = new URLSearchParams({
+    startDate: data.startDate,
+    endDate: data.endDate,
+    Totalhalfdays: String(data.totalHalfDays),
+  });
+
+  return apiClient(`/api/Leave/GetNoOfWorkingDaysFromStartandEndDate?${params.toString()}`, {
     method: "GET",
   });
 }
