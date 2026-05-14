@@ -1,3 +1,5 @@
+
+
 .quick-export-page {
   width: 100%;
   min-height: calc(100vh - 140px);
@@ -162,6 +164,27 @@
   color: #1d6d98;
   font-size: 17px;
   line-height: 1.35;
+}
+
+.quick-export-table {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+
+.quick-export-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.quick-export-table th,
+.quick-export-table td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+.quick-export-table th {
+  background-color: #f5f5f5;
 }
 
 @media (max-width: 1024px) {

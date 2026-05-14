@@ -1,19 +1,26 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import "./QuickExport.css";
-import { useAuth } from "../auth/useAuth";
+
 import {
-  getLeaveBalanceForExcelByManagerId,
-  getLeaveDetailsForExcelByManagerId
+  getAllEmployeeLeaveBalanceReport,
+  getAllEmployeeLeaveDetailsReport
 } from "../services/apiService";
+
 import type {
-  ManagerLeaveBalanceExcelApi
+  ManagerLeaveBalanceExcelApi,
+  ManagerLeaveDetailsExcelApi,
+  EmployeeLeaveBalanceReportType
 } from "../types/apiTypes";
+
 import { CsvExportUtil } from "../utils/Utils";
 
 type QuickReportType = "" | "leave-details" | "leave-balance";
 type BalanceYearOption = "this-year" | "next-year";
 
-const REPORT_OPTIONS: Array<{ value: Exclude<QuickReportType, "">; label: string }> = [
+const REPORT_OPTIONS: Array<{
+  value: Exclude<QuickReportType, "">;
+  label: string;
+}> = [
   { value: "leave-details", label: "All Leave Details" },
   { value: "leave-balance", label: "All Leave Balance" }
 ];
@@ -22,140 +29,96 @@ const toDateInputValue = (date: Date) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
+
   return `${year}-${month}-${day}`;
 };
 
-const parseReportDate = (value: string | null | undefined) => {
-  const text = String(value || "").trim();
-  if (!text) return null;
-
-  const dateOnly = text.split("T")[0].trim();
-  const separator = dateOnly.includes("/") ? "/" : dateOnly.includes("-") ? "-" : "";
-  if (!separator) {
-    const parsed = new Date(text);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }
-
-  const parts = dateOnly.split(separator).map((part) => part.trim());
-  if (parts.length !== 3) {
-    const parsed = new Date(text);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }
-
-  const [first, second, third] = parts;
-  const yearFirst = first.length === 4;
-  const year = Number(yearFirst ? first : third);
-  const month = Number(second);
-  const day = Number(yearFirst ? third : first);
-  const parsed = new Date(year, month - 1, day);
-
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
-
-const normalizeDateStart = (value: string) => {
-  const parsed = parseReportDate(value);
-  if (!parsed) return null;
-
-  parsed.setHours(0, 0, 0, 0);
-  return parsed;
-};
-
-const normalizeDateEnd = (value: string) => {
-  const parsed = parseReportDate(value);
-  if (!parsed) return null;
-
-  parsed.setHours(23, 59, 59, 999);
-  return parsed;
-};
-
-const downloadCsv = (csv: string, fileName: string) => {
-  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+const formatDateForApi = (value: string) => {
+  return value;
 };
 
 const QuickExport = () => {
   const currentYear = useMemo(() => new Date().getFullYear(), []);
-  const [reportType, setReportType] = useState<QuickReportType>("");
-  const [startDate, setStartDate] = useState(toDateInputValue(new Date(currentYear, 0, 1)));
-  const [endDate, setEndDate] = useState(toDateInputValue(new Date()));
-  const [balanceYearOption, setBalanceYearOption] = useState<BalanceYearOption>("this-year");
+
+  const [reportType, setReportType] =
+    useState<QuickReportType>("");
+
+  const [startDate, setStartDate] = useState(
+    toDateInputValue(new Date(currentYear, 0, 1))
+  );
+
+  const [endDate, setEndDate] = useState(
+    toDateInputValue(new Date())
+  );
+
+  const [balanceYearOption, setBalanceYearOption] =
+    useState<BalanceYearOption>("this-year");
+
   const [loading, setLoading] = useState(false);
+
   const [message, setMessage] = useState("");
-  const { user } = useAuth();
 
-  const selectedBalanceYear = balanceYearOption === "this-year" ? currentYear : currentYear + 1;
+  const [tableData, setTableData] = useState<any[]>([]);
 
-  const exportLeaveDetails = async (userId: string) => {
-    const rangeStart = normalizeDateStart(startDate);
-    const rangeEnd = normalizeDateEnd(endDate);
+  const exportLeaveDetails = async () => {
+    const apiStartDate = formatDateForApi(startDate);
+    const apiEndDate = formatDateForApi(endDate);
 
-    if (!rangeStart || !rangeEnd) {
-      setMessage("Please select valid start and end dates.");
+    const data: ManagerLeaveDetailsExcelApi[] =
+      await getAllEmployeeLeaveDetailsReport(
+        apiStartDate,
+        apiEndDate
+      );
+      setTableData(data);
+    if (data.length === 0) {
+      setMessage("No leave details records found.");
       return;
     }
 
-    if (rangeStart > rangeEnd) {
-      setMessage("Start date cannot be after end date.");
-      return;
-    }
-
-    const data = await getLeaveDetailsForExcelByManagerId(userId);
-    const filteredData = data.filter((item) => {
-      const itemStart = normalizeDateStart(item.startDate || "");
-      const itemEnd = normalizeDateEnd(item.endDate || item.startDate || "");
-
-      if (!itemStart && !itemEnd) return false;
-
-      const effectiveStart = itemStart || itemEnd;
-      const effectiveEnd = itemEnd || itemStart;
-
-      return Boolean(effectiveStart && effectiveEnd && effectiveStart <= rangeEnd && effectiveEnd >= rangeStart);
-    });
-
-    if (filteredData.length === 0) {
-      setMessage("No leave details found for selected date range.");
-      return;
-    }
+    const csv =
+      CsvExportUtil.generateManagerLeaveDetailsCsv(data);
 
     downloadCsv(
-      CsvExportUtil.generateManagerLeaveDetailsCsv(filteredData),
-      `all-leave-details-${startDate}-to-${endDate}.csv`
+      csv,
+      `all-leave-details-${apiStartDate}-to-${apiEndDate}.csv`
     );
-    setMessage(`Exported ${filteredData.length} leave detail record(s).`);
+
+    setMessage(
+      `Exported ${data.length} leave detail record(s).`
+    );
   };
 
-  const exportLeaveBalance = async (userId: string) => {
-    const data: ManagerLeaveBalanceExcelApi[] = await getLeaveBalanceForExcelByManagerId(userId);
+  const exportLeaveBalance = async () => {
+    const reportTypeValue: EmployeeLeaveBalanceReportType =
+      balanceYearOption === "this-year" ? "TY" : "NY";
 
+    const data: ManagerLeaveBalanceExcelApi[] =
+      await getAllEmployeeLeaveBalanceReport(
+        reportTypeValue
+      );
+      console.log("data", data);
+      setTableData(data);
     if (data.length === 0) {
       setMessage("No leave balance records found.");
       return;
     }
 
+    const csv =
+      CsvExportUtil.generateManagerLeaveBalanceCsv(data);
+
     downloadCsv(
-      CsvExportUtil.generateManagerLeaveBalanceCsv(data),
-      `all-leave-balance-${selectedBalanceYear}.csv`
+      csv,
+      `all-leave-balance-${reportTypeValue}.csv`
     );
-    setMessage(`Exported ${data.length} leave balance record(s) for ${selectedBalanceYear}.`);
+
+    setMessage(
+      `Exported ${data.length} leave balance record(s).`
+    );
   };
 
   const handleExport = async () => {
-    const userId = String(user?.loginUserAdID || "").trim();
     if (!reportType) {
       setMessage("Please select report type.");
-      return;
-    }
-
-    if (!userId) {
-      setMessage("Unable to identify logged in user.");
       return;
     }
 
@@ -164,35 +127,120 @@ const QuickExport = () => {
       setMessage("");
 
       if (reportType === "leave-details") {
-        await exportLeaveDetails(userId);
-      } else {
-        await exportLeaveBalance(userId);
+        await exportLeaveDetails();
+      }
+
+      if (reportType === "leave-balance") {
+        await exportLeaveBalance();
       }
     } catch {
-      setMessage("Unable to export report. Please try again.");
+      setMessage(
+        "Unable to export report. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const downloadCsv = (
+    csv: string,
+    fileName: string
+  ) => {
+    const blob = new Blob([`\uFEFF${csv}`], {
+      type: "text/csv;charset=utf-8;"
+    });
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = fileName;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(url);
+  };
+
+  const fetchReportData = async () => {
+  if (!reportType) return;
+
+  try {
+    setLoading(true);
+    setMessage("");
+
+    if (reportType === "leave-details") {
+      const apiStartDate = formatDateForApi(startDate);
+      const apiEndDate = formatDateForApi(endDate);
+
+      const data = await getAllEmployeeLeaveDetailsReport(
+        apiStartDate,
+        apiEndDate
+      );
+
+      setTableData(data);
+    }
+
+    if (reportType === "leave-balance") {
+      const reportTypeValue =
+        balanceYearOption === "this-year" ? "TY" : "NY";
+
+      const data = await getAllEmployeeLeaveBalanceReport(
+        reportTypeValue
+      );
+
+      setTableData(data);
+    }
+  } catch {
+    setMessage("Failed to load data.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+useEffect(() => {
+  fetchReportData();
+}, [reportType, startDate, endDate, balanceYearOption]);
   return (
     <section className="quick-export-page">
-      <h1 className="quick-export-title">Quick Export :</h1>
+      <h1 className="quick-export-title">
+        Quick Export :
+      </h1>
 
       <div className="quick-export-panel">
-        <div className={`quick-export-grid ${reportType ? "has-report" : "is-default"}`}>
+        <div
+          className={`quick-export-grid ${
+            reportType
+              ? "has-report"
+              : "is-default"
+          }`}
+        >
           <label className="quick-export-field">
             <span>Report Type</span>
+
             <select
               value={reportType}
               onChange={(event) => {
-                setReportType(event.target.value as QuickReportType);
+                setReportType(
+                  event.target.value as QuickReportType
+                );
+
                 setMessage("");
               }}
             >
-              <option value="">Select Report Type</option>
+              <option value="">
+                Select Report Type
+              </option>
+
               {REPORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
+                <option
+                  key={option.value}
+                  value={option.value}
+                >
                   {option.label}
                 </option>
               ))}
@@ -202,20 +250,32 @@ const QuickExport = () => {
           {reportType === "leave-details" && (
             <div className="quick-export-controls">
               <label className="quick-export-field">
-                <span>Start Date (dd/mm/yyyy)<strong>*</strong></span>
+                <span>
+                  Start Date
+                  <strong>*</strong>
+                </span>
+
                 <input
                   type="date"
                   value={startDate}
-                  onChange={(event) => setStartDate(event.target.value)}
+                  onChange={(event) =>
+                    setStartDate(event.target.value)
+                  }
                 />
               </label>
 
               <label className="quick-export-field">
-                <span>End Date (dd/mm/yyyy)<strong>*</strong></span>
+                <span>
+                  End Date
+                  <strong>*</strong>
+                </span>
+
                 <input
                   type="date"
                   value={endDate}
-                  onChange={(event) => setEndDate(event.target.value)}
+                  onChange={(event) =>
+                    setEndDate(event.target.value)
+                  }
                 />
               </label>
             </div>
@@ -229,35 +289,85 @@ const QuickExport = () => {
                     type="radio"
                     name="balanceYear"
                     value="this-year"
-                    checked={balanceYearOption === "this-year"}
-                    onChange={() => setBalanceYearOption("this-year")}
+                    checked={
+                      balanceYearOption ===
+                      "this-year"
+                    }
+                    onChange={() =>
+                      setBalanceYearOption(
+                        "this-year"
+                      )
+                    }
                   />
                   This Year
                 </label>
               </fieldset>
+
               <fieldset className="quick-export-field quick-export-radio-field">
                 <label>
                   <input
                     type="radio"
                     name="balanceYear"
                     value="next-year"
-                    checked={balanceYearOption === "next-year"}
-                    onChange={() => setBalanceYearOption("next-year")}
+                    checked={
+                      balanceYearOption ===
+                      "next-year"
+                    }
+                    onChange={() =>
+                      setBalanceYearOption(
+                        "next-year"
+                      )
+                    }
                   />
                   Next Year
                 </label>
               </fieldset>
             </div>
           )}
+
           <div className="quick-export-action">
-            <button type="button" onClick={handleExport} disabled={!reportType || loading}>
-              {loading ? "Exporting..." : "Export"}
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={!reportType || loading}
+            >
+              {loading
+                ? "Exporting..."
+                : "Export"}
             </button>
           </div>
         </div>
 
-        {message && <p className="quick-export-message">{message}</p>}
+        {message && (
+          <p className="quick-export-message">
+            {message}
+          </p>
+        )}
       </div>
+
+{tableData.length > 0 && (
+  <div className="leave-table-wrapper">
+    <table className="leave-table">
+      <thead>
+        <tr>
+          {Object.keys(tableData[0]).map((key) => (
+            <th key={key}>{key}</th>
+          ))}
+        </tr>
+      </thead>
+
+      <tbody>
+        {tableData.map((row, index) => (
+          <tr key={index}>
+            {Object.values(row).map((value, i) => (
+              <td key={i}>{String(value ?? "")}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
     </section>
   );
 };

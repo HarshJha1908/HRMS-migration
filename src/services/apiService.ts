@@ -14,6 +14,8 @@ import type {
   ManagerLeaveDetailsExcelResponse,
   ManagerLeaveBalanceExcelApi,
   ManagerLeaveBalanceExcelResponse,
+  EmployeeLeaveBalanceDetailsApi,
+  EmployeeLeaveBalanceReportType,
   ExitLeaveAdjustmentCalculationData,
   ExitLeaveAdjustmentCalculationResponse,
   UpdateExitLeaveAdjustmentRequest,
@@ -904,3 +906,107 @@ export const manageInsuranceNominationDetails = async (
     }
   );
 };
+// ==============================
+// HR / HEAD REPORT APIS
+// ==============================
+const toTextValue = (
+  value: string | number | boolean | null | undefined
+): string | null =>
+  value === null || value === undefined
+    ? null
+    : String(value);
+
+const mapEmployeeLeaveBalanceToExcelRow = (
+  item: EmployeeLeaveBalanceDetailsApi
+): ManagerLeaveBalanceExcelApi => ({
+
+  employeeID: item.employeeId,
+  employeeName: item.employeeName,
+  bdL_Total: toTextValue(item.bdlAvailable),
+  bdL_Submitted: toTextValue(item.bdlSubmitted),
+  bdL_Balance: toTextValue(item.bdlBalance),
+
+  cL_Total: toTextValue(item.clAvailable),
+  cL_Submitted: toTextValue(item.clSubmitted),
+  cL_Balance: toTextValue(item.clBalance),
+
+  pL_Total: toTextValue(item.plAvailable),
+  pL_Submitted: toTextValue(item.plSubmitted),
+  pL_Balance: toTextValue(item.plBalance),
+
+  asL_Total: toTextValue(item.openingPLBalance),
+  asL_Submitted: "0",
+  asL_Balance: toTextValue(item.openingPLBalance),
+
+  isPTLApplicable: item.ptlApplicable ?? null,
+
+  ptL_Total: toTextValue(item.ptlAvailable),
+  ptL_Submitted: toTextValue(item.ptlSubmitted),
+  ptL_Balance: toTextValue(item.ptlBalance),
+
+  isMTLApplicable: null,
+
+  mtL_Total: "0",
+  mtL_Submitted: "0",
+  mtL_Balance: "0",
+
+  sL_Total: toTextValue(item.slAvailable),
+  sL_Submitted: toTextValue(item.slSubmitted),
+  sL_Balance: toTextValue(item.slBalance),
+
+  wfH_Total: toTextValue(item.wfhAvailable),
+  wfH_Submitted: toTextValue(item.wfhSubmitted),
+  wfH_Balance: toTextValue(item.wfhBalance),
+
+  wfhX_Total: toTextValue(item.coAvailable),
+  wfhX_Submitted: toTextValue(item.coSubmitted),
+  wfhX_Balance: toTextValue(item.coBalance)
+});
+
+export const getAllEmployeeLeaveDetailsReport = async (
+  startDate: string,
+  endDate: string
+): Promise<ManagerLeaveDetailsExcelApi[]> => {
+  const res = await apiClient(
+    `/api/Report/GetAllEmployeeLeaveDetails?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
+  );
+
+  console.log("LEAVE DETAILS RAW RESPONSE:", res); // ✅ ADD THIS
+
+  if (Array.isArray(res)) return res;
+
+  if (res?.data && Array.isArray(res.data)) return res.data;
+
+  return [];
+};
+export const getAllEmployeeLeaveBalanceDetails = async (
+  type: EmployeeLeaveBalanceReportType = "TY"
+): Promise<EmployeeLeaveBalanceDetailsApi[]> => {
+  const res = await apiClient(
+    `/api/Report/GetAllEmployeeLeaveDetails?type=${encodeURIComponent(
+      type
+    )}`
+  );
+
+  return Array.isArray(res)
+    ? (res as EmployeeLeaveBalanceDetailsApi[])
+    : [];
+};
+export const getAllEmployeeLeaveBalanceReport = async (
+  type: EmployeeLeaveBalanceReportType = "TY"
+): Promise<ManagerLeaveBalanceExcelApi[]> => {
+  const res = await apiClient(
+    `/api/Report/GetAllEmployeeLeaveBalanceDetails?type=${encodeURIComponent(
+      type
+    )}`
+  );
+
+  console.log("RAW RESPONSE", res);
+
+  const data = Array.isArray(res)
+    ? res
+    : [];
+
+  return data.map(mapEmployeeLeaveBalanceToExcelRow);
+};
+

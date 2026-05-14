@@ -294,8 +294,8 @@ export const CsvExportUtil = {
   },
   generateManagerLeaveDetailsCsv: (data: ManagerLeaveDetailsExcelApi[]) => {
     const headers = [
-      "Requester Name",
       "Employee ID",
+      "Requester Name",
       "Start Date",
       "End Date",
       "Submission Date",
@@ -308,8 +308,8 @@ export const CsvExportUtil = {
     ];
 
     const rows = data.map((item) => [
-      escapeCsvCell(item.requesterName),
       escapeCsvCell(item.employeeId),
+      escapeCsvCell(item.requesterName),
       escapeCsvCell(item.startDate),
       escapeCsvCell(item.endDate),
       escapeCsvCell(item.submissionDate ?? item.submitionDate),
@@ -325,8 +325,8 @@ export const CsvExportUtil = {
   },
   generateManagerLeaveBalanceCsv: (data: ManagerLeaveBalanceExcelApi[]) => {
     const headers = [
-      "Employee Name",
       "Employee ID",
+      "Employee Name",
       "BDL Total",
       "BDL Submitted",
       "BDL Balance",
@@ -359,8 +359,8 @@ export const CsvExportUtil = {
     ];
 
     const rows = data.map((item) => [
-      escapeCsvCell(item.employeeName),
       escapeCsvCell(item.employeeID),
+      escapeCsvCell(item.employeeName),
       escapeCsvCell(item.bdL_Total),
       escapeCsvCell(item.bdL_Submitted),
       escapeCsvCell(item.bdL_Balance),

@@ -271,6 +271,44 @@ export type ManagerLeaveBalanceExcelResponse = {
   data?: ManagerLeaveBalanceExcelApi[] | null;
 };
 
+export type EmployeeLeaveBalanceReportType = "TY" | "NY";
+
+export type EmployeeLeaveBalanceDetailsApi = {
+  employeeId: string | number | null;
+  employeeName: string | null;
+  ptlApplicable?: boolean | null;
+  sex?: string | null;
+  openingPLBalance: string | number | null;
+  clAvailable: string | number | null;
+  clSubmitted: string | number | null;
+  clBalance: string | number | null;
+  plAvailable: string | number | null;
+  plSubmitted: string | number | null;
+  plBalance: string | number | null;
+  wfhAvailable: string | number | null;
+  wfhSubmitted: string | number | null;
+  wfhBalance: string | number | null;
+  bdlAvailable: string | number | null;
+  bdlSubmitted: string | number | null;
+  bdlBalance: string | number | null;
+  slAvailable: string | number | null;
+  slSubmitted: string | number | null;
+  slBalance: string | number | null;
+  ptlAvailable: string | number | null;
+  ptlSubmitted: string | number | null;
+  ptlBalance: string | number | null;
+  coAvailable: string | number | null;
+  coSubmitted: string | number | null;
+  coBalance: string | number | null;
+};
+
+export type EmployeeLeaveBalanceDetailsResponse = {
+  statusCode?: number;
+  isSuccess?: boolean;
+  message?: string;
+  data?: EmployeeLeaveBalanceDetailsApi[] | null;
+};
+
 //Create Employee 
   //Employee Type
 export type EmployeeTypeApi={
@@ -564,4 +602,5 @@ export type DocumentsResponse = {
   message?: string;
   data?: DocumentApi[] | null;
 };
+
 
