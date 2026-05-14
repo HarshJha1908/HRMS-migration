@@ -15,6 +15,15 @@ import { formatLocalDate } from '../utils/Utils';
 
 
 
+
+const formatApiDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+
 const getSavedLeaveId = (response: any) => {
   const leaveId = response?.message;
   return leaveId !== undefined && leaveId !== null ? String(leaveId).trim() : '';
@@ -143,13 +152,16 @@ export default function LeaveForm({ onSubmit }: LeaveFormProps) {
   }, []);
 
   useEffect(() => {
-    if (!startDate || !endDate) return;
+    if (!startDate || !endDate) {
+      setNoOfDays(null);
+      return;
+    }
     const loadDays = async () => {
       try {
         setLoadDays(true);
         const result = await getNoOfDays({
-          startDate: formatLocalDate(startDate),
-          endDate: formatLocalDate(endDate),
+          startDate: formatApiDate(startDate),
+          endDate: formatApiDate(endDate),
           totalHalfDays:
             (isHalfDayStart ? 0.5 : 0) +
             (isHalfDayEnd ? 0.5 : 0),
