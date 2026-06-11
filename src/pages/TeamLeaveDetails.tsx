@@ -78,11 +78,12 @@ export default function TeamLeaveDetails() {
         setError("");
 
         const [memberRes, leaveTypeRes, managerRows] = await Promise.all([
-          getAllTeamMembersByManagerId(user?.loginUserAdID || ''),
+          getAllTeamMembersByManagerId(user?.loginUserAdID || ''), ////user?.loginUserAdID || ''
           getLeaveTypes(user?.loginUserAdID || ''),
-          getAllLeaveRequestByManagerId(user?.loginUserAdID || '')
+          getAllLeaveRequestByManagerId(user?.loginUserAdID || '')//user?.loginUserAdID || ''
+          
         ]);
-
+        
         const memberData = (memberRes?.data ?? []).map((m: TeamMemberApi) => ({
           ...m,
           name: normalize(m.name),
@@ -278,7 +279,7 @@ export default function TeamLeaveDetails() {
                         {statusMap.get(normalizeCode(row.statusCode)) || row.statusCode}
                       </span>
                     </td>
-                    <td>{formatDate(row.statusChangeDate)}</td>
+                    <td>{formatDate(row.dateofapproved)}</td>
                     <td>
                       <button
                         type="button"

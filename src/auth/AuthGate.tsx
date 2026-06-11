@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { InteractionRequiredAuthError, InteractionStatus } from "@azure/msal-browser";
 import { loginRequest, ssoSilentRequest } from "./authConfig";
+import LoadingScreen from "../layouts/LoadingScreen";
 
 type Props = { children: ReactNode };
 
@@ -61,7 +62,7 @@ export default function AuthGate({ children }: Props) {
   }
 
   if (!isAuthenticated) {
-    return <div style={{ padding: 24 }}>Signing you in&hellip;</div>;
+    return <LoadingScreen />;
   }
 
   return <>{children}</>;

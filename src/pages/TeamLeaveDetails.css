@@ -89,11 +89,11 @@
 .team-table th {
   background: #14597b;
   color: #fff;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 500;
   text-align: center;
-  padding: 12px 10px;
-  border: 1px solid #2e7192;
+  padding: 14px 10px;
+  border: none;
   white-space: nowrap;
 }
 

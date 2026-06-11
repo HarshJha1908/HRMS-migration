@@ -139,7 +139,7 @@ export type HolidayResponse = {
 
 //Reason field
 export type ReasonApi = {
-  reason: string;
+  reason: string ;
   isActive: boolean;
 };
 
@@ -153,7 +153,7 @@ export type LeaveDetailsApi = {
   balance: number | null;
   submitionDate: string;
   approvednDate: string | null;
-  statusChangeDate: string | null;
+  dateofapproved: string | null;
   leaveTypeName: string;
   statusCode: string;
   reason: string | null;
@@ -177,6 +177,7 @@ export type LeaveDetails = {
   approverRemarks: string | null;
   noOfDays: number;
   pat_Mat_Leave: string;
+  dateofapproved:string;
 };
 
 //Manager Name
@@ -211,10 +212,10 @@ export type ManagerLeaveDetailsExcelApi = {
   startDate: string | null;
   endDate: string | null;
   submitionDate?: string | null;
-  submissionDate?: string | null;
+  dateOfSubmission?: string | null;
   dateofapproved?: string | null;
-  dateOfApproved?: string | null;
-  leaveTypeName: string | null;
+  dateOfApproval?: string | null;
+  leaveType: string | null;
   status: string | null;
   approverName: string | null;
   teamName: string | null;
@@ -276,29 +277,45 @@ export type EmployeeLeaveBalanceReportType = "TY" | "NY";
 export type EmployeeLeaveBalanceDetailsApi = {
   employeeId: string | number | null;
   employeeName: string | null;
+
   ptlApplicable?: boolean | null;
   sex?: string | null;
+
   openingPLBalance: string | number | null;
+
   clAvailable: string | number | null;
   clSubmitted: string | number | null;
+  clSubmited?: string | number | null; // ✅ backend typo support
   clBalance: string | number | null;
+
   plAvailable: string | number | null;
   plSubmitted: string | number | null;
+  plSubmited?: string | number | null; // ✅ backend typo support
   plBalance: string | number | null;
+
   wfhAvailable: string | number | null;
   wfhSubmitted: string | number | null;
+  wfhSubmited?: string | number | null; // ✅ backend typo support
   wfhBalance: string | number | null;
+
   bdlAvailable: string | number | null;
   bdlSubmitted: string | number | null;
+  bdlSubmited?: string | number | null; // ✅ backend typo support
   bdlBalance: string | number | null;
+
   slAvailable: string | number | null;
   slSubmitted: string | number | null;
+  slSubmited?: string | number | null; // ✅ backend typo support
   slBalance: string | number | null;
+
   ptlAvailable: string | number | null;
   ptlSubmitted: string | number | null;
+  ptlSubmited?: string | number | null; // ✅ backend typo support
   ptlBalance: string | number | null;
+
   coAvailable: string | number | null;
   coSubmitted: string | number | null;
+  coSubmited?: string | number | null; // ✅ backend typo support
   coBalance: string | number | null;
 };
 
@@ -603,4 +620,13 @@ export type DocumentsResponse = {
   data?: DocumentApi[] | null;
 };
 
+//Summary Report
+export interface SummaryReportTeamHeadApi {
+  teamId: number;
+  teamName: string;
+}
 
+export interface SummaryReportTeamMemberApi {
+  employeeId: string;
+  employeeName: string;
+}

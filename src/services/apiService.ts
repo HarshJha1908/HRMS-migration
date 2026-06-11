@@ -1,3 +1,4 @@
+// Get All Employee Insurance Nomination Details (for Quick Export)
 
 import type {
   HolidayResponse,
@@ -36,7 +37,7 @@ import type {
   DocumentTypeResponse,
   DocumentApi,
   DocumentsResponse,
-  LoginUserInfo
+  LoginUserInfo,
 } from "../types/apiTypes";
 import { apiClient } from "./apiClient";
 import { resolveApiUrl } from "./apiClient";
@@ -106,7 +107,7 @@ export const getLeaveReasons = () => {
 
 // Submit Leave
 export const saveLeaveRequest = (data: {
-  userADId: string;
+  UserADId: string;
   startDate: string;
   endDate: string;
 //   noOfDays: number;
@@ -224,7 +225,7 @@ export const getLeaveDetailsForExcelByManagerId = async (
     throw new Error(response && !Array.isArray(response) ? response.message || "Failed to fetch leave details." : "Failed to fetch leave details.");
   }
 
-  return data;
+  return data.map(mapManagerLeaveDetailsToExcelRow);
 };
 
 export const getLeaveBalanceForExcelByManagerId = async (
@@ -800,14 +801,14 @@ export interface InsuranceRelationApi {
   relationName: string;
   insuranceType: string;
 }
-
+ 
 export interface InsuranceRelationResponse {
   statusCode: number;
   isSuccess: boolean;
   message: string;
   data: InsuranceRelationApi[];
 }
-
+ 
 export const getInsuranceRelations = async (
   insuranceCode: string
 ): Promise<InsuranceRelationApi[]> => {
@@ -816,18 +817,18 @@ export const getInsuranceRelations = async (
       insuranceCode
     )}`
   );
-
+ 
   const response = res as InsuranceRelationResponse;
-
+ 
   if (!response?.isSuccess) {
     throw new Error(
       response?.message || "Failed to fetch insurance relations"
     );
   }
-
+ 
   return response.data || [];
 };
-
+ 
 export interface InsuranceNomineeApi {
   sequence: number;
   memberDOB: string;
@@ -836,22 +837,22 @@ export interface InsuranceNomineeApi {
   insuranceType: string;
   percentageShare: number;
 }
-
+ 
 export interface InsuranceNominationDetailsResponse {
   statusCode: number;
   isSuccess: boolean;
   message: string;
-
+ 
   employeeName: string;
   employeeNumber: number;
-
+ 
   reasonforchange: string;
   lastupdateon: string;
   acceptterms: boolean;
-
+ 
   data: InsuranceNomineeApi[];
 }
-
+ 
 export const getInsuranceNominationDetails = async (
   insuranceCode: string,
   userId: string
@@ -861,19 +862,19 @@ export const getInsuranceNominationDetails = async (
       insuranceCode
     )}&Userid=${encodeURIComponent(userId)}`
   );
-
+ 
   const response = res as InsuranceNominationDetailsResponse;
-
+ 
   if (!response?.isSuccess) {
     throw new Error(
       response?.message ||
         "Failed to fetch insurance nomination details"
     );
   }
-
+ 
   return response;
 };
-
+ 
 export interface ManageInsuranceNomineeRequest {
   sequence: number;
   memberDOB: string;
@@ -881,8 +882,10 @@ export interface ManageInsuranceNomineeRequest {
   mamberName: string;
   insuranceType: string;
   percentageShare: number;
+  updatedBy: string;
+  updatedOn: string;
 }
-
+ 
 export const manageInsuranceNominationDetails = async (
   reason: string,
   empnumber: string,
@@ -906,6 +909,7 @@ export const manageInsuranceNominationDetails = async (
     }
   );
 };
+ 
 // ==============================
 // HR / HEAD REPORT APIS
 // ==============================
@@ -916,50 +920,118 @@ const toTextValue = (
     ? null
     : String(value);
 
+const pickTextValue = (
+  ...values: Array<string | number | boolean | null | undefined>
+): string | null => {
+  for (const value of values) {
+    const text = toTextValue(value)?.trim();
+    if (text) return text;
+  }
+
+  return null;
+};
+
+const mapManagerLeaveDetailsToExcelRow = (
+  item: ManagerLeaveDetailsExcelApi & {
+    leaveTypeName?: string | null;
+    statusCode?: string | null;
+    dayCount?: number | string | null;
+  }
+): ManagerLeaveDetailsExcelApi => ({
+  ...item,
+  requesterName: pickTextValue(item.requesterName),
+  employeeId: pickTextValue(item.employeeId),
+  startDate: pickTextValue(item.startDate),
+  endDate: pickTextValue(item.endDate),
+  submitionDate: pickTextValue(item.submitionDate, item.dateOfSubmission),
+  dateOfSubmission: pickTextValue(item.dateOfSubmission, item.submitionDate),
+  dateofapproved: pickTextValue(item.dateofapproved, item.dateOfApproval),
+  dateOfApproval: pickTextValue(item.dateOfApproval, item.dateofapproved),
+  leaveType: pickTextValue(item.leaveType, item.leaveTypeName),
+  status: pickTextValue(item.status, item.statusCode),
+  approverName: pickTextValue(item.approverName),
+  teamName: pickTextValue(item.teamName),
+  noOfDays: item.noOfDays ?? item.dayCount ?? null
+});
+
 const mapEmployeeLeaveBalanceToExcelRow = (
   item: EmployeeLeaveBalanceDetailsApi
 ): ManagerLeaveBalanceExcelApi => ({
-
   employeeID: item.employeeId,
+
   employeeName: item.employeeName,
+
   bdL_Total: toTextValue(item.bdlAvailable),
-  bdL_Submitted: toTextValue(item.bdlSubmitted),
+
+  bdL_Submitted: toTextValue(
+    item.bdlSubmitted ?? item.bdlSubmited
+  ),
+
   bdL_Balance: toTextValue(item.bdlBalance),
 
   cL_Total: toTextValue(item.clAvailable),
-  cL_Submitted: toTextValue(item.clSubmitted),
+
+  cL_Submitted: toTextValue(
+    item.clSubmitted ?? item.clSubmited
+  ),
+
   cL_Balance: toTextValue(item.clBalance),
 
   pL_Total: toTextValue(item.plAvailable),
-  pL_Submitted: toTextValue(item.plSubmitted),
+
+  pL_Submitted: toTextValue(
+    item.plSubmitted ?? item.plSubmited
+  ),
+
   pL_Balance: toTextValue(item.plBalance),
 
   asL_Total: toTextValue(item.openingPLBalance),
+
   asL_Submitted: "0",
+
   asL_Balance: toTextValue(item.openingPLBalance),
 
-  isPTLApplicable: item.ptlApplicable ?? null,
+  isPTLApplicable:
+    item.ptlApplicable ?? null,
 
   ptL_Total: toTextValue(item.ptlAvailable),
-  ptL_Submitted: toTextValue(item.ptlSubmitted),
+
+  ptL_Submitted: toTextValue(
+    item.ptlSubmitted ?? item.ptlSubmited
+  ),
+
   ptL_Balance: toTextValue(item.ptlBalance),
 
   isMTLApplicable: null,
 
   mtL_Total: "0",
+
   mtL_Submitted: "0",
+
   mtL_Balance: "0",
 
   sL_Total: toTextValue(item.slAvailable),
-  sL_Submitted: toTextValue(item.slSubmitted),
+
+  sL_Submitted: toTextValue(
+    item.slSubmitted ?? item.slSubmited
+  ),
+
   sL_Balance: toTextValue(item.slBalance),
 
   wfH_Total: toTextValue(item.wfhAvailable),
-  wfH_Submitted: toTextValue(item.wfhSubmitted),
+
+  wfH_Submitted: toTextValue(
+    item.wfhSubmitted ?? item.wfhSubmited
+  ),
+
   wfH_Balance: toTextValue(item.wfhBalance),
 
   wfhX_Total: toTextValue(item.coAvailable),
-  wfhX_Submitted: toTextValue(item.coSubmitted),
+
+  wfhX_Submitted: toTextValue(
+    item.coSubmitted ?? item.coSubmited
+  ),
+
   wfhX_Balance: toTextValue(item.coBalance)
 });
 
@@ -973,9 +1045,11 @@ export const getAllEmployeeLeaveDetailsReport = async (
 
   console.log("LEAVE DETAILS RAW RESPONSE:", res); // ✅ ADD THIS
 
-  if (Array.isArray(res)) return res;
+  if (Array.isArray(res)) return res.map(mapManagerLeaveDetailsToExcelRow);
 
-  if (res?.data && Array.isArray(res.data)) return res.data;
+  if (res?.data && Array.isArray(res.data)) {
+    return res.data.map(mapManagerLeaveDetailsToExcelRow);
+  }
 
   return [];
 };
@@ -1010,3 +1084,225 @@ export const getAllEmployeeLeaveBalanceReport = async (
   return data.map(mapEmployeeLeaveBalanceToExcelRow);
 };
 
+export const getAllEmployeeEmergencyContactDetails =
+  async () => {
+    try {
+      const response =
+        await apiClient(
+          "/api/Report/GetAllEmployeeEmergencyContactDetails"
+        );
+
+      if (Array.isArray(response)) {
+        return response;
+      }
+
+      if (Array.isArray(response?.data)) {
+        return response.data;
+      }
+
+      if (
+        Array.isArray(
+          response?.employeeEmergencyContactDetails
+        )
+      ) {
+        return response.employeeEmergencyContactDetails;
+      }
+
+      return [];
+    } catch (error) {
+      console.error(
+        "Emergency Contact API Error:",
+        error
+      );
+
+      return [];
+    }
+  };
+
+  export const getAllEmployeeInsuranceNominationDetails = async () => {
+  try {
+    const response = await apiClient("/api/Report/ GetAllEmployeeInsuranceNominationDetails");
+    if (Array.isArray(response)) {
+      return response;
+    }
+    if (Array.isArray(response?.data)) {
+      return response.data;
+    }
+     if (
+        Array.isArray(
+          response?.employeeInsuranceNominationDetails
+        )
+      ) {
+        return response.employeeInsuranceNominationDetails;
+      }
+
+      return [];
+    } 
+   catch (error) {
+    console.error("Insurance Nomination API Error:", error);
+    return [];
+  }
+};
+
+//Summary Report
+export interface SummaryReportTeamHeadApi {
+  teamId: number;
+  teamName: string;
+}
+
+export const getSummaryReportTeamHeadName =
+  async (
+    userId: string
+  ): Promise<
+    SummaryReportTeamHeadApi[]
+  > => {
+    const res = await apiClient(
+      `/api/Report/GetSummaryReportTeamHeadName?userid=${encodeURIComponent(
+        userId
+      )}`
+    );
+
+    if (Array.isArray(res)) {
+      return res;
+    }
+
+    if (Array.isArray(res?.data)) {
+      return res.data;
+    }
+
+    return [];
+  };
+
+  export interface SummaryReportTeamNameApi {
+  teamId: number;
+  teamName: string;
+}
+
+export const getSummaryReportTeamName = async (
+  userId: string,
+  teamId: number | string
+): Promise<SummaryReportTeamNameApi[]> => {
+  const res = await apiClient(
+    `/api/Report/GetSummaryReportTeamName?userid=${encodeURIComponent(
+      userId
+    )}&teamid=${encodeURIComponent(String(teamId))}`
+  );
+
+  if (Array.isArray(res)) {
+    return res;
+  }
+
+  if (Array.isArray(res?.data)) {
+    return res.data;
+  }
+
+  return [];
+};
+export interface SummaryReportTeamMemberApi {
+  user_Id: string;
+  user_Employee_No: number;
+  name: string;
+
+}
+
+export const getSummaryReportTeamMemberName = async (
+  teamId: number | string
+): Promise<SummaryReportTeamMemberApi[]> => {
+  const res = await apiClient(
+    `/api/Report/GetSummaryReportTeamMemberName?teamid=${encodeURIComponent(
+      String(teamId)
+    )}`
+  );
+
+  if (Array.isArray(res)) {
+    return res;
+  }
+
+  if (Array.isArray(res?.data)) {
+    return res.data;
+  }
+
+  return [];
+};
+
+
+export interface LeaveDetailsSummaryReportApi {
+  requesterName: string;
+  employeeId: string;
+  startDate: string;
+  endDate: string;
+  submitionDate: string;
+  dateofapproved: string;
+  leaveTypeName: string;
+  leaveType?: string | null;
+  statusCode: string;
+  approverName: string;
+  teamName: string;
+  noOfDays: number;
+  reason: string;
+}
+
+export interface LeaveBalanceSummaryReportResponse {
+  statusCode: number;
+  isSuccess: boolean;
+  message: string;
+  data: ManagerLeaveBalanceExcelApi[] | null;
+}
+
+export const getLeaveBalanceSummaryReport = async (
+  teamHeadId: number | string,
+  teamNameId: number | string,
+  teamMemberId: string | number
+): Promise<ManagerLeaveBalanceExcelApi[]> => {
+  const params = new URLSearchParams({
+    THNameId: String(teamHeadId),
+    TeamNameId: String(teamNameId),
+    TeamMemberNameId: String(teamMemberId || -1)
+  });
+
+  const res = await apiClient(
+    `/api/Report/GetLeaveBalanceSummaryReport?${params.toString()}`
+  );
+
+  if (Array.isArray(res)) {
+    return res;
+  }
+
+  const response = res as LeaveBalanceSummaryReportResponse;
+
+  if (Array.isArray(response?.data)) {
+    return response.data;
+  }
+
+  return [];
+};
+
+export const getLeaveDetailsSummaryReport = async (
+  teamHeadId: number | string,
+  teamNameId: number | string,
+  teamMemberId: string | number,
+  startDate: string,
+  endDate: string
+): Promise<LeaveDetailsSummaryReportApi[]> => {
+  const params = new URLSearchParams({
+    THNameId: String(teamHeadId),
+    TeamNameId: String(teamNameId),
+    TeamMemberNameId: String(teamMemberId || -1),
+    startDate,
+    Enddate: endDate
+  });
+
+  const res = await apiClient(
+    `/api/Report/GetLeaveDetailsSummaryReport?${params.toString()}`
+  );
+
+  if (Array.isArray(res)) {
+    return res;
+  }
+
+  if (Array.isArray(res?.data)) {
+    return res.data;
+  }
+
+  return [];
+};

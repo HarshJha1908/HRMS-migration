@@ -1,76 +1,129 @@
 /* ===============================
-   Holiday List (Scoped Module)
+   Holiday List
    =============================== */
 
-.holidayRoot {
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-  background-color: #e6e6e6;
-  min-height: 100%;
-  font-family: "Segoe UI", Arial, sans-serif;
-}
-
-/* Card */
-.holidayCard {
+html,
+body,
+#root {
   background: #ffffff;
-  border: 1px solid #dcdcdc;
-  border-radius: 4px;
+}
+
+.holidayRoot {
   width: 100%;
-  max-width: 100%;
-  padding: 20px;
+  /* min-height: 100vh; */
+  overflow-x: hidden;
+  margin: 0;
+  padding: 14px;
+  background: #e9e9e9;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.holidayCard {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  box-sizing: border-box;
+  padding: 0;
+
+  flex: 1;
 }
 
-/* Title */
+/* Header same as TeamLeaveDetails */
+.holidayHeader {
+  background: #ffffff;
+  border-bottom: 1px solid #d9d9d9;
+  padding: 18px 20px 14px;
+}
+
 .holidayTitle {
-  margin-bottom: 16px;
-  font-size: 20px;
-  font-weight: 600;
-  color: #2b6f8a;
+  margin: 0;
+  color: #1d6d98;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.1;
 }
 
-/* Status text */
+/* Status */
 .status {
   font-size: 14px;
+  padding: 15px;
 }
 
 .error {
   color: #d32f2f;
   font-weight: 500;
+  padding: 15px;
+}
+
+/* Table Wrapper */
+.holidayTableWrapper {
+  width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+  padding: 10px;
 }
 
 /* Table */
 .holidayTable {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14px;
+  min-width: 700px;
 }
 
-.holidayTable thead {
-  background-color: #0f5f7f;
+/* Table Header */
+/* .holidayTable thead {
+  background-color: #14597b;
   color: #ffffff;
-}
+} */
 
 .holidayTable th {
-  padding: 12px;
+  background: #14597b;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 500;
   text-align: left;
-  font-weight: 600;
+  padding: 14px 10px;
+  border: none;
+  white-space: nowrap;
 }
 
-.past-holiday {
-  color: #999999;
-  /* text-decoration: line-through; */
-}
-
+/* Table Body */
 .holidayTable td {
-  padding: 12px;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 14px;
+  border: 1px solid #d6dbe0;
+  color: #3b5668;
+  font-size: 15px;
+  white-space: nowrap;
 }
 
+/* Alternate Rows */
 .holidayTable tbody tr:nth-child(even) {
-  background-color: #f8f9fa;
+  background: #f8f9fa;
 }
 
+/* Hover */
 .holidayTable tbody tr:hover {
-  background-color: #e6edf5;
+  background: #eef5fb;
+}
+
+/* Past Holiday */
+.past-holiday {
+  color: #a8a8a8 !important;
+  opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .holidayTitle {
+    font-size: 30px;
+  }
+
+  .holidayTable {
+    min-width: 600px;
+  }
 }

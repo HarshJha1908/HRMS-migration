@@ -314,11 +314,12 @@ export default function ExitLeaveAdjustment() {
     <section className="ela-page">
       <div className="ela-wrap">
         <div className="ela-header">
-          <h1 className="ela-title">Exit Leave Adjustment:</h1>
+          <h1 className="ela-title">Exit Leave Adjustment</h1>
+
           <p className="ela-subtitle">
             <strong>{employeeName}</strong> [ DOJ: <strong>{dojLabel}</strong> ]
           </p>
-          
+
         </div>
 
         <div className="ela-board">
@@ -326,15 +327,24 @@ export default function ExitLeaveAdjustment() {
             <div className="ela-col">
               <div className="ela-top">
                 <label htmlFor="ela-exit-date" className="ela-label">
-                  Enter Exit Date (dd/mm/yyyy) <span className="ela-required">*</span>
-                </label>
-                <input
-                  id="ela-exit-date"
-                  type="date"
-                  className="ela-input"
-                  value={exitDate}
-                  onChange={(e) => setExitDate(e.target.value)}
-                />
+  Enter Exit Date (dd/mm/yyyy) <span className="ela-required">*</span>
+</label>
+
+<div className="ela-date-wrapper">
+  <input
+    id="ela-exit-date"
+    type="date"
+    className="ela-date-input"
+    value={exitDate}
+    onChange={(e) => setExitDate(e.target.value)}
+  />
+
+  <span className="ela-date-text">
+    {exitDate
+      ? `${exitDate.split("-")[2]}/${exitDate.split("-")[1]}/${exitDate.split("-")[0]}`
+      : "dd/mm/yyyy"}
+  </span>
+</div>
               </div>
 
               <div className="ela-section">
@@ -371,16 +381,16 @@ export default function ExitLeaveAdjustment() {
 
                 {showUpdatePL && (
                   <div className="ela-row ela-row-remarks">
-                   <button
-                  type="button"
-                  className="ela-btn"
-                  onClick={handleUpdatePl}
-                  disabled={updateLoading || !calculationData}
-                >
-                  {updateLoading ? "Updating..." : "Update PL"}
-                  </button>
-                  {updateError && <p className="ela-help-text">{updateError}</p>}
-                  {updateSuccess && <p className="ela-success-text">{updateSuccess}</p>}
+                    <button
+                      type="button"
+                      className="ela-btn"
+                      onClick={handleUpdatePl}
+                      disabled={updateLoading || !calculationData}
+                    >
+                      {updateLoading ? "Updating..." : "Update PL"}
+                    </button>
+                    {updateError && <p className="ela-help-text">{updateError}</p>}
+                    {updateSuccess && <p className="ela-success-text">{updateSuccess}</p>}
                   </div>
                 )}
               </div>

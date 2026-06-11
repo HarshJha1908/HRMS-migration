@@ -1,35 +1,110 @@
+html,
+body,
+#root {
+  overflow-x: hidden;
+  background: #ffffff;
+}
+
+/* ===============================
+   Leave Balance Page
+   =============================== */
+
+.lb-page {
+  width: 100%;
+  padding: 14px;
+  background: #e9e9e9;
+  box-sizing: border-box;
+}
+
+/* ===============================
+   Main Card
+   =============================== */
+
 .lb-card {
-  background: #fff;
-  border: 1px solid #ccc;
-  padding: 12px;
-  margin-bottom: 16px;
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ===============================
+   Header
+   =============================== */
+
+.lb-title-wrap {
+  background: #ffffff;
+  border-bottom: 1px solid #d9d9d9;
+  padding: 18px 20px 14px;
 }
 
 .lb-title {
-  font-size: 18px;
-  margin-bottom: 6px;
+  margin: 0;
+  color: #1d6d98;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.1;
 }
 
+/* ===============================
+   Legend
+   =============================== */
+
 .lb-header {
-  border: 1px solid #ddd;
-  padding: 6px;
-  font-size: 13px;
-  margin-bottom: 10px;
+  margin: 16px 20px 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #d6dbe0;
+
+  font-size: 15px;
+  color: #3b5668;
 }
+
+/* ===============================
+   Grid
+   =============================== */
 
 .lb-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  font-size: 13px;
+  gap: 30px;
+
+  padding: 12px 20px 24px;
 }
 
-.red { color: #d32f2f; }
-.blue { color: #1976d2; }
+/* ===============================
+   Leave Lines
+   =============================== */
 
 .lb-grid p {
-  margin: 6px 0;
+  margin: 0 0 14px;
+  padding: 0;
+
+  background: transparent;
+  border: none;
+
+  font-size: 15px;
+  color: #3b5668;
+  line-height: 1.7;
 }
+
+/* ===============================
+   Colors
+   =============================== */
+
+.red {
+  color: #c62828;
+  font-weight: 600;
+}
+
+.blue {
+  color: #1565c0;
+  font-weight: 600;
+}
+
+/* ===============================
+   Tooltip
+   =============================== */
+
 .tooltip-item {
   position: relative;
   display: inline-block;
@@ -43,7 +118,7 @@
   transform: translateX(-50%);
 
   background: #2d2d2d;
-  color: #fff;
+  color: #ffffff;
 
   padding: 6px 10px;
   border-radius: 4px;
@@ -62,4 +137,200 @@
 .tooltip-item:hover .custom-tooltip {
   opacity: 1;
   visibility: visible;
+}
+
+/* ===============================
+   Loading / Error
+   =============================== */
+
+.lb-loading,
+.lb-error {
+  padding: 16px 20px;
+  font-size: 14px;
+}
+
+.lb-error {
+  color: #c62828;
+}
+
+/* ===============================
+   Responsive
+   =============================== */
+
+@media (max-width: 1024px) {
+  .lb-title {
+    font-size: 30px;
+  }
+
+  .lb-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .lb-page {
+    padding: 10px;
+  }
+
+  .lb-title-wrap {
+    padding: 16px;
+  }
+
+  .lb-title {
+    font-size: 26px;
+  }
+
+  .lb-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .lb-grid p {
+    font-size: 14px;
+  }
+}
+/* ==========================================
+   Leave Dashboard Cards
+   ========================================== */
+
+.leave-dashboard-wrapper {
+  padding: 20px;
+}
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.dashboard-card {
+  min-height: 240px;
+
+  border-radius: 8px;
+  border: 1px solid #d6dbe0;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding: 24px 16px;
+
+  box-shadow: none;
+
+  transition: all 0.2s ease;
+}
+
+.dashboard-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Card Background Variants */
+
+.dashboard-card.wfh {
+  background: #d9f8ec;
+}
+
+.dashboard-card.wfhx {
+  background: #eaf4ff;
+}
+
+.dashboard-card.cl {
+  background: #fff4dd;
+}
+
+.dashboard-card.pl {
+  background: #f3eaff;
+}
+.dashboard-card.asl {
+  background: #f3eaff;
+}
+
+/* Icons */
+
+.dashboard-icon {
+  font-size: 54px;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+
+/* Label */
+
+.dashboard-label {
+  color: #1d6d98;
+  font-size: 22px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+/* Main Value */
+
+.dashboard-value {
+  color: #0c78a8;
+  font-size: 64px;
+  line-height: 1;
+  font-weight: 400;
+}
+
+/* PL Opening Balance */
+
+.dashboard-subtext {
+  margin-top: 14px;
+
+  color: #5d6d7e;
+  text-align: center;
+
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* ==========================================
+   Responsive
+   ========================================== */
+
+@media (max-width: 1200px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .leave-dashboard-wrapper {
+    padding: 15px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dashboard-card {
+    min-height: 200px;
+  }
+
+  .dashboard-icon {
+    font-size: 42px;
+  }
+
+  .dashboard-label {
+    font-size: 18px;
+  }
+
+  .dashboard-value {
+    font-size: 48px;
+  }
+}
+
+.dashboard-main-card {
+  margin-bottom: 20px;
+}
+
+.dashboard-main-card .leave-dashboard-wrapper {
+  padding: 20px;
+}
+
+.dashboard-main-card .dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
 }

@@ -181,6 +181,10 @@ const DownLoadCenter = () => {
         <section className="emergency-page">
             <div className="emergency-container">
                 <div className="emergency-card">
+                    <div className="emergency-header">
+        <h2 className="emergency-title">Reports & Records</h2>
+    </div>
+
                     <div className="emergency-card-body">
                         <div className="viewer-actions">
                             <div className="report-tabs" role="tablist" aria-label="Export report views">

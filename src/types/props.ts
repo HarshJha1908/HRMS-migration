@@ -11,6 +11,9 @@ export type LeaveFormProps = {
     otherReason: string;
     totalDays: number;
   }) => void;
+  userId?: string;
+  employeeName?: string;
+  isApplyForOthers?: boolean;
 };
 
 //Leave Detail props
@@ -19,6 +22,7 @@ export type LeaveDetailProps = {
   year?: number;
   leaveType?: string;
   status?: string;
+  onLeaveStatusChanged?: () => void;
 };
 
 // FilterProps

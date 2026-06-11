@@ -29,6 +29,7 @@ const pickAdIdFromLeaveDetails = (details: LeaveDetails | null) => {
 export default function EmployeeLeaveDetails() {
   const location = useLocation();
   const [resolvedUserId, setResolvedUserId] = useState("");
+  const [leaveBalanceRefreshKey, setLeaveBalanceRefreshKey] = useState(0);
 
   const userIdFromRouteState = useMemo(() => {
     const routeState = (location.state ?? {}) as {
@@ -52,13 +53,19 @@ export default function EmployeeLeaveDetails() {
 
   return (
     <>
-      <LeaveBalance userId={leaveBalanceUserId} />
+      <LeaveBalance
+        userId={leaveBalanceUserId}
+        refreshKey={leaveBalanceRefreshKey}
+      />
       <ViewLeaveDetails
         onDataLoaded={(details) => {
           const extractedUserId = pickAdIdFromLeaveDetails(details);
           if (extractedUserId) {
             setResolvedUserId(extractedUserId);
           }
+        }}
+        onLeaveStatusChanged={() => {
+          setLeaveBalanceRefreshKey((prev) => prev + 1);
         }}
       />
     </>

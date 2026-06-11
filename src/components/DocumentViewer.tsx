@@ -129,6 +129,7 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
     }, 400);
 
     return () => clearTimeout(delay);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchText]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -222,6 +223,7 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
+ 
   const handleSearch = async (value: string) => {
     setSearchText(value);
 
@@ -511,6 +513,12 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
               </div>
 
               <div className="form-actions">
+                
+                <button type="submit" className="button-primary" disabled={isSubmitting}>
+                  {isSubmitting
+                    ? isEditMode ? 'Updating...' : 'Adding...'
+                    : isEditMode ? 'Update Document' : 'Add Document'}
+                </button>
                 <button
                   type="button"
                   className="button-secondary"
@@ -518,11 +526,6 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
                   disabled={isSubmitting}
                 >
                   Cancel
-                </button>
-                <button type="submit" className="button-primary" disabled={isSubmitting}>
-                  {isSubmitting
-                    ? isEditMode ? 'Updating...' : 'Adding...'
-                    : isEditMode ? 'Update Document' : 'Add Document'}
                 </button>
               </div>
             </form>

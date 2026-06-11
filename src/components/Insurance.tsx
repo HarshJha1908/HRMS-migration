@@ -1,19 +1,33 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  useRef,
+} from "react";
 import "./Insurance.css";
-
+import { useLocation } from "react-router-dom";
 import {
   getInsuranceRelations,
   getInsuranceNominationDetails,
   manageInsuranceNominationDetails,
   getEmpProfileByAdId,
+  getEmpProfileByEmpId,
 } from "../services/apiService";
 
 import { useAuth } from "../auth/useAuth";
-
+import ToastMessage from "./ToastMessage";
 const Insurance = () => {
   const { user } = useAuth();
+  const location = useLocation();
 
-  const userId = user?.loginUserAdID || "";
+  const state = location.state as {
+    empId?: string;
+    mode?: string;
+  };
+
+  const [userId, setUserId] = useState("");
+
+  const loggedInUserId =
+    user?.loginUserAdID || "";
 
   const nomineeRows = [1, 2, 3, 4];
 
@@ -40,12 +54,12 @@ const Insurance = () => {
     "",
   ]);
 
-  const [dobInputTypes, setDobInputTypes] = useState([
-    "text",
-    "text",
-    "text",
-    "text",
-  ]);
+  // const [dobInputTypes, setDobInputTypes] = useState([
+  //   "text",
+  //   "text",
+  //   "text",
+  //   "text",
+  // ]);
 
   const [relationships, setRelationships] = useState([
     "",
@@ -57,6 +71,7 @@ const Insurance = () => {
   const [relationshipOptions, setRelationshipOptions] = useState<
     { code: string; relationName: string }[]
   >([]);
+
 
   const [loadingRelations, setLoadingRelations] = useState(false);
 
@@ -73,8 +88,9 @@ const Insurance = () => {
   const [initialData, setInitialData] =
     useState("");
 
-  const today = new Date().toISOString().split("T")[0];
-
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const errorRef = useRef<HTMLDivElement | null>(null);
   const insuranceOptions = [
     { label: "Group Personal Accident", value: "GPA" },
     { label: "Group Term Life", value: "GTL" },
@@ -103,44 +119,93 @@ const Insurance = () => {
     isHealthInsurance
       ? "N.A"
       : percentageShares.reduce(
-          (sum, share) =>
-            sum +
-            (share.trim() === ""
-              ? 0
-              : Number(share)),
-          0
-        );
+        (sum, share) =>
+          sum +
+          (share.trim() === ""
+            ? 0
+            : Number(share)),
+        0
+      );
+  useEffect(() => {
+    if (!successMessage) return;
+
+    const timer = window.setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
 
   useEffect(() => {
-    const fetchEmployeeProfile = async () => {
-      if (!userId) {
-        setEmployeeNumber("");
-        return;
-      }
+  if (error && errorRef.current) {
+    errorRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
+}, [error]);
 
+  useEffect(() => {
+    const loadUserDetails = async () => {
       try {
-        const empProfile =
-          await getEmpProfileByAdId(
-            userId
+        // Single Search flow
+        if (
+          state?.mode === "single-search" &&
+          state?.empId
+        ) {
+          const profile =
+            await getEmpProfileByEmpId(
+              state.empId
+            );
+
+          const fetchedUserId =
+            profile?.user_Id || "";
+
+          setUserId(fetchedUserId);
+
+          setEmployeeName(
+            profile?.empName || ""
           );
 
-        setEmployeeNumber(
-          String(
-            empProfile?.user_Employee_No ||
-              ""
-          )
-        );
+          setEmployeeNumber(
+            String(
+              profile?.user_Employee_No || ""
+            )
+          );
+        }
+
+        // Normal logged-in flow
+        else {
+          setUserId(loggedInUserId);
+
+          const profile =
+            await getEmpProfileByAdId(
+              loggedInUserId
+            );
+
+          setEmployeeName(
+            profile?.empName || ""
+          );
+
+          setEmployeeNumber(
+            String(
+              profile?.user_Employee_No || ""
+            )
+          );
+        }
       } catch (error) {
         console.error(
-          "Failed to load employee profile",
+          "Failed to fetch employee details",
           error
         );
+
+        setEmployeeName("");
         setEmployeeNumber("");
       }
     };
 
-    fetchEmployeeProfile();
-  }, [userId]);
+    loadUserDetails();
+  }, [state, loggedInUserId]);
 
   useEffect(() => {
     const fetchInsuranceData = async () => {
@@ -152,22 +217,38 @@ const Insurance = () => {
       try {
         setLoadingRelations(true);
 
+        const relationsPromise =
+          getInsuranceRelations(insuranceType);
+
+        const nominationPromise =
+          getInsuranceNominationDetails(
+            insuranceType,
+            userId
+          ).catch((error) => {
+            if (
+              error?.message === "No Data Found"
+            ) {
+              return {
+                data: [],
+                reasonforchange: "",
+                lastupdateon: "",
+                acceptterms: false,
+              };
+            }
+
+            throw error;
+          });
+
         const [relations, nominationDetails] =
           await Promise.all([
-            getInsuranceRelations(
-              insuranceType
-            ),
-            getInsuranceNominationDetails(
-              insuranceType,
-              userId
-            ),
+            relationsPromise,
+            nominationPromise,
           ]);
+
 
         setRelationshipOptions(relations);
 
-        setEmployeeName(
-          nominationDetails.employeeName || ""
-        );
+
 
         setReasonForChange(
           nominationDetails.reasonforchange || ""
@@ -202,20 +283,25 @@ const Insurance = () => {
             nominee.relationCode || "";
 
           updatedShares[index] =
-  nominee.percentageShare !== null &&
-  nominee.percentageShare !== undefined
-    ? nominee.percentageShare.toString()
-    : "";
+            nominee.percentageShare !== null &&
+              nominee.percentageShare !== undefined
+              ? nominee.percentageShare.toString()
+              : "";
 
           if (nominee.memberDOB) {
-            const dob = new Date(
-              nominee.memberDOB
-            );
+            const dob = new Date(nominee.memberDOB);
 
             if (!isNaN(dob.getTime())) {
-              updatedDobs[index] = dob
-                .toISOString()
-                .split("T")[0];
+              const year = dob.getFullYear();
+              const month = String(
+                dob.getMonth() + 1
+              ).padStart(2, "0");
+              const day = String(
+                dob.getDate()
+              ).padStart(2, "0");
+
+              updatedDobs[index] =
+                `${year}-${month}-${day}`;
             }
           }
         });
@@ -291,25 +377,35 @@ const Insurance = () => {
     return date;
   };
 
-  const handleSave = async () => {
-    if (!reasonForChange.trim()) {
-  window.alert(
-    "Reason For Change is mandatory"
-  );
-  return;
-}
+  const formatDisplayDate = (value: string) => {
+    if (!value) return "";
 
-if (!acceptTerms) {
-  window.alert(
-    "Please accept Terms & Condition before proceeding!"
-  );
-  return;
-}
+    const parts = value.split("-");
+
+    if (parts.length !== 3) {
+      return value;
+    }
+
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  };
+
+  const handleSave = async () => {
+    setError("");
+    setSuccessMessage("");
+    if (!reasonForChange.trim()) {
+      setError("Reason For Change is mandatory");
+      return;
+    }
+
+    if (!acceptTerms) {
+      setError(
+        "Please accept Terms & Condition before proceeding!"
+      );
+      return;
+    }
 
     if (!employeeNumber) {
-      window.alert(
-        "Employee number not loaded"
-      );
+      setError("Employee number not loaded");
       return;
     }
 
@@ -323,9 +419,7 @@ if (!acceptTerms) {
     });
 
     if (currentData === initialData) {
-      window.alert(
-        "No changes detected"
-      );
+      setError("No changes detected");
       return;
     }
 
@@ -348,16 +442,16 @@ if (!acceptTerms) {
 
       const hasRowData = isHealthInsurance
         ? Boolean(
-            nomineeName ||
-              dobValue ||
-              relationship
-          )
+          nomineeName ||
+          dobValue ||
+          relationship
+        )
         : Boolean(
-            nomineeName ||
-              dobValue ||
-              relationship ||
-              shareValue
-          );
+          nomineeName ||
+          dobValue ||
+          relationship ||
+          shareValue
+        );
 
       const isMissingRequiredField =
         !nomineeName ||
@@ -370,10 +464,8 @@ if (!acceptTerms) {
         hasRowData &&
         isMissingRequiredField
       ) {
-        window.alert(
-          `Please complete all mandatory fields for nominee row ${
-            index + 1
-          } before saving.`
+        setError(
+          `Please complete all mandatory fields for nominee row ${index + 1} before saving.`
         );
         return;
       }
@@ -416,7 +508,7 @@ if (!acceptTerms) {
           monthDifference < 0 ||
           (monthDifference === 0 &&
             todayDate.getDate() <
-              dob.getDate())
+            dob.getDate())
         ) {
           age--;
         }
@@ -425,7 +517,7 @@ if (!acceptTerms) {
           relationship === "CD" &&
           age > 18
         ) {
-          window.alert(
+          setError(
             "Maximum permissible age to add your Child as dependent is 18 years. Please check the DOB of your dependents. Kindly refer Group Health Insurance policy or contact HR."
           );
 
@@ -441,7 +533,7 @@ if (!acceptTerms) {
           ].includes(relationship) &&
           age > 85
         ) {
-          window.alert(
+          setError(
             "Maximum permissible age to add your Parents or Inlaws as dependent is 85 years. Please check the DOB of your dependents. Kindly refer Group Health Insurance policy or contact HR."
           );
 
@@ -449,6 +541,49 @@ if (!acceptTerms) {
         }
       }
     }
+    if (
+      insuranceType === "GPA" ||
+      insuranceType === "GTL"
+    ) {
+      const filledRows = nomineeRows.filter(
+        (_, index) =>
+          nomineeNames[index].trim() !== ""
+      );
+
+      for (const index of filledRows) {
+        const share =
+          Number(
+            percentageShares[index - 1]
+          ) || 0;
+
+        if (share <= 0) {
+          setError(
+            `Percentage Share for nominee row ${index} must be greater than 0`
+          );
+          return;
+        }
+      }
+
+      const totalShare =
+        percentageShares.reduce(
+          (sum, share) =>
+            sum +
+            (share.trim() === ""
+              ? 0
+              : Number(share)),
+          0
+        );
+
+      if (totalShare !== 100) {
+        setError(
+          `Total Percentage Share for ${insuranceType} must be exactly 100`
+        );
+        return;
+      }
+    }
+    await new Promise((resolve) =>
+      setTimeout(resolve, 0)
+    );
 
     try {
       const payload = nomineeRows
@@ -471,16 +606,20 @@ if (!acceptTerms) {
             isHealthInsurance
               ? 0
               : Number(
-                  percentageShares[
-                    index
-                  ] || 0
-                ),
+                percentageShares[
+                index
+                ] || 0
+              ),
+          updatedBy: user?.loginUserAdID || "",
+          updatedOn: new Date().toISOString(),
         }))
         .filter(
           (item) =>
             item.mamberName.trim() !==
             ""
         );
+      console.log("percentageShares", percentageShares);
+      console.log("payload", payload);
 
       await manageInsuranceNominationDetails(
         reasonForChange,
@@ -489,86 +628,32 @@ if (!acceptTerms) {
         payload
       );
 
-      window.alert(
+      setSuccessMessage(
         "Insurance nomination details saved successfully"
       );
+      setError("");
 
-      const nominationDetails =
-        await getInsuranceNominationDetails(
-          insuranceType,
-          userId
-        );
+      setInsuranceType("");
 
-      const nominees =
-        nominationDetails.data || [];
+      setNomineeNames(["", "", "", ""]);
+      setNomineeDobs(["", "", "", ""]);
+      setRelationships(["", "", "", ""]);
+      setPercentageShares(["", "", "", ""]);
+      setReasonForChange("");
+      setAcceptTerms(false);
+      setLastUpdatedOn("");
+      setInitialData("");
+      setRelationshipOptions([]);
 
-      const updatedNames = ["", "", "", ""];
-      const updatedDobs = ["", "", "", ""];
-      const updatedRelationships = [
-        "",
-        "",
-        "",
-        "",
-      ];
-      const updatedShares = ["", "", "", ""];
 
-      nominees.forEach((nominee, index) => {
-        updatedNames[index] =
-          nominee.mamberName || "";
 
-        updatedRelationships[index] =
-          nominee.relationCode || "";
-
-        updatedShares[index] =
-  nominee.percentageShare !== null &&
-  nominee.percentageShare !== undefined
-    ? nominee.percentageShare.toString()
-    : "";
-
-        if (nominee.memberDOB) {
-          const dob = new Date(
-            nominee.memberDOB
-          );
-
-          if (!isNaN(dob.getTime())) {
-            updatedDobs[index] = dob
-              .toISOString()
-              .split("T")[0];
-          }
-        }
-      });
-
-      setNomineeNames(updatedNames);
-
-      setNomineeDobs(updatedDobs);
-
-      setRelationships(
-        updatedRelationships
-      );
-
-      setPercentageShares(
-        updatedShares
-      );
-
-      const latestData = JSON.stringify({
-        nomineeNames: updatedNames,
-        nomineeDobs: updatedDobs,
-        relationships:
-          updatedRelationships,
-        percentageShares:
-          updatedShares,
-        reasonForChange,
-        acceptTerms,
-      });
-
-      setInitialData(latestData);
     } catch (error) {
       console.error(
         "Failed to save insurance details",
         error
       );
 
-      window.alert(
+      setError(
         "Failed to save insurance details"
       );
     }
@@ -578,6 +663,7 @@ if (!acceptTerms) {
     index: number,
     value: string
   ) => {
+    setError("");
     if (!/^\d*$/.test(value)) {
       return;
     }
@@ -615,24 +701,27 @@ if (!acceptTerms) {
     );
   };
 
-  const handleNomineeNameChange = (
-    index: number,
-    value: string
-  ) => {
-    setNomineeNames((currentNames) =>
-      currentNames.map(
-        (name, nameIndex) =>
-          nameIndex === index
-            ? value
-            : name
-      )
-    );
-  };
+ const handleNomineeNameChange = (
+  index: number,
+  value: string
+) => {
+  setError("");
+
+  setNomineeNames((currentNames) =>
+    currentNames.map(
+      (name, nameIndex) =>
+        nameIndex === index
+          ? value
+          : name
+    )
+  );
+};
 
   const handleNomineeDobChange = (
     index: number,
     value: string
   ) => {
+    setError("");
     setNomineeDobs((currentDobs) =>
       currentDobs.map(
         (dob, dobIndex) =>
@@ -643,42 +732,13 @@ if (!acceptTerms) {
     );
   };
 
-  const handleDobFocus = (
-    index: number
-  ) => {
-    setDobInputTypes(
-      (currentTypes) =>
-        currentTypes.map(
-          (type, typeIndex) =>
-            typeIndex === index
-              ? "date"
-              : type
-        )
-    );
-  };
 
-  const handleDobBlur = (
-    index: number
-  ) => {
-    if (nomineeDobs[index]) {
-      return;
-    }
-
-    setDobInputTypes(
-      (currentTypes) =>
-        currentTypes.map(
-          (type, typeIndex) =>
-            typeIndex === index
-              ? "text"
-              : type
-        )
-    );
-  };
 
   const handleRelationshipChange = (
     index: number,
     value: string
   ) => {
+    setError("");
     setRelationships(
       (currentRelationships) =>
         currentRelationships.map(
@@ -687,7 +747,7 @@ if (!acceptTerms) {
             relationshipIndex
           ) =>
             relationshipIndex ===
-            index
+              index
               ? value
               : relationship
         )
@@ -700,12 +760,26 @@ if (!acceptTerms) {
         <div className="insurance-title-band">
           <h2 className="form-title">
             Insurance Nomination Form -{" "}
-            {employeeName || user?.name || ""}
+            {employeeName}
             ({employeeNumber})
           </h2>
         </div>
 
         <div className="insurance-content">
+         {error && (
+  <div
+    ref={errorRef}
+    className="insurance-error-text"
+  >
+    {error}
+  </div>
+)}
+
+          <ToastMessage
+            show={!!successMessage}
+            message={successMessage}
+            type="success"
+          />
           <div className="insurance-type-row">
             <label htmlFor="insurance-type">
               Insurance Type:
@@ -714,11 +788,26 @@ if (!acceptTerms) {
             <select
               id="insurance-type"
               value={insuranceType}
-              onChange={(e) =>
-                setInsuranceType(
-                  e.target.value
-                )
-              }
+             onChange={(e) => {
+  const value = e.target.value;
+
+  setError("");
+  setSuccessMessage("");
+
+  setInsuranceType(value);
+
+  if (value === "") {
+    setNomineeNames(["", "", "", ""]);
+    setNomineeDobs(["", "", "", ""]);
+    setRelationships(["", "", "", ""]);
+    setPercentageShares(["", "", "", ""]);
+    setReasonForChange("");
+    setAcceptTerms(false);
+    setLastUpdatedOn("");
+    setInitialData("");
+    setRelationshipOptions([]);
+  }
+}}
             >
               <option value="">
                 Please Select
@@ -786,7 +875,7 @@ if (!acceptTerms) {
                         aria-label={`Nominee ${row} name`}
                         value={
                           nomineeNames[
-                            index
+                          index
                           ]
                         }
                         disabled={
@@ -801,40 +890,32 @@ if (!acceptTerms) {
                       />
                     </td>
 
+
                     <td>
-                      <input
-                        type={
-                          dobInputTypes[
-                            index
-                          ]
-                        }
-                        aria-label={`Nominee ${row} date of birth`}
-                        value={
-                          nomineeDobs[
-                            index
-                          ]
-                        }
-                        max={today}
-                        disabled={
-                          isFormDisabled
-                        }
-                        onFocus={() =>
-                          handleDobFocus(
-                            index
-                          )
-                        }
-                        onBlur={() =>
-                          handleDobBlur(
-                            index
-                          )
-                        }
-                        onChange={(e) =>
-                          handleNomineeDobChange(
-                            index,
-                            e.target.value
-                          )
-                        }
-                      />
+                      <div className="insurance-dob-wrapper">
+                        <input
+                          type="date"
+                          className="insurance-dob-input"
+                          aria-label={`Nominee ${row} date of birth`}
+                          value={nomineeDobs[index]}
+                          disabled={isFormDisabled}
+                          onChange={(e) =>
+                            handleNomineeDobChange(
+                              index,
+                              e.target.value
+                            )
+                          }
+                        />
+
+                        <span className="insurance-dob-text">
+                          {nomineeDobs[index]
+                            ? formatDisplayDate(
+                              nomineeDobs[index]
+                            )
+                            : "dd/mm/yyyy"}
+                        </span>
+                      </div>
+
                     </td>
 
                     <td>
@@ -843,7 +924,7 @@ if (!acceptTerms) {
                         aria-label={`Nominee ${row} type`}
                         value={
                           insuranceType ===
-                          "INS"
+                            "INS"
                             ? "GHI"
                             : insuranceType
                         }
@@ -857,7 +938,7 @@ if (!acceptTerms) {
                         aria-label={`Nominee ${row} relationship`}
                         value={
                           relationships[
-                            index
+                          index
                           ]
                         }
                         disabled={
@@ -906,8 +987,8 @@ if (!acceptTerms) {
                           isHealthInsurance
                             ? "N.A"
                             : percentageShares[
-                                index
-                              ]
+                            index
+                            ]
                         }
                         disabled={
                           isFormDisabled
@@ -922,11 +1003,10 @@ if (!acceptTerms) {
                               .value
                           )
                         }
-                        className={`share-input ${
-                          isHealthInsurance
-                            ? "na-share-input"
-                            : ""
-                        }`}
+                        className={`share-input ${isHealthInsurance
+                          ? "na-share-input"
+                          : ""
+                          }`}
                       />
                     </td>
                   </tr>
@@ -995,11 +1075,10 @@ if (!acceptTerms) {
                 disabled={
                   isFormDisabled
                 }
-                onChange={(e) =>
-                  setReasonForChange(
-                    e.target.value
-                  )
-                }
+               onChange={(e) => {
+  setError("");
+  setReasonForChange(e.target.value);
+}}
               />
             </div>
 
@@ -1027,11 +1106,10 @@ if (!acceptTerms) {
                 disabled={
                   isFormDisabled
                 }
-                onChange={(e) =>
-                  setAcceptTerms(
-                    e.target.checked
-                  )
-                }
+               onChange={(e) => {
+  setError("");
+  setAcceptTerms(e.target.checked);
+}}
               />
             </div>
 

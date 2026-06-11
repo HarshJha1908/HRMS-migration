@@ -60,7 +60,9 @@ export default function LeaveRules() {
   return (
     <section className="leave-rules-page">
       <div className="leave-rules-card">
-        <h2 className="leave-rules-title">Clubbing Rule</h2>
+        <div className="leave-rules-header">
+  <h2 className="leave-rules-title">Clubbing Rule</h2>
+</div>
 
         {loading && <p className="leave-rules-state">Loading...</p>}
         {error && !loading && <p className="leave-rules-error">{error}</p>}

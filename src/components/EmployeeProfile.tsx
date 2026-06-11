@@ -15,6 +15,7 @@ import type {
   SaveNewEmployeeProfileRequest
 } from "../types/apiTypes";
 
+import PageLoader from "./PageLoader";
 
 type EmployeeTeamOption = {
   teamId: string;
@@ -40,6 +41,7 @@ type PrefillEmployee = Partial<{
   empName: string;
   name: string;
   user_Doj: string;
+  lwd: string;
   user_Email_Id: string;
   user_Sex: string;
   User_Sex: string;
@@ -98,7 +100,7 @@ const toApiDateTime = (value: string) => {
   const trimmed = value.trim();
 
   if (!trimmed) return "";
-
+  
   const slashDate = /^(\d{2})\/(\d{2})\/(\d{4})$/;
   const isoDate = /^(\d{4})-(\d{2})-(\d{2})/;
   const slashMatch = trimmed.match(slashDate);
@@ -220,6 +222,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
   const [gender, setGender] = useState("");
   const [isMatPatApplicable, setIsMatPatApplicable] = useState(false);
   const [joiningDate, setJoiningDate] = useState("");
+  const [lastWorkingDate, setLastWorkingDate] = useState("");
   const [clBalance, setClBalance] = useState("0");
   const [slBalance, setSlBalance] = useState("0");
   const [plBalance, setPlBalance] = useState("0");
@@ -230,6 +233,8 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
   const [contactName2, setContactName2] = useState("");
   const [prefillTeamName, setPrefillTeamName] = useState("");
   const teamRequestSeqRef = useRef(0);
+  const [pageLoader, setPageLoader] = useState(false);
+    const errorRef = useRef<HTMLDivElement | null>(null);
 
   const selectedEmployeeTypeCode = selectedEmployeeType.trim().toUpperCase();
   const selectedEmployeeTypeLabel = employeeType
@@ -253,7 +258,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
   const disableAslBalance = isProbationType || isConfirmedType;
   const showClBalanceField = !isAssociateType;
   const showSlBalanceField = !isAssociateType;
-  const showPlBalanceField = !isAssociateType && !isProbationType;
+  // const showPlBalanceField = !isAssociateType && !isProbationType;
   const showAslBalanceField =
     isAssociateType || (!isProbationType && !isConfirmedType);
   const employeeFromState = location.state?.employee as PrefillEmployee | undefined;
@@ -276,7 +281,35 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
   useEffect(() => {
     const applyPrefill = async () => {
 
+      if (!isUpdateMode) {
+        setFirstName("");
+        setMiddleName("");
+        setLastName("");
+        setEmployeeNo("");
+        setUserId("");
+        setEmailId("");
+        setGender("");
+        setIsMatPatApplicable(false);
+        setJoiningDate("");
+        setLastWorkingDate("");
+        setClBalance("0");
+        setSlBalance("0");
+        setPlBalance("0");
+        setAslBalance("0");
+        setEmergencyContactNo1("");
+        setEmergencyContactNo2("");
+        setContactName1("");
+        setContactName2("");
+        setSelectedEmployeeType("");
+        setSelectedemployeeTeam("");
+        setPrefillTeamName("");
+        setIsManager(false);
+        setUserSeqNo(0);
+        setSaveError(null);
+        setSaveMessage(null);
 
+        return;
+      }
       if (!employeeFromState) return;
 
       try {
@@ -284,11 +317,12 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         const profileByEmpId = employeeNoFromState
           ? await getEmpProfileByEmpId(employeeNoFromState)
           : null;
+        console.log("Fetched profile for prefill:", profileByEmpId);
         const merged = {
           ...employeeFromState,
           ...(profileByEmpId || {})
         } as PrefillEmployee;
-
+        // const 
         const resolvedUserSeqNo = extractUserSeqNo(profileByEmpId) || extractUserSeqNo(employeeFromState);
         setUserSeqNo(Number.isFinite(resolvedUserSeqNo) ? resolvedUserSeqNo : 0);
 
@@ -309,6 +343,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         setGender(toGenderCode(merged.User_Sex || merged.user_Sex));
         setIsMatPatApplicable(toBoolean(merged.User_Mat_Pat_Applicable ?? merged.user_Mat_Pat_Applicable));
         setJoiningDate(toDisplayDate(merged.user_Doj));
+        setLastWorkingDate(toDisplayDate(merged.lwd));
         setClBalance(String(merged.cl ?? 0));
         setSlBalance(String(merged.sl ?? 0));
         setPlBalance(String(merged.pl ?? 0));
@@ -317,8 +352,40 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         setEmergencyContactNo2(String(merged.emergencyContactNo2 || ""));
         setContactName1(String(merged.contactName1 || ""));
         setContactName2(String(merged.contactName2 || ""));
-        setSelectedEmployeeType(String(merged.eligibleTypeCode || "").trim().toUpperCase());
+const normalizeEmployeeTypeCode = (value: string) => {
+  const normalized = value.trim().toUpperCase();
 
+  if (
+    normalized === "ASSOCIATE" ||
+    normalized === "ACT"
+  ) {
+    return "ACT";
+  }
+
+  if (
+    normalized === "PROBATION" ||
+    normalized === "PRB" ||
+    normalized === "PBT"
+  ) {
+    return "PRB";
+  }
+
+  if (
+    normalized === "CONFIRMED" ||
+    normalized === "CNF" ||
+    normalized === "CFM" ||
+    normalized === "CON"
+  ) {
+    return "CNF";
+  }
+
+  return normalized;
+};
+setSelectedEmployeeType(
+  normalizeEmployeeTypeCode(
+    String(merged.eligibleTypeCode || "")
+  )
+);
         const resolvedIsManager = toOptionalBoolean(
           merged.isManager ?? merged.IsManager ?? merged.is_Manager
         );
@@ -328,7 +395,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         const assignmentTeamId = String(merged.assignmentTeamId || "").trim();
         const teamName = String(merged.teamName || "").trim();
         if (assignmentTeamId) {
-         
+
           setSelectedemployeeTeam(assignmentTeamId);
           setPrefillTeamName(teamName);
         } else if (teamName) {
@@ -342,7 +409,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
     };
 
     applyPrefill();
-  }, [employeeFromState]);
+  }, [employeeFromState, isUpdateMode]);
 
   useEffect(() => {
     if (!prefillTeamName || employeeTeam.length === 0) return;
@@ -386,6 +453,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         setTypeError("Unable to load employee types.");
       } finally {
         setLoadingType(false);
+        setPageLoader(false);
       }
     };
 
@@ -463,6 +531,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
 
   const validateForm = () => {
     const apiDoj = toApiDateTime(joiningDate);
+    const apiLwd = toApiDateTime(lastWorkingDate);
     const empNo = Number(employeeNo);
     const cl = Number(clBalance);
     const sl = Number(slBalance);
@@ -477,16 +546,36 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
     if (!emailId.trim()) return "Email Id is required.";
     if (!gender.trim()) return "Gender is required.";
     if (!joiningDate.trim() || !apiDoj) return "Joining Date must be valid (dd/mm/yyyy or yyyy-mm-dd).";
+    if (lastWorkingDate.trim() && !apiLwd)
+      return "Last Working Date must be valid.";
     if (!selectedEmployeeTeam.trim() || selectedEmployeeTeam.trim() === "-1") {
       return "Valid Assignment Team is required.";
     }
     if (Number.isNaN(cl) || Number.isNaN(sl) || Number.isNaN(pl) || Number.isNaN(asl)) {
       return "Leave balances must be valid numbers.";
     }
+    if (cl < 0 || sl < 0 || pl < 0 || asl < 0) {
+      return "Leave balances cannot be negative.";
+    }
+
+    if (
+      (!disableClBalance && cl > 99) ||
+      sl > 99 ||
+      (!disablePlBalance && pl > 99)
+    ) {
+      return "CL, SL and PL balances cannot be more than 2 digits.";
+    }
 
     return null;
   };
-
+  useEffect(() => {
+  if (saveError && errorRef.current) {
+    errorRef.current.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }
+}, [saveError]);
   const handleCreate = async () => {
     setSaveError(null);
     setSaveMessage(null);
@@ -496,7 +585,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
       setSaveError(validationError);
       return;
     }
-
+    setPageLoader(true);
     const payload: SaveNewEmployeeProfileRequest = {
       employee: {
         user_Employee_No: Number(employeeNo),
@@ -511,7 +600,9 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         user_Line_Mng_1: 0,
         isActive: true,
         eligibleTypeCode: selectedEmployeeType.trim().toUpperCase(),
-        lwd: "",
+        lwd: lastWorkingDate
+          ? lastWorkingDate
+          : "",
         User_Sex: gender,
         User_Mat_Pat_Applicable: isMatPatApplicable,
         emergencyContactNo1: emergencyContactNo1.trim(),
@@ -530,9 +621,11 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
 
     try {
       setIsSaving(true);
+      setPageLoader(true);
       if (isUpdateMode) {
 
         await updateEmpProfile(payload);
+        console.log("Update payload:", payload);
       }
       else {
         await saveNewEmpProfile(payload);
@@ -542,6 +635,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
           ? "Employee profile updated successfully."
           : "Employee profile saved successfully."
       );
+      console.log(saveMessage, payload);
     } catch (error) {
       const errorMessage =
         error instanceof Error && error.message
@@ -551,6 +645,7 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
       setSaveError(errorMessage);
     } finally {
       setIsSaving(false);
+      setPageLoader(false);
     }
   };
 
@@ -559,236 +654,345 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
   };
 
   return (
-    <section className="create-employee-form">
-      <h2 className="page-title">
-        {isUpdateMode ? "Update Employee Profile" : "Create Employee Profile"}
-      </h2>
-      {/* <LockedScreen/> */}
-      <div className="employee-form-card">
-        {saveError && <div className="form-error-text">{saveError}</div>}
-        <div className="form-grid">
-          {/* Row 1 */}
-          <div className="form-group checkbox-group">
-            <input type="checkbox" checked readOnly />
-            <label>Employee Status</label>
-          </div>
+    <section className="employee-profile-page">
+      <div className="employee-profile-card">
 
-          <div className="form-group">
-            <label>
-              Employee Type<span>*</span>
-            </label>
-
-            {typeError && <p style={{ color: "red" }}>{typeError}</p>}
-            <select
-              value={selectedEmployeeType}
-              disabled={loadingType}
-              onChange={e => setSelectedEmployeeType(e.target.value)}
-            >
-              {!selectedEmployeeType && <option value="">----Select Employee Type----</option>}
-              {employeeType.map((type) => (
-                <option
-                  key={type.eligibleTypeCode}
-                  value={type.eligibleTypeCode}
-                >
-                  {type.eligibleEmpName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group checkbox-group">
-            <input
-              type="checkbox"
-              checked={isManager}
-              disabled={isAssociateType}
-              onChange={(e) => handleIsManagerChange(e.target.checked)}
-            />
-            <label>Is Manager / Head / Team Lead</label>
-
-            {/* {loading && <span className="spinner"></span>} */}
-          </div>
-
-          {/* Row 2 */}
-          <div className="form-group">
-            <label>
-              First Name<span>*</span>
-            </label>
-            <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-          </div>
-
-          <div className="form-group">
-            <label>Middle Name</label>
-            <input type="text" value={middleName} onChange={(e) => setMiddleName(e.target.value)} />
-          </div>
-
-          <div className="form-group">
-            <label>
-              Last Name<span>*</span>
-            </label>
-            <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-          </div>
-
-          {/* Row 3 */}
-          <div className="form-group">
-            <label>
-              Employee No<span>*</span>
-            </label>
-            <input
-              type="text"
-              value={employeeNo}
-              onChange={(e) => setEmployeeNo(e.target.value)}
-              disabled={isUpdateMode}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>
-              User Id<span>*</span>
-            </label>
-            <input
-              type="text"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              disabled={isUpdateMode}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>
-              Email Id<span>*</span>
-            </label>
-            <input
-              type="email"
-              value={emailId}
-              onChange={(e) => setEmailId(e.target.value)}
-              disabled={isUpdateMode}
-            />
-          </div>
-
-          {/* Row 4 */}
-          <div className="form-group">
-            <label>
-              Gender<span>*</span>
-            </label>
-            <select value={gender} onChange={(e) => setGender(e.target.value)}>
-              <option value="M">Male</option>
-              <option value="F">Female</option>
-            </select>
-          </div>
-
-          <div className="form-group checkbox-group">
-            <input
-              type="checkbox"
-              checked={isMatPatApplicable}
-              onChange={(e) => setIsMatPatApplicable(e.target.checked)}
-            />
-            <label>Maternity / Paternity Leave Applicable</label>
-          </div>
-
-          <div className="form-group">
-            <label>
-              Joining Date (dd/mm/yyyy)<span>*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="dd/mm/yyyy"
-              value={joiningDate}
-              onChange={(e) => setJoiningDate(e.target.value)}
-            />
-          </div>
-
-          {/* Row 5 */}
-          <div className="form-group">
-            <label>Emergency Contact Name 1</label>
-            <input
-              type="text"
-              value={contactName1}
-              onChange={(e) => setContactName1(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Emergency Contact No 1</label>
-            <input
-              type="text"
-              value={emergencyContactNo1}
-              onChange={(e) => setEmergencyContactNo1(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group contact-spacer" aria-hidden="true" />
-
-          <div className="form-group">
-            <label>Emergency Contact Name 2</label>
-            <input
-              type="text"
-              value={contactName2}
-              onChange={(e) => setContactName2(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Emergency Contact No 2</label>
-            <input
-              type="text"
-              value={emergencyContactNo2}
-              onChange={(e) => setEmergencyContactNo2(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group full-width">
-            <label>
-              Assignment Team<span>*</span>
-            </label>
-            {loadingTeam && <p>Loading teams...</p>}
-
-            {teamError && <p style={{ color: "red" }}>{teamError}</p>}
-            <select
-              value={selectedEmployeeTeam}
-              disabled={loadingTeam}
-              onChange={e => setSelectedemployeeTeam(e.target.value)}
-            >
-              <option value="">Select Assignment Team</option>
-              {employeeTeam.map((type, index) => (
-                <option
-                  key={`${String(type.teamId)}-${index}`}
-                  value={type.teamId}
-                >
-                  {type.teamName}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="employee-profile-header">
+          <h2 className="employee-profile-title">
+            {isUpdateMode ? "Update Employee Profile" : "Create Employee Profile"}
+          </h2>
         </div>
 
-        {/* Leave balances */}
+        <div className="employee-profile-body">
 
-        <div className="leave-balance-wrapper">
-          <div className="leave-section">
-            {showClBalanceField && (
-              <div className="leave-row">
-                <label>
-                  Casual Leave (CL) Balance Entry<span>*</span>
-                </label>
+           <PageLoader show={pageLoader} />
+
+          {/* <LockedScreen/> */}
+          
+          {saveError && (
+  <div
+    ref={errorRef}
+    className="form-error-text"
+  >
+    {saveError}
+  </div>
+)}
+          <div className="form-grid">
+            {/* Row 1 */}
+            <div className="form-group checkbox-group">
+              <input type="checkbox" checked readOnly />
+              <label>Employee Status</label>
+            </div>
+
+            <div className="form-group">
+              <label>
+                Employee Type<span>*</span>
+              </label>
+
+              {typeError && <p style={{ color: "red" }}>{typeError}</p>}
+              <select
+                value={selectedEmployeeType}
+                disabled={loadingType}
+                onChange={e => setSelectedEmployeeType(e.target.value)}
+              >
+                {!selectedEmployeeType && <option value="">----Select Employee Type----</option>}
+                {employeeType.map((type) => (
+                  <option
+                    key={type.eligibleTypeCode}
+                    value={type.eligibleTypeCode}
+                  >
+                    {type.eligibleEmpName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group checkbox-group">
+              <input
+                type="checkbox"
+                checked={isManager}
+                disabled={isAssociateType}
+                onChange={(e) => handleIsManagerChange(e.target.checked)}
+              />
+              <label>Is Manager / Head / Team Lead</label>
+
+              {/* {loading && <span className="spinner"></span>} */}
+            </div>
+
+            {/* Row 2 */}
+            <div className="form-group">
+              <label>
+                First Name<span>*</span>
+              </label>
+              <input
+  type="text"
+  value={firstName}
+  onChange={(e) => {
+    const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+    setFirstName(value);
+  }}
+/>
+            </div>
+
+            <div className="form-group">
+              <label>Middle Name</label>
+              <input type="text" value={middleName} onChange={(e) => {
+    const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+    setMiddleName(value);
+  }} />
+            </div>
+
+            <div className="form-group">
+              <label>
+                Last Name<span>*</span>
+              </label>
+              <input type="text" value={lastName} onChange={(e) => {
+    const value = e.target.value.replace(/[^a-zA-Z\s]/g, "");
+    setLastName(value);
+  }} />
+            </div>
+
+            {/* Row 3 */}
+            <div className="form-group">
+              <label>
+                Employee No<span>*</span>
+              </label>
+              <input
+                type="text"
+                value={employeeNo}
+                maxLength={8}
+                onChange={(e)=>{
+                  const value = e.target.value.replace(/[^0-9]/g, "");
+                  setEmployeeNo(value);
+                }}
+                disabled={isUpdateMode}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>
+                User Id<span>*</span>
+              </label>
+              <input
+                type="text"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                disabled={isUpdateMode}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>
+                Email Id<span>*</span>
+              </label>
+              <input
+                type="email"
+                value={emailId}
+                onChange={(e) => setEmailId(e.target.value)}
+                disabled={isUpdateMode}
+              />
+            </div>
+
+            {/* Row 4 */}
+            <div className="form-group">
+              <label>
+                Gender<span>*</span>
+              </label>
+              <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                <option value="">---Select---</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+              </select>
+            </div>
+
+            <div className="form-group checkbox-group">
+              <input
+                type="checkbox"
+                checked={isMatPatApplicable}
+                disabled={isAssociateType}
+                onChange={(e) => setIsMatPatApplicable(e.target.checked)}
+              />
+              <label>Maternity / Paternity Leave Applicable</label>
+            </div>
+
+            <div className="form-group">
+              <label>
+                Joining Date (dd/mm/yyyy)<span>*</span>
+              </label>
+              <div className="date-input-wrapper">
                 <input
-                  type="number"
-                  value={clBalance}
-                  onChange={(e) => setClBalance(e.target.value)}
-                  disabled={disableClBalance}
+                  type="date"
+                  value={
+                    joiningDate
+                      ? (joiningDate).split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) =>
+                    setJoiningDate(
+                      toDisplayDate(e.target.value)
+                    )
+                  }
                 />
-              </div>
-            )}
 
-            {showSlBalanceField && (
-              <div className="leave-row">
-                <label>
-                  Sick Leave (SL) Balance Entry<span>*</span>
-                </label>
-                <input type="number" value={slBalance} onChange={(e) => setSlBalance(e.target.value)} />
+                <span className="date-display-text">
+                  {joiningDate || "dd/mm/yyyy"}
+                </span>
               </div>
-            )}
+            </div>
 
-            {showPlBalanceField && (
+           {isUpdateMode && (
+  <div className="form-group">
+    <label>
+      Last Working Date (dd/mm/yyyy)
+    </label>
+
+    <div className="date-input-wrapper">
+      <input
+        type="date"
+        value={
+          lastWorkingDate
+            ? (() => {
+                const [day, month, year] =
+                  lastWorkingDate.split("/");
+                return `${year}-${month}-${day}`;
+              })()
+            : ""
+        }
+        onChange={(e) =>
+          setLastWorkingDate(
+            toDisplayDate(e.target.value)
+          )
+        }
+      />
+
+      <span className="date-display-text">
+        {lastWorkingDate || "dd/mm/yyyy"}
+      </span>
+    </div>
+  </div>
+)}
+
+
+            {/* Row 5 */}
+            <div className="form-group">
+              <label>Emergency Contact Name 1</label>
+              <input
+                type="text"
+                value={contactName1}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^a-zA-Z.\s]/g, "");
+                  setContactName1(value);
+                }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Emergency Contact No 1</label>
+              <input
+                type="text"
+                maxLength={14}
+                value={emergencyContactNo1}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9+-]/g, "");
+                  setEmergencyContactNo1(value);
+                }}
+              />
+            </div>
+
+            <div className="form-group contact-spacer" aria-hidden="true" />
+
+            <div className="form-group">
+              <label>Emergency Contact Name 2</label>
+              <input
+                type="text"
+                value={contactName2}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^a-zA-Z.\s]/g, "");
+                  setContactName2(value);
+                }}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Emergency Contact No 2</label>
+              <input
+                type="text"
+                maxLength={14}
+                value={emergencyContactNo2}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9+-]/g, "");
+                  setEmergencyContactNo2(value);
+                }}
+              />
+            </div>
+
+            <div className="form-group full-width">
+              <label>
+                Assignment Team<span>*</span>
+              </label>
+              {loadingTeam && <p>Loading teams...</p>}
+
+              {teamError && <p style={{ color: "red" }}>{teamError}</p>}
+              <select
+                value={selectedEmployeeTeam}
+                disabled={loadingTeam}
+                onChange={e => setSelectedemployeeTeam(e.target.value)}
+              >
+                <option value="">Select Assignment Team</option>
+                {employeeTeam.map((type, index) => (
+                  <option
+                    key={`${String(type.teamId)}-${index}`}
+                    value={type.teamId}
+                  >
+                    {type.teamName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Leave balances */}
+
+          <div className="leave-balance-wrapper">
+            <div className="leave-section">
+              {showClBalanceField && (
+                <div className="leave-row">
+                  <label>
+                    Casual Leave (CL) Balance Entry<span>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={clBalance}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "");
+                      setClBalance(value);
+                    }}
+                    disabled={disableClBalance}
+                  />
+                </div>
+              )}
+
+              {showSlBalanceField && (
+                <div className="leave-row">
+                  <label>
+                    Sick Leave (SL) Balance Entry<span>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={slBalance}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "");
+                      setSlBalance(value);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* {showPlBalanceField && (
               <div className="leave-row">
                 <label>
                   Privileged Leave (PL) Balance Entry<span>*</span>
@@ -800,42 +1004,53 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
                   disabled={disablePlBalance}
                 />
               </div>
-            )}
+            )} */}
 
-            {showAslBalanceField && (
-              <div className="leave-row">
-                <label>
-                  Associate Leave (ASL) Balance Entry<span>*</span>
-                </label>
-                <input
-                  type="number"
-                  value={aslBalance}
-                  onChange={(e) => setAslBalance(e.target.value)}
-                  disabled={disableAslBalance}
-                />
-              </div>
-            )}
+              {showAslBalanceField && (
+                <div className="leave-row">
+                  <label>
+                    Associate Leave (ASL) Balance Entry<span>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={2}
+                    value={aslBalance}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, "");
+                      setAslBalance(value);
+                    }}
+                    disabled={disableAslBalance}
+                  />
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        {saveMessage && (
-          <div className="employee-success-toast">
-            {saveMessage}
+          {saveMessage && (
+            <div className="employee-success-toast">
+              {saveMessage}
+            </div>
+          )}
+
+          <div className="action-bar">
+            <button
+              className="btn-primary"
+              onClick={handleCreate}
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : isUpdateMode ? "Update" : "Create"}
+            </button>
+
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={handleCancel}
+              disabled={isSaving}
+            >
+              Cancel
+            </button>
           </div>
-        )}
-
-        <div className="action-bar">
-          <button
-            className="btn-secondary"
-            type="button"
-            onClick={handleCancel}
-            disabled={isSaving}
-          >
-            Cancel
-          </button>
-          <button className="btn-primary" onClick={handleCreate} disabled={isSaving}>
-            {isSaving ? "Saving..." : isUpdateMode ? "Update" : "Create"}
-          </button>
         </div>
       </div>
     </section>

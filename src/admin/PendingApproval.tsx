@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import "./PendingApproval.css";
 import { getAllTeamMembersByManagerId, getPendingApprovals, bulkApproveReject } from "../services/apiService";
 import type { TeamMemberApi } from "../types/apiTypes";
-// import { useAuth } from "../auth/useAuth";
+import { useAuth } from "../auth/useAuth";
+import {
+  useLocation,
+  useNavigate
+} from "react-router-dom";
+import PageLoader from "../components/PageLoader";
+import ToastMessage from "../components/ToastMessage";
 
 type PendingApprovalApiItem = {
   leaveId: string;
@@ -37,14 +42,18 @@ type PendingRow = {
 };
 
 export default function PendingApproval() {
-  // const { user } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [rows, setRows] = useState<PendingRow[]>([]);
   const [nameToAdId, setNameToAdId] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [rejectValidationActive, setRejectValidationActive] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
-  const userId = "IN091a";//user?.loginUserAdID
+  const userId = user?.loginUserAdID || ""
   const normalize = (value: string | null | undefined) => (value || "").trim();
   const normalizeNameKey = (value: string | null | undefined) => normalize(value).toLowerCase();
   const pickUserId = (item: PendingApprovalApiItem) =>
@@ -112,6 +121,29 @@ export default function PendingApproval() {
     fetchPending();
   }, [fetchPending]);
 
+  useEffect(() => {
+    if (!successMessage) return;
+
+    const timer = window.setTimeout(() => {
+      setSuccessMessage("");
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setSuccessMessage(location.state.message);
+
+      const timer = window.setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+
+      window.history.replaceState({}, document.title);
+
+      return () => window.clearTimeout(timer);
+    }
+  }, [location.state]);
   const hasSelection = rows.some((r) => r.selected);
   const allSelected = rows.length > 0 && rows.every((r) => r.selected);
 
@@ -128,6 +160,10 @@ export default function PendingApproval() {
   };
 
   const updateRemark = (id: string, value: string) => {
+    if (value.trim()) {
+      setRejectValidationActive(false);
+      setError("");
+    }
     setRows((prev) =>
       prev.map((r) =>
         r.id === id ? { ...r, remark: value.slice(0, 250) } : r
@@ -136,17 +172,20 @@ export default function PendingApproval() {
   };
 
   const handleAction = async (action: "Approve" | "Reject") => {
+    setError("");
+    setSuccessMessage("");
     const selectedRows = rows.filter((r) => r.selected);
 
     if (selectedRows.length === 0) {
-      alert("No rows selected");
+      setError("No rows selected");
       return;
     }
 
     if (action === "Reject") {
       const missingRemark = selectedRows.some((r) => !r.remark.trim());
       if (missingRemark) {
-        alert("Please enter remark for rejection");
+        setError("Please enter remark for rejection");
+        setRejectValidationActive(true);
         return;
       }
     }
@@ -165,30 +204,46 @@ export default function PendingApproval() {
     setRows((prev) => prev.filter((r) => !r.selected));
 
     try {
+      setActionLoading(true);
       setLoading(true);
 
       await bulkApproveReject(payload);
 
-      alert(`${action} successful`);
+      setSuccessMessage(`${action} successful!`);
+      setError("");
 
     } catch (err) {
       console.error(err);
-      alert("Something went wrong");
+      setError("Something went wrong");
 
       // ❗ Rollback if API fails
       setRows(previousRows);
     } finally {
+      setActionLoading(false);
       setLoading(false);
     }
   };
 
   return (
     <section className="pending-page">
+
+      <PageLoader show={actionLoading} />
       <div className="container">
         <div className="card">
           <div className="card-header">Pending Requests Details</div>
 
           <div className="card-body">
+            {error && (
+              <div className="pending-error-text">
+                {error}
+              </div>
+            )}
+
+            <ToastMessage
+              show={!!successMessage}
+              message={successMessage}
+              type="success"
+            />
             <div className="controls">
               <label className="select-all">
                 <input
@@ -201,19 +256,36 @@ export default function PendingApproval() {
 
               <div className="action-buttons">
                 <button
+                  type="button"
                   className="btn approve"
-                  disabled={!hasSelection}
+                  disabled={
+                    !hasSelection ||
+                    rejectValidationActive ||
+                    actionLoading
+                  }
                   onClick={() => handleAction("Approve")}
                 >
-                  Approve
+                  {actionLoading ? (
+                    <span className="btn-spinner"></span>
+                  ) : (
+                    "Approve"
+                  )}
                 </button>
 
                 <button
+                  type="button"
                   className="btn reject"
-                  disabled={!hasSelection}
+                  disabled={
+                    !hasSelection ||
+                    actionLoading
+                  }
                   onClick={() => handleAction("Reject")}
                 >
-                  Reject
+                  {actionLoading ? (
+                    <span className="btn-spinner"></span>
+                  ) : (
+                    "Reject"
+                  )}
                 </button>
               </div>
             </div>
@@ -238,10 +310,6 @@ export default function PendingApproval() {
                   {loading ? (
                     <tr>
                       <td colSpan={9}>Loading...</td>
-                    </tr>
-                  ) : error ? (
-                    <tr>
-                      <td colSpan={9}>{error}</td>
                     </tr>
                   ) : rows.length === 0 ? (
                     <tr>

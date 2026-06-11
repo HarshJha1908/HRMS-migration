@@ -121,9 +121,9 @@ export const PdfExportUtil = {
       item.employeeId,
       item.startDate,
       item.endDate,
-      item.submissionDate ?? item.submitionDate,
-      item.dateOfApproved ?? item.dateofapproved,
-      item.leaveTypeName,
+      item.dateOfSubmission ?? item.submitionDate,
+      item.dateOfApproval ?? item.dateofapproved,
+      item.leaveType,
       item.status,
       item.approverName,
       item.teamName,
@@ -312,9 +312,9 @@ export const CsvExportUtil = {
       escapeCsvCell(item.requesterName),
       escapeCsvCell(item.startDate),
       escapeCsvCell(item.endDate),
-      escapeCsvCell(item.submissionDate ?? item.submitionDate),
-      escapeCsvCell(item.dateOfApproved ?? item.dateofapproved),
-      escapeCsvCell(item.leaveTypeName),
+      escapeCsvCell(item.dateOfSubmission ?? item.submitionDate),
+      escapeCsvCell(item.dateOfApproval ?? item.dateofapproved),
+      escapeCsvCell(item.leaveType),
       escapeCsvCell(item.status),
       escapeCsvCell(item.approverName),
       escapeCsvCell(item.teamName),
@@ -403,3 +403,10 @@ export const formatLocalDate = (date: Date) => {
   return `${day}-${month}-${year}`;
 };
 
+export const formatLeaveValue = (
+  total: string | null,
+  submitted: string | null,
+  balance: string | null
+) => {
+  return `${total ?? "NA"}[${submitted ?? "0.0"} / ${balance ?? "0.0"}]`;
+};

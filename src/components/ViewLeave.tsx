@@ -13,24 +13,29 @@ import { useHolidays } from "../hooks/useHolidays";
 import { useUser } from "../context/UserContext";
 import { useAuth } from "../auth/useAuth";
 import { formatLocalDate } from "../utils/Utils";
+import PageLoader from "./PageLoader";
+// import ToastMessage from "./ToastMessage";
 
 type ViewLeaveDetailsProps = {
   onDataLoaded?: (details: LeaveDetails | null) => void;
+  onLeaveStatusChanged?: () => void;
 };
 
-export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps) {
+export default function ViewLeaveDetails({
+  onDataLoaded,
+  onLeaveStatusChanged
+}: ViewLeaveDetailsProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const leaveId = location.state?.leaveId;
   const { isManager } = useUser();
   const { user } = useAuth();
-  const currentUserAdId =
-  user?.loginUserAdID || "";
+  const currentUserAdId = user?.loginUserAdID || "";
   const viewedUserId =
-  location.state?.userId || "";
+    location.state?.userId || "";
   const isOwnLeave =
-  currentUserAdId.trim().toLowerCase() ===
-  viewedUserId.trim().toLowerCase();
+    currentUserAdId.trim().toLowerCase() ===
+    viewedUserId.trim().toLowerCase();
   const [data, setData] = useState<LeaveDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [calendarOpen, setCalendarOpen] = useState(false);
@@ -43,22 +48,27 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
   const [showAttachmentModal, setShowAttachmentModal] = useState(false);
   // const [attachmentLoading, setAttachmentLoading] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [, setSuccessMessage] = useState("");
+  const [rejectValidationActive, setRejectValidationActive] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
+
         setLoading(true);
 
         if (!leaveId) return;
 
         const result = await getViewLeaveDetailsByLeaveId(leaveId);
+        console.log("Leave details fetched:", result);
         setData(result.data);
         setRemarks(result?.data?.approverRemarks || "");
         onDataLoaded?.((result?.data as LeaveDetails) || null);
 
         // Fetch attachment
         try {
-          
+
           const attachmentData = await getLeaveAttachment(leaveId);
 
           if (attachmentData && attachmentData.blob && attachmentData.blob.size > 0) {
@@ -123,22 +133,25 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
   );
 
   const isPending = data?.statusCode?.toLowerCase() === "p";
-  
+
   const showManagerActions =
-  isManager &&
-  !isOwnLeave &&
-  isPending;
+    isManager &&
+    !isOwnLeave &&
+    isPending;
 
   const handleManagerAction = async (nextStatus: "A" | "R") => {
+    setErrorMessage("");
+    setSuccessMessage("");
     if (!leaveId) {
-      alert("Leave ID is missing.");
+      setErrorMessage("Leave ID is missing.");
       return;
     }
 
     const trimmedRemarks = remarks.trim();
 
     if (nextStatus === "R" && !trimmedRemarks) {
-      alert("Please enter approver remark before rejection.");
+      setErrorMessage("Please enter approver remark before rejection.");
+      setRejectValidationActive(true);
       return;
     }
 
@@ -164,17 +177,28 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
           : prev
       );
 
-      alert(nextStatus === "A" ? "Leave approved successfully." : "Leave rejected successfully.");
-      navigate("/pending-approval");
+      onLeaveStatusChanged?.();
+
+      setTimeout(() => {
+        navigate("/pending-approval", {
+          state: {
+            message:
+              nextStatus === "A"
+                ? "Leave approved successfully."
+                : "Leave rejected successfully."
+          }
+        });
+      }, 700);
     } catch (error) {
       console.error(error);
       const message =
         error instanceof Error && error.message
           ? error.message
           : "Failed to save action. Please try again.";
-      alert(message);
+      setErrorMessage(message);
     } finally {
       setActionLoading(false);
+
     }
   };
 
@@ -240,6 +264,7 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
 
   return (
     <section className="view-leave-page">
+      <PageLoader show={actionLoading} />
       <div className="details-wrapper">
         <div className="details-card">
           <div className="details-title-row">
@@ -279,10 +304,17 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
                 <button
                   type="button"
                   className="btn approve"
-                  disabled={actionLoading}
+                  disabled={
+                    actionLoading ||
+                    rejectValidationActive
+                  }
                   onClick={() => handleManagerAction("A")}
                 >
-                  {actionLoading ? "Saving..." : "Approve"}
+                  {actionLoading ? (
+                    <span className="btn-spinner"></span>
+                  ) : (
+                    "Approve"
+                  )}
                 </button>
                 <button
                   type="button"
@@ -290,11 +322,21 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
                   disabled={actionLoading}
                   onClick={() => handleManagerAction("R")}
                 >
-                  {actionLoading ? "Saving..." : "Reject"}
+                  {actionLoading ? (
+                    <span className="btn-spinner"></span>
+                  ) : (
+                    "Reject"
+                  )}
                 </button>
               </div>
             )}
           </div>
+
+          {errorMessage && (
+            <div className="view-error-text">
+              {errorMessage}
+            </div>
+          )}
 
           <table className="leave-details-table">
             <tbody>
@@ -347,7 +389,7 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
                 </td>
                 <td>
                   <span className="label">Last Update Date:</span>
-                  <span className="value">{formatDate(data.statusChangeDate)}</span>
+                  <span className="value">{formatDate(data.dateofapproved)}</span>
                 </td>
               </tr>
 
@@ -364,7 +406,16 @@ export default function ViewLeaveDetails({ onDataLoaded }: ViewLeaveDetailsProps
                       value={remarks}
                       maxLength={250}
                       placeholder="Enter remark"
-                      onChange={(e) => setRemarks(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+
+                        setRemarks(value);
+
+                        if (value.trim()) {
+                          setRejectValidationActive(false);
+                          setErrorMessage("");
+                        }
+                      }}
                     />
                   ) : (
                     <span className="value">{data.approverRemarks || "-"}</span>

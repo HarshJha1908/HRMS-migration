@@ -15,10 +15,11 @@ import type {
   SpecialLeaveTypeApi
 } from "../types/apiTypes";
 import "./SpecialLeaveEntry.css";
-import { useSearchParams } from "react-router-dom";
 import { useRef } from "react";
 import { useUser } from "../context/UserContext";
-
+import {useNavigate, useSearchParams } from "react-router-dom";
+import ToastMessage from "../components/ToastMessage";
+import Pagination from "../components/Pagination";
 
 const DEFAULT_LEAVE_TYPES: SpecialLeaveTypeApi[] = [
   { leaveTypeCode: "LWP", leaveTypeName: "Leave Without Pay" },
@@ -55,11 +56,17 @@ type TeamOption = {
 export default function SpecialLeaveEntry() {
   const exportRef = useRef<HTMLDivElement | null>(null);
   const { username: signedInUser } = useUser();
- 
+
+
   const [searchParams] = useSearchParams();
+  // const location = useLocation();
+  const navigate = useNavigate();
   const [leaveTypes, setLeaveTypes] = useState<SpecialLeaveTypeApi[]>([]);
   const [selectedLeaveTypeCode, setSelectedLeaveTypeCode] = useState("LWP");
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+
+  const [appliedLeaveTypeCode, setAppliedLeaveTypeCode] = useState("LWP");
+  const [appliedYear, setAppliedYear] = useState<number>(new Date().getFullYear());
   const [rows, setRows] = useState<SpecialLeaveRowApi[]>([]);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [isAssignMode, setIsAssignMode] = useState(false);
@@ -78,6 +85,11 @@ export default function SpecialLeaveEntry() {
   const [loading, setLoading] = useState(true);
   const [isRemoving, setIsRemoving] = useState(false);
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showToast, setShowToast] = useState(true);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const rowsPerPage = 40;
 
   const yearOptions = useMemo(() => {
     const currentYear = new Date().getFullYear();
@@ -113,8 +125,8 @@ export default function SpecialLeaveEntry() {
         setLoading(true);
         setError("");
         const list = await getSpecialLeavesByLeaveTypeCodeYear(
-          selectedLeaveTypeCode,
-          selectedYear
+          appliedLeaveTypeCode,
+          appliedYear
         );
         const safeList = Array.isArray(list) ? list : [];
 
@@ -155,6 +167,7 @@ export default function SpecialLeaveEntry() {
 
         setRows(enrichedRows);
         setSelectedRows([]);
+        setCurrentPage(1);
       } catch (fetchError) {
         const message =
           fetchError instanceof Error && fetchError.message
@@ -162,13 +175,14 @@ export default function SpecialLeaveEntry() {
             : "Unable to fetch special leaves.";
         setError(message);
         setRows([]);
+        setCurrentPage(1);
       } finally {
         setLoading(false);
       }
     };
 
     loadSpecialLeaves();
-  }, [selectedLeaveTypeCode, selectedYear]);
+  }, [appliedLeaveTypeCode, appliedYear]);
 
   useEffect(() => {
     const loadAssignData = async () => {
@@ -251,6 +265,20 @@ export default function SpecialLeaveEntry() {
     [rows]
   );
 
+  const totalPages = Math.ceil(normalizedRows.length / rowsPerPage);
+  const lastIndex = currentPage * rowsPerPage;
+  const firstIndex = lastIndex - rowsPerPage;
+  const paginatedRows = normalizedRows.slice(firstIndex, lastIndex);
+
+  useEffect(() => {
+    if (totalPages > 0 && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+    if (normalizedRows.length === 0) {
+      setCurrentPage(1);
+    }
+  }, [currentPage, normalizedRows.length, totalPages]);
+
   const selectedTeamName = useMemo(
     () => teamOptions.find((team) => team.teamId === selectedTeamId)?.teamName || "",
     [selectedTeamId, teamOptions]
@@ -273,89 +301,123 @@ export default function SpecialLeaveEntry() {
         : [...prev, employeeNo]
     );
   };
+  const confirmRemoveSelected = async () => {
+  try {
+    setIsRemoving(true);
+    setError("");
 
-  const handleRemoveSelected = async () => {
-    if (selectedRows.length === 0) {
-      alert("Please select at least one row to remove.");
-      return;
+    const today = new Date().toISOString().split("T")[0];
+
+    const currentUser =
+      String(signedInUser || "").trim() ||
+      "HR";
+
+    const selectedSet = new Set(selectedRows);
+
+    const selectedPayload = rows
+      .filter((row) => selectedSet.has(row.specialLeaveID))
+      .map((row) => ({
+        specialLeaveID: row.specialLeaveID,
+        empId: row.empId,
+        empAdId: row.empAdId,
+        empName: row.empName,
+        leaveType: normalize(
+          row.leaveTypeCode ||
+          row.leaveType ||
+          row.leaveTypeName
+        ),
+        fromDate: row.fromDate,
+        toDate: row.toDate,
+        updatedOn: today,
+        updatedBy: currentUser,
+        isActive: false,
+        isHalfStartDay: Boolean(row.isHalfStartDay),
+        isHalfEndDay: Boolean(row.isHalfEndDay)
+      }));
+
+    const response =
+      await deactivateBulkSpecialLeavesRequest(
+        selectedPayload
+      );
+
+    if (response?.isSuccess === false) {
+      throw new Error(
+        response?.message ||
+        "Unable to remove selected rows."
+      );
     }
-
-    const confirmRemove = window.confirm(
-      "Do you really want to remove the selected special leave request(s)?"
-    );
-
-    if (!confirmRemove) return;
-
-    try {
-      setIsRemoving(true);
-      setError("");
-
-      const today = new Date().toISOString().split("T")[0];
-      const currentUser =
-        String(signedInUser || "").trim() ||
-        "HR";
-
-      const selectedSet = new Set(selectedRows);
-      const selectedPayload = rows
-        .filter((row) => selectedSet.has(row.specialLeaveID))
-        .map((row) => ({
-          specialLeaveID: row.specialLeaveID,
-          empId: row.empId,
-          empAdId: row.empAdId,
-          empName: row.empName,
-          leaveType: normalize(row.leaveTypeCode || row.leaveType || row.leaveTypeName),
-          fromDate: row.fromDate,
-          toDate: row.toDate,
-          updatedOn: today,
-          updatedBy: currentUser,
-          isActive: false,
-          isHalfStartDay: Boolean(row.isHalfStartDay),
-          isHalfEndDay: Boolean(row.isHalfEndDay)
-        }));
-
-      const response = await deactivateBulkSpecialLeavesRequest(selectedPayload);
-      if (response?.isSuccess === false) {
-        throw new Error(response?.message || "Unable to remove selected rows.");
-      }
 
       setRows((prev) =>
-        prev.map((row) =>
-          selectedSet.has(row.specialLeaveID)
-            ? { ...row, isActive: false, updatedOn: today, updatedBy: currentUser }
-            : row
-        )
-      );
-      setSelectedRows([]);
-    } catch (removeError) {
-      const message =
-        removeError instanceof Error && removeError.message
-          ? removeError.message
-          : "Unable to remove selected rows.";
-      setError(message);
-      alert(message);
-    } finally {
-      setIsRemoving(false);
-    }
-  };
+      prev.map((row) =>
+        selectedSet.has(row.specialLeaveID)
+          ? {
+              ...row,
+              isActive: false,
+              updatedOn: today,
+              updatedBy: currentUser
+            }
+          : row
+      )
+    );
+
+    setSelectedRows([]);
+    setCurrentPage(1);
+
+    setShowRemoveModal(false);
+
+    setSuccessMessage(
+      "Selected special leave removed successfully."
+    );
+
+    setShowToast(true);
+
+  } catch (removeError) {
+
+    const message =
+      removeError instanceof Error &&
+      removeError.message
+        ? removeError.message
+        : "Unable to remove selected rows.";
+
+    setError(message);
+
+    setShowRemoveModal(false);
+
+  } finally {
+
+    setIsRemoving(false);
+  }
+};
+const handleRemoveSelected = () => {
+
+  if (selectedRows.length === 0) {
+    setError(
+      "Please select at least one row to remove."
+    );
+    return;
+  }
+
+  setShowRemoveModal(true);
+};
 
   const handleAssignSave = async () => {
     if (!assignStartDate || !assignEndDate) {
-      alert("Please select both Start Date and End Date.");
+      setError("Please select both Start Date and End Date.");
       return;
     }
 
     if (assignEndDate < assignStartDate) {
-      alert("End Date cannot be before Start Date.");
+      setError("End Date cannot be before Start Date.");
       return;
     }
 
     if (!assignLeaveTypeCode) {
-      alert("Please select Leave Type.");
+      setError("Please select Leave Type.");
       return;
     }
 
     if (selectedAssignEmployees.length === 0) {
-      alert("Please select at least one employee.");
+      setError("Please select at least one employee.");
       return;
     }
 
@@ -363,7 +425,7 @@ export default function SpecialLeaveEntry() {
     const selectedMembers = assignMemberRows.filter((member) => selectedSet.has(member.employeeId));
 
     if (selectedMembers.length === 0) {
-      alert("Selected employees are not available in current team list.");
+      setError("Selected employees are not available in current team list.");
       return;
     }
 
@@ -414,14 +476,35 @@ export default function SpecialLeaveEntry() {
 
       setSelectedAssignEmployees([]);
       setSelectedLeaveTypeCode(resolvedLeaveTypeCode);
+
+      setAppliedLeaveTypeCode(resolvedLeaveTypeCode);
+      setAppliedYear(new Date(assignStartDate).getFullYear());
+
+      const refreshedRows = await getSpecialLeavesByLeaveTypeCodeYear(
+        resolvedLeaveTypeCode,
+        new Date(assignStartDate).getFullYear()
+      );
+
+      setRows(Array.isArray(refreshedRows) ? refreshedRows : []);
+      setCurrentPage(1);
+
+      setSuccessMessage(
+        response?.message || "Special leave assigned successfully."
+      );
+
+      setShowToast(true);
+
       setIsAssignMode(false);
-      alert(response?.message || "Special leave request saved successfully.");
+
+      navigate("/special-leave-entry", {
+        replace: true
+      });
     } catch (saveError) {
       const message =
         saveError instanceof Error && saveError.message
           ? saveError.message
           : "Unable to save special leave request.";
-      alert(message);
+      setError(message);
     } finally {
       setIsAssignSaving(false);
     }
@@ -486,23 +569,46 @@ export default function SpecialLeaveEntry() {
   };
 
   useEffect(() => {
-  const type = searchParams.get("type");
+    const type = searchParams.get("type");
 
-  if (type === "export" && exportRef.current) {
-    setTimeout(() => {
-      exportRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-      });
-    }, 300);
-  }
-}, [searchParams]);
+    if (type === "export" && exportRef.current) {
+      setTimeout(() => {
+        exportRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }, 300);
+    }
+  }, [searchParams]);
+ useEffect(() => {
+  if (!successMessage) return;
+
+  const timer = window.setTimeout(() => {
+    setShowToast(false);
+    setSuccessMessage("");
+  }, 3000);
+
+  return () => window.clearTimeout(timer);
+
+}, [successMessage]);
+
+  const handleGoFilter = () => {
+    setAppliedLeaveTypeCode(selectedLeaveTypeCode);
+    setAppliedYear(selectedYear);
+    setCurrentPage(1);
+  };
   if (isAssignMode) {
     return (
       <section className="special-leave-page">
         <div className="special-leave-card assign-card">
           <div className="special-leave-header">
-            <h2>Assign Special Leaves </h2>
+            {successMessage && showToast && (
+              <ToastMessage
+                show={!!successMessage}
+                message={successMessage}
+                type="success"
+              />
+            )}
           </div>
 
           <div className="assign-form-grid">
@@ -510,21 +616,39 @@ export default function SpecialLeaveEntry() {
               <label>
                 Start Date<span>*</span>
               </label>
-              <input
-                type="date"
-                value={assignStartDate}
-                onChange={(event) => setAssignStartDate(event.target.value)}
-              />
+              <div className="special-date-wrapper">
+                <input
+                  type="date"
+                  value={assignStartDate}
+                  onChange={(event) => setAssignStartDate(event.target.value)}
+                  className="special-date-input"
+                />
+
+                <span className="special-date-text">
+                  {assignStartDate
+                    ? `${assignStartDate.split("-")[2]}/${assignStartDate.split("-")[1]}/${assignStartDate.split("-")[0]}`
+                    : "dd/mm/yyyy"}
+                </span>
+              </div>
             </div>
             <div className="assign-field">
               <label>
                 End Date<span>*</span>
               </label>
-              <input
-                type="date"
-                value={assignEndDate}
-                onChange={(event) => setAssignEndDate(event.target.value)}
-              />
+              <div className="special-date-wrapper">
+                <input
+                  type="date"
+                  value={assignEndDate}
+                  onChange={(event) => setAssignEndDate(event.target.value)}
+                  className="special-date-input"
+                />
+
+                <span className="special-date-text">
+                  {assignEndDate
+                    ? `${assignEndDate.split("-")[2]}/${assignEndDate.split("-")[1]}/${assignEndDate.split("-")[0]}`
+                    : "dd/mm/yyyy"}
+                </span>
+              </div>
             </div>
             <div className="assign-field">
               <label>
@@ -562,8 +686,9 @@ export default function SpecialLeaveEntry() {
           </div>
 
           {assignLoading && <div className="special-leave-error">Loading assign data...</div>}
-          {error && <div className="special-leave-error">{error}</div>}
-
+          {error && (
+            <div className="special-leave-error">{error}</div>
+          )}
           <div className="special-leave-table-wrap">
             <table className="special-leave-table">
               <thead>
@@ -632,33 +757,53 @@ export default function SpecialLeaveEntry() {
       <div className="special-leave-card">
         <div className="special-leave-header">
           <h2>View Special Leaves</h2>
+          {successMessage && showToast && (
+            <ToastMessage
+              show={!!successMessage}
+              message={successMessage}
+              type="success"
+            />
+          )}
         </div>
 
-        <div className="special-leave-filter">
-          <label htmlFor="specialLeaveType">Special Leave Type:</label>
-          <select
-            id="specialLeaveType"
-            value={selectedLeaveTypeCode}
-            onChange={(event) => setSelectedLeaveTypeCode(event.target.value)}
+        <div className="special-leave-filter-container">
+          <div className="special-leave-filter-group">
+            <label htmlFor="specialLeaveType">Special Leave Type</label>
+            <select
+              id="specialLeaveType"
+              value={selectedLeaveTypeCode}
+              onChange={(event) => setSelectedLeaveTypeCode(event.target.value)}
+            >
+              {leaveTypes.map((type) => (
+                <option key={type.leaveTypeCode} value={type.leaveTypeCode}>
+                  {type.leaveTypeName}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="special-leave-filter-group">
+            <label htmlFor="specialLeaveYear">Year</label>
+            <select
+              id="specialLeaveYear"
+              value={selectedYear}
+              onChange={(event) => setSelectedYear(Number(event.target.value))}
+            >
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            className="special-leave-go-btn"
+            onClick={handleGoFilter}
           >
-            {leaveTypes.map((type) => (
-              <option key={type.leaveTypeCode} value={type.leaveTypeCode}>
-                {type.leaveTypeName}
-              </option>
-            ))}
-          </select>
-          <label htmlFor="specialLeaveYear">Year:</label>
-          <select
-            id="specialLeaveYear"
-            value={selectedYear}
-            onChange={(event) => setSelectedYear(Number(event.target.value))}
-          >
-            {yearOptions.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+            Go
+          </button>
         </div>
 
         {error && <div className="special-leave-error">{error}</div>}
@@ -687,7 +832,7 @@ export default function SpecialLeaveEntry() {
                   <td colSpan={8}>No records found.</td>
                 </tr>
               ) : (
-                normalizedRows.map((row) => (
+                paginatedRows.map((row) => (
                   <tr
                     key={row.specialLeaveID}
                     className={row.isActive === false ? "special-leave-row-inactive" : ""}
@@ -715,6 +860,14 @@ export default function SpecialLeaveEntry() {
           </table>
         </div>
 
+        {!loading && !error && totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        )}
+
         <div className="special-leave-actions" ref={exportRef}>
           <button type="button" onClick={() => setIsAssignMode(true)}>
             Assign
@@ -722,13 +875,48 @@ export default function SpecialLeaveEntry() {
           <button type="button" onClick={handleRemoveSelected} disabled={isRemoving}>
             {isRemoving ? "Removing..." : "Remove Selected"}
           </button>
-          <button type="button" onClick={handleExport} disabled={loading || normalizedRows.length === 0}        
-              className={searchParams.get("type") === "export" ? "highlight" : ""}
->
+          <button type="button" onClick={handleExport} disabled={loading || normalizedRows.length === 0}
+            className={searchParams.get("type") === "export" ? "highlight" : ""}
+          >
             Export
           </button>
         </div>
       </div>
+      {showRemoveModal && (
+  <div className="cancel-modal-overlay">
+
+    <div className="cancel-modal">
+
+      <h3>Remove Special Leave</h3>
+
+      <p>
+        Are you sure you want to remove
+        the selected special leave request(s)?
+      </p>
+
+      <div className="cancel-modal-actions">
+
+        <button
+          className="modal-no-btn"
+          onClick={() =>
+            setShowRemoveModal(false)
+          }
+        >
+          No
+        </button>
+
+        <button
+          className="modal-yes-btn"
+          onClick={confirmRemoveSelected}
+          disabled={isRemoving}
+        >
+          {isRemoving ? "Removing..." : "Yes"}
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
     </section>
   );
 }

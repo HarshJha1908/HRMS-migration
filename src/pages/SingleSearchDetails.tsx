@@ -12,12 +12,15 @@ import {
 } from "../services/apiService";
 import type { LeaveDetailsApi, LeaveTypeApi } from "../types/apiTypes";
 import "./SingleSearchDetails.css";
+import PageLoader from "../components/PageLoader";
+import ToastMessage from "../components/ToastMessage";
 
 type EmployeeSearchItem = {
   user_Employee_No?: string | number;
   user_Id?: string;
   name?: string;
   empName?: string;
+  eligibleTypeCode?: string;
   user_Doj?: string;
   user_Email_Id?: string;
   teamName?: string;
@@ -162,12 +165,18 @@ export default function SingleSearchDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [actioningLeaveId, setActioningLeaveId] = useState<string | null>(null);
+  const [pageLoader, setPageLoader] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [leaveTypes, setLeaveTypes] = useState<LeaveTypeApi[]>([]);
   const [leaveTypeFilter, setLeaveTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [appliedLeaveTypeFilter, setAppliedLeaveTypeFilter] = useState("");
   const [appliedStatusFilter, setAppliedStatusFilter] = useState("");
+  const [showActionModal, setShowActionModal] = useState(false);
+const [selectedLeaveId, setSelectedLeaveId] = useState("");
+const [selectedAction, setSelectedAction] = useState<ActionStatus | null>(null);
+  const [leaveBalanceRefreshKey, setLeaveBalanceRefreshKey] = useState(0);
   const rowsPerPage = 5;
 
   useEffect(() => {
@@ -254,9 +263,9 @@ export default function SingleSearchDetails() {
             setContact(
               managerName || mergedProfile.teamManagerName || mergedProfile.teamHeadName
                 ? {
-                    managerName: managerName || normalizeName(mergedProfile.teamManagerName),
-                    headName: normalizeName(mergedProfile.teamHeadName)
-                  }
+                  managerName: managerName || normalizeName(mergedProfile.teamManagerName),
+                  headName: normalizeName(mergedProfile.teamHeadName)
+                }
                 : null
             );
           }
@@ -264,9 +273,9 @@ export default function SingleSearchDetails() {
           setContact(
             managerName || mergedProfile.teamManagerName || mergedProfile.teamHeadName
               ? {
-                  managerName: managerName || normalizeName(mergedProfile.teamManagerName),
-                  headName: normalizeName(mergedProfile.teamHeadName)
-                }
+                managerName: managerName || normalizeName(mergedProfile.teamManagerName),
+                headName: normalizeName(mergedProfile.teamHeadName)
+              }
               : null
           );
         }
@@ -294,7 +303,16 @@ export default function SingleSearchDetails() {
 
     loadDetails();
   }, [employeeFromState]);
+  useEffect(() => {
+    if (!successMessage) return;
 
+    const timer = window.setTimeout(() => {
+      setSuccessMessage("");
+      // setToastError("");
+    }, 3000);
+
+    return () => window.clearTimeout(timer);
+  }, [successMessage]);
   const visibleLeaveRows = useMemo(
     () => leaveRows.filter((row) => isVisibleHrStatus(row.statusCode)),
     [leaveRows]
@@ -374,10 +392,32 @@ export default function SingleSearchDetails() {
     setAppliedStatusFilter(statusFilter);
     setCurrentPage(1);
   };
+  const openActionModal = (
+  leaveId: string,
+  action: ActionStatus
+) => {
+  setSelectedLeaveId(leaveId);
+  setSelectedAction(action);
+  setShowActionModal(true);
+};
 
+const confirmLeaveAction = async () => {
+  if (!selectedLeaveId || !selectedAction) return;
+
+  await handleLeaveAction(
+    selectedLeaveId,
+    selectedAction
+  );
+
+  setShowActionModal(false);
+  setSelectedLeaveId("");
+  setSelectedAction(null);
+};
   const handleLeaveAction = async (leaveId: string, status: ActionStatus) => {
     try {
       setActioningLeaveId(leaveId);
+      setPageLoader(true);
+
       const response = await savePendingLeaveRequestByOneLeaveId({
         leaveId,
         status,
@@ -389,17 +429,28 @@ export default function SingleSearchDetails() {
       }
 
       setLeaveRows((prev) =>
-        prev.map((row) => (row.leaveId === leaveId ? { ...row, statusCode: status } : row))
+        prev.map((row) =>
+          row.leaveId === leaveId
+            ? { ...row, statusCode: status }
+            : row
+        )
       );
-      alert(toSuccessMessage(status));
-    } catch (actionError) {
-      const message =
-        actionError instanceof Error && actionError.message
-          ? actionError.message
-          : "Unable to submit action.";
-      alert(message);
-    } finally {
+
+      setLeaveBalanceRefreshKey((prev) => prev + 1);
+      setSuccessMessage(toSuccessMessage(status));
+
+    } 
+
+      // const message =
+      //   actionError instanceof Error && actionError.message
+      //     ? actionError.message
+      //     : "Unable to submit action.";
+
+      // setToastError(message);
+
+     finally {
       setActioningLeaveId(null);
+      setPageLoader(false);
     }
   };
 
@@ -407,50 +458,60 @@ export default function SingleSearchDetails() {
 
   return (
     <section className="single-search-details-page">
+      <PageLoader show={pageLoader} />
+
+      <ToastMessage
+        show={!!successMessage}
+        message={successMessage}
+        type="success"
+      />
+
+
       <div className="ssd-panel">
         <h2 className="ssd-title">My Profile :</h2>
         {error && <p className="ssd-error">{error}</p>}
         {!error && (
           <div className="ssd-grid">
-            <div>Emp ID:</div>
+            <div className="my-profile-label">Employee ID:</div>
             <div>{pickEmpNo(profile) || "NA"}</div>
-            <div>AD ID:</div>
+            <div className="my-profile-label">AD ID:</div>
             <div>{pickAdId(profile) || "NA"}</div>
 
-            <div>Name:</div>
+            <div className="my-profile-label">Name:</div>
             <div>{fullName}</div>
-            <div>Sex:</div>
+             <div className="my-profile-label">Employee Type:</div>
+                    <div>{String(profile?.eligibleTypeCode || "NA")}</div>
+            <div className="my-profile-label">Sex:</div>
             <div>{String(profile?.user_Sex || "NA")}</div>
 
-            <div>DOJ (dd/mm/yyyy):</div>
+            <div className="my-profile-label">DOJ (dd/mm/yyyy):</div>
             <div>{formatDate(String(profile?.user_Doj || ""))}</div>
-            <div>LWD (dd/mm/yyyy):</div>
+            <div className="my-profile-label">LWD (dd/mm/yyyy):</div>
             <div>{formatDate(String(profile?.lwd || ""))}</div>
 
-            <div>Is Maternity/Paternity Applicable:</div>
-            <div>{profile?.user_Mat_Pat_Applicable ? "Yes" : "No"}</div>
-            <div>Status:</div>
+            <div className="my-profile-label">Is Maternity/Paternity Applicable:</div>
+            <div>{profile?.user_Mat_Pat_Applicable }</div>
+            <div className="my-profile-label">Status:</div>
             <div>{statusText}</div>
 
-            <div>Emergency Contact Name 1:</div>
+            <div className="my-profile-label">Emergency Contact Name 1:</div>
             <div>{String(contact?.contactNoName1 || profile?.contactName1 || "NA")}</div>
-            <div>Emergency Contact Number 1:</div>
+            <div className="my-profile-label">Emergency Contact Number 1:</div>
             <div>{String(contact?.contactNo1 || profile?.emergencyContactNo1 || "NA")}</div>
 
-            <div>Emergency Contact Name 2:</div>
+            <div className="my-profile-label">Emergency Contact Name 2:</div>
             <div>{String(contact?.contactNoName2 || profile?.contactName2 || "NA")}</div>
-            <div>Emergency Contact Number 2:</div>
+            <div className="my-profile-label">Emergency Contact Number 2:</div>
             <div>{String(contact?.contactNo2 || profile?.emergencyContactNo2 || "NA")}</div>
 
-            <div>Team Name:</div>
+            <div className="my-profile-label">Team Name:</div>
             <div>{String(profile?.teamName || "NA")}</div>
-            <div>Team Head Name:</div>
+            <div className="my-profile-label">Team Head Name:</div>
             <div>{String(contact?.headName || profile?.teamHeadName || "NA")}</div>
 
-            <div>Team Manager Name:</div>
+            <div className="my-profile-label">Team Manager Name:</div>
             <div>{String(contact?.managerName || profile?.teamManagerName || "NA")}</div>
-            <div />
-            <div />
+            
           </div>
         )}
       </div>
@@ -535,14 +596,14 @@ export default function SingleSearchDetails() {
                           <button
                             type="button"
                             disabled={!actionAllowed || rowBusy}
-                            onClick={() => handleLeaveAction(row.leaveId, "R")}
+                            onClick={() => openActionModal(row.leaveId, "R")}
                           >
                             Reject
                           </button>
                           <button
                             type="button"
                             disabled={!actionAllowed || rowBusy}
-                            onClick={() => handleLeaveAction(row.leaveId, "C")}
+                            onClick={() => openActionModal(row.leaveId, "C")}
                           >
                             Cancel
                           </button>
@@ -564,13 +625,53 @@ export default function SingleSearchDetails() {
         )}
       </div>
 
-      <LeaveBalance userId={pickAdId(profile) || undefined} />
+      <LeaveBalance
+        userId={pickAdId(profile) || undefined}
+        refreshKey={leaveBalanceRefreshKey}
+      />
 
       <div className="ssd-back-row">
         <button type="button" onClick={() => navigate("/single-search")}>
           Back To Single Search
         </button>
       </div>
+      {showActionModal && (
+  <div className="cancel-modal-overlay">
+    <div className="cancel-modal">
+      <h3>
+        {selectedAction === "R"
+          ? "Reject Leave"
+          : "Cancel Leave"}
+      </h3>
+
+      <p>
+        Are you sure you want to{" "}
+        {selectedAction === "R"
+          ? "reject"
+          : "cancel"}{" "}
+        this leave request?
+      </p>
+
+      <div className="cancel-modal-actions">
+        <button
+          className="modal-no-btn"
+          onClick={() => setShowActionModal(false)}
+        >
+          No
+        </button>
+
+        <button
+          className="modal-yes-btn"
+          onClick={confirmLeaveAction}
+          disabled={pageLoader}
+        >
+          Yes
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </section>
   );
 }
+ 

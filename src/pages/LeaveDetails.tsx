@@ -17,6 +17,7 @@ export default function LeaveDetails() {
   const [appliedLeaveType, setAppliedLeaveType] = useState("");
   const [appliedStatus, setAppliedStatus] = useState("");
   const [leaveTypes, setLeaveTypes] = useState<LeaveTypeApi[]>([]);
+  const [leaveBalanceRefreshKey, setLeaveBalanceRefreshKey] = useState(0);
   const { leaveStatuses } = useLeaveStatusCodes();
  
 
@@ -42,6 +43,10 @@ export default function LeaveDetails() {
     setAppliedStatus(status);
   };
 
+  const refreshLeaveBalance = () => {
+    setLeaveBalanceRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <>
       <LeaveFilterHeader
@@ -59,9 +64,10 @@ export default function LeaveDetails() {
         year={appliedYear}
         leaveType={appliedLeaveType}
         status={appliedStatus}
+        onLeaveStatusChanged={refreshLeaveBalance}
       />
       
-      <LeaveBalance />
+      <LeaveBalance refreshKey={leaveBalanceRefreshKey} />
 
       
     </>

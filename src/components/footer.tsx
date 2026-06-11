@@ -1,16 +1,15 @@
 import './footer.css';
- 
+
 const Footer = () => {
+  const currentYear = new Date().getFullYear();
+
   return (
     <footer className="footer">
       <div className="footer-line">
-        Copyright © 2026 · All Rights Reserved · Linde IT, Kolkata Center
+        Copyright © {currentYear} · All Rights Reserved · Corporate IT Hub, Kolkata
       </div>
-      {/* <div className="footer-subline">
-        Designed and managed by Tania & Harsh
-      </div> */}
     </footer>
   );
 };
- 
+
 export default Footer;

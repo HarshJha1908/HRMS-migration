@@ -8,6 +8,7 @@ import {
 } from "../services/apiService";
 import type { LeaveExceptionItem, LeaveTypeApi } from "../types/apiTypes";
 import "./SingleSearchCreateException.css";
+import ToastMessage from "../components/ToastMessage";
 
 const formatTodayForInput = () => {
   const today = new Date();
@@ -61,7 +62,7 @@ export default function SingleSearchCreateException() {
   const [raisedDate, setRaisedDate] = useState(minRaisedDate);
   const [loadingLeaveTypes, setLoadingLeaveTypes] = useState(false);
   const [leaveTypeError, setLeaveTypeError] = useState("");
-  const [dateError, setDateError] = useState("");
+  const [dateError,] = useState("");
   const [reason, setReason] = useState("");
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
@@ -69,6 +70,7 @@ export default function SingleSearchCreateException() {
   const [exceptions, setExceptions] = useState<LeaveExceptionItem[]>([]);
   const [loadingExceptions, setLoadingExceptions] = useState(false);
   const [exceptionError, setExceptionError] = useState("");
+  // const errorRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadLeaveTypes = async () => {
@@ -96,11 +98,11 @@ export default function SingleSearchCreateException() {
         const leaveTypeResponse = await getLeaveTypes(adId);
         const options = Array.isArray(leaveTypeResponse?.data)
           ? leaveTypeResponse.data
-              .map((item: LeaveTypeApi) => ({
-                leaveTypeCode: String(item.leaveTypeCode || "").trim(),
-                leaveTypeName: String(item.leaveTypeName || "").trim()
-              }))
-              .filter((item: LeaveTypeApi) => item.leaveTypeCode || item.leaveTypeName)
+            .map((item: LeaveTypeApi) => ({
+              leaveTypeCode: String(item.leaveTypeCode || "").trim(),
+              leaveTypeName: String(item.leaveTypeName || "").trim()
+            }))
+            .filter((item: LeaveTypeApi) => item.leaveTypeCode || item.leaveTypeName)
           : [];
 
         setLeaveTypes(options);
@@ -120,7 +122,15 @@ export default function SingleSearchCreateException() {
 
     loadLeaveTypes();
   }, [empId]);
+useEffect(() => {
+  if (!addSuccess) return;
 
+  const timer = window.setTimeout(() => {
+    setAddSuccess("");
+  }, 3000);
+
+  return () => window.clearTimeout(timer);
+}, [addSuccess]);
   const loadExceptions = async () => {
     if (!empId) {
       setExceptions([]);
@@ -150,10 +160,7 @@ export default function SingleSearchCreateException() {
 
   const isPastDate = Boolean(raisedDate) && raisedDate < minRaisedDate;
 
-  const handleRaisedDateChange = (value: string) => {
-    setRaisedDate(value);
-    setDateError(value && value < minRaisedDate ? "Date must be today or a future date." : "");
-  };
+
 
   const handleAddException = async () => {
     setAddError("");
@@ -221,118 +228,141 @@ export default function SingleSearchCreateException() {
 
   return (
     <section className="ssce-page">
-      <div className="ssce-panel">
-        <h2 className="ssce-title">Create New Exception</h2>
+      <div className="ssce-card">
+        <div className="ssce-header">
+          <h2 className="ssce-title">Exception Details</h2>
+        </div>
 
-        <div className="ssce-form-grid">
-          <div className="ssce-left-col">
-            <div className="ssce-field">
-              <label htmlFor="leaveType" className="ssce-label">
-                Leave Type:<span className="ssce-required">*</span>
-              </label>
-              <select
-                id="leaveType"
-                className="ssce-select"
-                value={selectedLeaveType}
-                onChange={(e) => setSelectedLeaveType(e.target.value)}
-                disabled={loadingLeaveTypes || leaveTypes.length === 0}
+        <div className="ssce-body">
+          <div className="ssce-form-grid">
+            <div className="ssce-left-col">
+              <div className="ssce-field">
+                <label htmlFor="leaveType" className="ssce-label">
+                  Leave Type:<span className="ssce-required">*</span>
+                </label>
+                <select
+                  id="leaveType"
+                  className="ssce-select"
+                  value={selectedLeaveType}
+                  onChange={(e) => setSelectedLeaveType(e.target.value)}
+                  disabled={loadingLeaveTypes || leaveTypes.length === 0}
+                >
+                  {loadingLeaveTypes ? (
+                    <option value="">Loading leave types...</option>
+                  ) : leaveTypes.length > 0 ? (
+                    leaveTypes.map((item) => {
+                      const code = item.leaveTypeCode || item.leaveTypeName;
+                      const name = item.leaveTypeName || item.leaveTypeCode;
+                      return (
+                        <option key={code} value={code}>
+                          {name}
+                        </option>
+                      );
+                    })
+                  ) : (
+                    <option value="">No leave types available</option>
+                  )}
+                </select>
+                {leaveTypeError && <p className="ssce-help-text">{leaveTypeError}</p>}
+              </div>
+
+              <div className="ssce-field">
+                <label htmlFor="raisedDate" className="ssce-label">
+                  Exception Raised Date:<span className="ssce-required">*</span>
+                </label>
+
+                <div className="ssce-date-wrapper">
+                  <input
+                    id="ela-exit-date"
+                    type="date"
+                    min={minRaisedDate}
+                    className="ssce-date-input"
+                    value={raisedDate}
+                    onChange={(e) => setRaisedDate(e.target.value)}
+                  />
+
+                  <span className="ssce-date-text">
+                    {raisedDate
+                      ? `${raisedDate.split("-")[2]}/${raisedDate.split("-")[1]}/${raisedDate.split("-")[0]}`
+                      : "dd/mm/yyyy"}
+                  </span>
+                </div>
+                {dateError && <p className="ssce-help-text">{dateError}</p>}
+              </div>
+            </div>
+
+            <div className="ssce-right-col">
+              <div className="ssce-field">
+                <label htmlFor="reason" className="ssce-label">
+                  Reason for Exception <span className="ssce-required">*</span>
+                </label>
+                <textarea
+                  id="reason"
+                  className="ssce-textarea"
+                  placeholder="Type reason for exception"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                />
+              </div>
+
+              <button
+                type="button"
+                className="ssce-add-btn"
+                disabled={isPastDate || addLoading || loadingLeaveTypes}
+                onClick={handleAddException}
               >
-                {loadingLeaveTypes ? (
-                  <option value="">Loading leave types...</option>
-                ) : leaveTypes.length > 0 ? (
-                  leaveTypes.map((item) => {
-                    const code = item.leaveTypeCode || item.leaveTypeName;
-                    const name = item.leaveTypeName || item.leaveTypeCode;
-                    return (
-                      <option key={code} value={code}>
-                        {name}
-                      </option>
-                    );
-                  })
-                ) : (
-                  <option value="">No leave types available</option>
-                )}
-              </select>
-              {leaveTypeError && <p className="ssce-help-text">{leaveTypeError}</p>}
-            </div>
-
-            <div className="ssce-field">
-              <label htmlFor="raisedDate" className="ssce-label">
-                Exception Raised Date:<span className="ssce-required">*</span>
-              </label>
-              <input
-                id="raisedDate"
-                type="date"
-                className="ssce-input"
-                min={minRaisedDate}
-                value={raisedDate}
-                onChange={(e) => handleRaisedDateChange(e.target.value)}
-              />
-              {dateError && <p className="ssce-help-text">{dateError}</p>}
-            </div>
-          </div>
-
-          <div className="ssce-right-col">
-            <div className="ssce-field">
-              <label htmlFor="reason" className="ssce-label">
-                Reason for Exception <span className="ssce-required">*</span>
-              </label>
-              <textarea
-                id="reason"
-                className="ssce-textarea"
-                placeholder="Type reason for exception"
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                {addLoading ? "Adding..." : "Add Exception"}
+              </button>
+              {addError && (
+  <div className="ssce-error-text">
+    {addError}
+  </div>
+)}
+              <ToastMessage
+                show={!!addSuccess}
+                message={addSuccess}
+                type="success"
               />
             </div>
-
-            <button
-              type="button"
-              className="ssce-add-btn"
-              disabled={isPastDate || addLoading || loadingLeaveTypes}
-              onClick={handleAddException}
-            >
-              {addLoading ? "Adding..." : "Add Exception"}
-            </button>
-            {addError && <p className="ssce-help-text">{addError}</p>}
-            {addSuccess && <p className="ssce-success-text">{addSuccess}</p>}
           </div>
         </div>
-      </div>
 
-      <div className="ssce-panel ssce-details-panel">
-        <h2 className="ssce-title">Exception Details :</h2>
-        <div className="ssce-details-wrap">
-          {loadingExceptions ? (
-            <p className="ssce-details-state">Loading exception details...</p>
-          ) : exceptionError ? (
-            <p className="ssce-help-text ssce-details-state">{exceptionError}</p>
-          ) : exceptions.length === 0 ? (
-            <p className="ssce-details-state">No exception records found.</p>
-          ) : (
-            <table className="ssce-details-table">
-              <thead>
-                <tr>
-                  <th>Leave Type</th>
-                  <th>Raised Date</th>
-                  <th>Exception Valid Till</th>
-                  <th>Reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {exceptions.map((item, index) => (
-                  <tr
-                    key={`${resolveLeaveTypeLabel(item)}-${resolveRaisedDateLabel(item)}-${index}`}
-                  >
-                    <td>{resolveLeaveTypeLabel(item)}</td>
-                    <td>{resolveCreatedAtLabel(item)}</td>
-                    <td>{resolveExceptionValidTillLabel(item)}</td>
-                    <td>{resolveReasonLabel(item)}</td>
+        <div className="ssce-card ssce-details-panel">
+          <div className="ssce-header">
+            <h2 className="ssce-title">Exception History</h2>
+          </div>
+          <div className="ssce-details-wrap">
+            {loadingExceptions ? (
+              <p className="ssce-details-state">Loading exception details...</p>
+            ) : exceptionError ? (
+              <p className="ssce-help-text ssce-details-state">{exceptionError}</p>
+            ) : exceptions.length === 0 ? (
+              <p className="ssce-details-state">No exception records found.</p>
+            ) : (
+              <table className="ssce-details-table">
+                <thead>
+                  <tr>
+                    <th>Leave Type</th>
+                    <th>Raised Date</th>
+                    <th>Exception Valid Till</th>
+                    <th>Reason</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody>
+                  {exceptions.map((item, index) => (
+                    <tr
+                      key={`${resolveLeaveTypeLabel(item)}-${resolveRaisedDateLabel(item)}-${index}`}
+                    >
+                      <td>{resolveLeaveTypeLabel(item)}</td>
+                      <td>{resolveCreatedAtLabel(item)}</td>
+                      <td>{resolveExceptionValidTillLabel(item)}</td>
+                      <td>{resolveReasonLabel(item)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
     </section>

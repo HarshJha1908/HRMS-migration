@@ -3,6 +3,8 @@ import { Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import AuthGate from "./auth/AuthGate";
 import { UserProvider } from "./context/UserContext";
+import ApplyLeaveForOthers from "./pages/ApplyLeaveForOthers";
+import SummaryReport from "./components/SummaryReport";
 // import { getLoginUser } from './services/apiService';
 // import { getLoginUser } from './services/apiService';
 // import { useEffect } from 'react';
@@ -56,7 +58,7 @@ export default function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/apply-leave" element={<ApplyLeave />} />
           <Route path="/leave-details" element={<LeaveDetails />} />
-          <Route path="/leave-balance" element={<LeaveBalance/>} />
+          <Route path="/leave-balance" element={<LeaveBalance showDashboardCards={true} />} />
           <Route path="/leave-rules" element={<LeaveRules />} />
           <Route path="/profile" element={<CreateEmployeeLeaveProfile />} />
           <Route path="/pending-approval" element={<PendingApproval />} />
@@ -77,6 +79,8 @@ export default function App() {
         <Route path="/documents/:documentType" element={<ViewDocuments />} />
         <Route path="/documents" element={<ViewDocuments />} />
         <Route path="/locked" element={<LockedScreen />} />
+        <Route path="/apply-leave-for-others/:employeeId" element={<ApplyLeaveForOthers />} />
+        <Route path="/summary-report" element={<SummaryReport />} />
         </Route>
         </Routes>
         </UserProvider>

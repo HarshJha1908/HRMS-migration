@@ -365,38 +365,48 @@
 
 /* Manager Dashboard mega menu (3 columns) */
 .manager-mega-menu {
-  min-width: 560px;
+  min-width: 475px;
 }
 
 .manager-mega-grid {
-  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  grid-template-columns: repeat(2, minmax(170px, 1fr));
 }
+
+/* My Workspace mega menu (3 columns) */
+.workspace-mega-menu {
+  min-width: 400px;
+}
+
+.workspace-mega-grid {
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+}
+
 
 /* HR Administration mega menu (4 columns) anchored to navbar right edge */
 .hr-admin-dropdown {
-  position: static;
+  position: relative;
 }
 
 .hr-admin-mega-menu {
   min-width: 720px;
   max-width: calc(100vw - 32px);
-  left: auto !important;
-  right: 24px;
+  left: 0;
+  right: auto;
   padding: 18px 22px;
 }
 
 /* Wider bridge for HR Administration: the toggle sits far from the
    right-aligned mega menu, so the bridge must span the full navbar width
    to keep :hover active while the cursor travels diagonally. */
-.hr-admin-mega-menu::before {
+/* .hr-admin-mega-menu::before {
   left: -100vw;
   right: 0;
   top: -12px;
   height: 12px;
-}
+} */
 
 .hr-admin-mega-grid {
-  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, minmax(150px, 1fr));
   column-gap: 18px;
   row-gap: 16px;
 }
@@ -407,3 +417,4 @@
   font-size: 0.78rem;
 }
 
+ 

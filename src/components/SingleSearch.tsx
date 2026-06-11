@@ -53,40 +53,54 @@ const SingleSearch = () => {
   };
 
   return (
-    <div className="container">
-      <div className="header">* Enter Search Text</div>
+    <section className="single-search-page">
+  <div className="single-search-card">
+      <div className="single-search-header">
+  <h2 className="single-search-title">Single Search</h2>
+</div>
 
       {/* SEARCH SECTION */}
-      <div className="search-section">
-        <div className="left-box">
-          <input
-            type="text"
-            value={keyword}
-            placeholder="Enter Search Text"
-            onChange={(e) => setKeyword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          />
+      <div className="single-search-filter-grid">
+  <div className="single-search-filter-field">
+    <label>Enter Search Text</label>
 
-          <button onClick={handleSearch} disabled={loading}>Find</button>
+    <input
+      type="text"
+      value={keyword}
+      placeholder="Enter Search Text"
+      onChange={(e) => setKeyword(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+    />
 
-          {error && <p className="error-text">{error}</p>}
-        </div>
+    {error && <p className="single-search-error">{error}</p>}
+  </div>
 
-        <div className="right-box">
-          <p className="tips-title">*Tips:</p>
-          <ul>
-            <li>
-              Type First Name/Last Name/Employee last 3 Nbr - for specific search.
-            </li>
-            <li>Type Left - for only ex-employee list.</li>
-            <li>Type All - for all employee list.</li>
-          </ul>
-        </div>
-      </div>
+  <div className="single-search-filter-field single-search-tips">
+    <label>Tips</label>
+
+    <ul>
+      <li>
+        Type First Name/Last Name/Employee last 3 Nbr - for specific search.
+      </li>
+      <li>Type Left - for only ex-employee list.</li>
+      <li>Type All - for all employee list.</li>
+    </ul>
+  </div>
+
+  <div className="single-search-filter-action">
+    <button
+      className="single-search-go-btn"
+      onClick={handleSearch}
+      disabled={loading}
+    >
+      Find
+    </button>
+  </div>
+</div>
 
       {/* TABLE */}
-      <div className="table-container">
-        <table>
+      <div className="single-search-table-wrap">
+  <table className="single-search-table">
           <thead>
             <tr>
               <th>Employee Id</th>
@@ -128,7 +142,7 @@ const SingleSearch = () => {
                     >
                       Details
                     </button>
-                    <br></br>
+                   
                     <button
                       type="button"
                       onClick={() =>
@@ -143,10 +157,10 @@ const SingleSearch = () => {
                     >
                       Create Exception
                     </button>
-                    <br></br>
-                    <button
+              
+                    {/* <button
                       type="button"
-                      onClick={() => navigate("/apply-leave",{
+                      onClick={() => navigate("/apply-leave", {
                         state: {
                           employee: emp,
                           empId: String(emp.user_Employee_No || "").trim(),
@@ -155,15 +169,32 @@ const SingleSearch = () => {
                       })}
                     >
                       Apply Leave
-                    </button>
-                    <br></br>
+                    </button> */}
+                   
                     <button
                       type="button"
                       onClick={() => navigate("/profile", { state: { employee: emp, mode: "update" } })}
                     >
-                      Update Info
+                      Update Employee Profile
                     </button>
-                    <br></br>
+                  
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate("/insurance", {
+                          state: {
+                            employee: emp,
+                            empId: String(
+                              emp.user_Employee_No || ""
+                            ).trim(),
+                            mode: "single-search",
+                          },
+                        })
+                      }
+                    >
+                      Update Insurance Info
+                    </button>
+                    
                     <button
                       type="button"
                       onClick={() =>
@@ -177,6 +208,23 @@ const SingleSearch = () => {
                     >
                       Exit Leave Adjustment
                     </button>
+                    {/* <br></br> */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(`/apply-leave-for-others/${emp.user_Employee_No}`, {
+                          state: {
+                            employee: emp,
+                            empId: String(emp.user_Employee_No || "").trim(),
+                            userId: String(emp.user_Id || emp.userId || "").trim(),
+                            employeeName: String(emp.name || "").trim(),
+                            mode: "single-search",
+                          },
+                        })
+                      }
+                    >
+                      Apply Leave for Others
+                    </button>
                   </td>
                 </tr>
               ))
@@ -185,6 +233,7 @@ const SingleSearch = () => {
         </table>
       </div>
     </div>
+    </section>
   );
 };
 

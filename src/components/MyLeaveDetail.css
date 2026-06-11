@@ -1,135 +1,307 @@
-/* ===============================
-   Latest Applied Leave (Scoped)
-   =============================== */
-
 .leave-detail-page {
-  display: flex;
-  justify-content: center;
+  padding: 14px;
+  background: #e9e9e9;
 }
 
-/* Card container */
 .leave-detail-card {
   background: #ffffff;
-  border: 1px solid #dcdcdc;
-  padding: 16px;
+  border: 1px solid #d0d0d0;
   width: 100%;
-  margin-bottom: 16px;
-  /* border-radius: 8px; */
-  /* max-width: 100%;    */
 }
 
-/* Section title */
+/* HEADER */
 .section-title {
-  margin: 0 0 12px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #000;
+  margin: 0;
+  padding: 18px 20px 14px;
+  font-size: 28px;
+  font-weight: 400;
+  color: #1d6d98;
+  line-height: 1.1;
+  border-bottom: 1px solid #d9d9d9;
+  background: #ffffff;
 }
 
-/* Table wrapper (prevents page overflow) */
+/* TABLE WRAPPER */
 .leave-table-wrapper {
   overflow-x: auto;
-}
-
-/* Table */
-.leave-table {
   width: 100%;
+}
+
+/* TABLE */
+.leave-table {
+  width: calc(100% + 2px);
+  margin-left: -1px;
   border-collapse: collapse;
-  font-size: 14px;
 }
 
-/* Header */
+/* TABLE HEADER */
 .leave-table th {
-  background-color: #0f5f7f;
+  background: #14597b;
   color: #ffffff;
-  text-align: left;
-  padding: 8px 10px;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  padding: 14px 10px;
+  border: none;
   white-space: nowrap;
 }
 
-/* Body */
+/* TABLE BODY */
 .leave-table td {
-  padding: 8px 10px;
-  border-bottom: 1px solid #e0e0e0;
+  border: 1px solid #d6dbe0;
+  padding: 10px;
+  font-size: 15px;
+  color: #3b5668;
+  text-align: center;
   white-space: nowrap;
+  background: #ffffff;
 }
 
+.leave-table tbody tr:nth-child(even) td {
+  background: #fafafa;
+}
 
-/* Status badge */
+/* STATUS BADGE */
 .status-badge {
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
   display: inline-block;
-  min-width: 80px;
+  min-width: 90px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
   text-align: center;
 }
 
-/* Pending */
 .status-badge.Pending {
-  background-color: #ffc107;
-  color: #000;
+  background: #ffe466;
+  color: #6f5600;
 }
 
-/* Approved */
 .status-badge.Approved {
-  background-color: #28a745;
-  color: #fff;
+  background: #e4f9ea;
+  color: #20753b;
 }
 
-/* Rejected */
 .status-badge.Rejected {
-  background-color: #dc3545;
-  color: #fff;
+  background: #fde8e8;
+  color: #8b1e1e;
 }
 
-/* Cancelled */
 .status-badge.Cancelled {
-  background-color: #6c757d;
-  color: #fff;
+  background: #eceff2;
+  color: #3f4e58;
 }
 
-/* Drafted */
 .status-badge.Drafted {
-  background-color: #17a2b8;
-  color: #fff;
+  background: #f3f5f7;
+  color: #586877;
 }
 
-/* View more */
-.view-more {
-  margin-top: 10px;
-  font-size: 13px;
-  color: #1a0dab;
+/* VIEW BUTTON */
+.view-btn {
+  border: none;
+  background: transparent;
+  color: #2b7bd9;
+  text-decoration: underline;
   cursor: pointer;
+  font-size: 15px;
+}
+
+.view-btn:hover {
+  color: #174969;
+}
+
+/* VIEW MORE */
+.view-more {
+  margin: 10px;
+  font-size: 14px;
+  color: #2b7bd9;
+  cursor: pointer;
+  text-decoration: underline;
+  width: fit-content;
 }
 
 .view-more:hover {
+  color: #174969;
+}
+
+.error-text {
+  padding: 14px;
+  color: #b00020;
+  font-size: 14px;
+}
+
+/* TOAST */
+
+.my-leave-top-card {
+  background: #ffffff;
+  border: 1px solid #d0d0d0;
+  margin-bottom: 20px;
+}
+
+.my-leave-header {
+  background: #ffffff;
+  border-bottom: 1px solid #d9d9d9;
+  padding: 18px 20px 14px;
+}
+
+.my-leave-header h2 {
+  margin: 0;
+  color: #1d6d98;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 1.1;
+}
+
+.my-leave-filter-box {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(220px, 1fr) minmax(220px, 1fr) 180px;
+  gap: 14px;
+  align-items: end;
+  background: #f6f6f6;
+  border: 1px solid #d4d4d4;
+  padding: 14px;
+  margin: 14px;
+}
+
+.my-leave-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.my-leave-filter-field label {
+  font-size: 14px;
+  color: #4d6f81;
+}
+
+.my-leave-filter-field select {
+  height: 48px;
+  border: 1px solid #bfcdd6;
+  border-radius: 4px;
+  padding: 0 14px;
+  font-size: 18px;
+  background: #ffffff;
+  color: #222;
+}
+
+.my-leave-go-btn {
+  height: 48px;
+  border: none;
+  border-radius: 4px;
+  background: #1f5d83;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.my-leave-go-btn:hover {
+  background: #174969;
+}
+.action-cell {
+  white-space: nowrap;
+}
+
+.cancel-btn {
+  border: none;
+  background: transparent;
+  color: #d32f2f;
   text-decoration: underline;
+  cursor: pointer;
+  font-size: 15px;
 }
 
+.cancel-btn:hover {
+  color: #8b1e1e;
+}
 
-.top-success-toast {
+.action-separator {
+  color: #777;
+}
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.cancel-modal-overlay {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  background-color: #28a745;
-  color: #fff;
-  padding: 12px 20px;
-  border-radius: 6px;
-  font-weight: 500;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 9999;
-  animation: slideIn 0.4s ease-out;
 }
 
-@keyframes slideIn {
+.cancel-modal {
+  width: 420px;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  animation: modalFade 0.2s ease;
+}
+
+.cancel-modal h3 {
+  margin: 0 0 14px;
+  color: #1d6d98;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.cancel-modal p {
+  margin: 0;
+  color: #444;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.cancel-modal-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.modal-no-btn,
+.modal-yes-btn {
+  min-width: 90px;
+  height: 40px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.modal-no-btn {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.modal-no-btn:hover {
+  background: #cfcfcf;
+}
+
+.modal-yes-btn {
+  background: #d32f2f;
+  color: white;
+}
+
+.modal-yes-btn:hover {
+  background: #b71c1c;
+}
+
+@keyframes modalFade {
   from {
-    transform: translateX(100%);
+    transform: scale(0.95);
     opacity: 0;
   }
+
   to {
-    transform: translateX(0);
+    transform: scale(1);
     opacity: 1;
   }
 }

@@ -1,34 +1,49 @@
 import { useEffect, useMemo, useState } from "react";
+import { useAuth } from "../auth/useAuth";
+import { useUser } from "../context/UserContext";
 import { getLeaveBalance } from "../services/apiService";
 import type { LeaveBalanceApiData } from "../types/apiTypes";
 import "./LeaveBalance.css";
-import { useAuth } from "../auth/useAuth";
 
 type LeaveBalanceProps = {
   userId?: string;
+  showDashboardCards?: boolean;
+  refreshKey?: number;
 };
-
 
 const asDisplay = (value: string | null | undefined) => {
   const text = String(value ?? "").trim();
   return text || "NA";
 };
 
-const isNaValue = (value: string | null | undefined) => asDisplay(value).toUpperCase() === "NA";
+const isNaValue = (value: string | null | undefined) =>
+  asDisplay(value).toUpperCase() === "NA";
 
-const renderValue = (value: string | null | undefined, colorClass: "red" | "blue") => (
-  <span className={isNaValue(value) ? "red" : colorClass}>{asDisplay(value)}</span>
+const renderValue = (
+  value: string | null | undefined,
+  colorClass: "red" | "blue",
+) => (
+  <span className={isNaValue(value) ? "red" : colorClass}>
+    {asDisplay(value)}
+  </span>
 );
 
 const renderLine = (
   label: string,
   total: string | null | undefined,
   submitted: string | null | undefined,
-  balance: string | null | undefined
+  balance: string | null | undefined,
 ) => (
   <p>
-    {label}: {renderValue(total, "blue")} [
+    {label}:
+    <span className="tooltip-item">
+      {renderValue(total, "blue")}
 
+      <span className="custom-tooltip">
+        Total {label.split("(")[1]?.replace(")", "")}
+      </span>
+    </span>
+    {" ["}
     <span className="tooltip-item">
       {renderValue(submitted, "blue")}
 
@@ -36,9 +51,7 @@ const renderLine = (
         Availed/Submitted {label.split("(")[1]?.replace(")", "")}
       </span>
     </span>
-
     {" / "}
-
     <span className="tooltip-item">
       {renderValue(balance, "red")}
 
@@ -46,26 +59,49 @@ const renderLine = (
         Balance {label.split("(")[1]?.replace(")", "")}
       </span>
     </span>
-
     ]
   </p>
 );
 
-export default function LeaveBalance({ userId }: LeaveBalanceProps) {
-  const {user} = useAuth();
-  const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceApiData | null>(null);
+export default function LeaveBalance({
+  userId,
+  showDashboardCards = false,
+  refreshKey = 0,
+}: LeaveBalanceProps) {
+  const { user } = useAuth();
+  const { userInfo } = useUser();
+  const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceApiData | null>(
+    null,
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Helper function to check if employee is an associate (ACT code)
+  const isAssociate = useMemo(() => {
+    const eligibleType = String(userInfo?.eligibleTypeCode || "")
+      .trim()
+      .toUpperCase();
+    return eligibleType === "ACT";
+  }, [userInfo?.eligibleTypeCode]);
 
   useEffect(() => {
     let active = true;
 
     const loadLeaveBalance = async () => {
+      const resolvedUserId = String(userId || user?.loginUserAdID || "").trim();
+
+      if (!resolvedUserId) {
+        setLeaveBalance(null);
+        setError("User ID is missing.");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         setError("");
 
-        const response = await getLeaveBalance(user?.loginUserAdID || '');//user?.loginUserAdID || ''
+        const response = await getLeaveBalance(resolvedUserId);
         if (!active) return;
 
         if (!response?.isSuccess || !response?.data) {
@@ -91,21 +127,31 @@ export default function LeaveBalance({ userId }: LeaveBalanceProps) {
     return () => {
       active = false;
     };
-  }, [userId]);
+  }, [user?.loginUserAdID, userId, refreshKey]);
 
   const firstColumn = useMemo(() => {
     if (!leaveBalance) return null;
 
     return (
       <div>
-        {renderLine("Birthday Leave(BDL)", leaveBalance.bdL_Total, leaveBalance.bdL_Submitted, leaveBalance.bdL_Balance)}
+        {renderLine(
+          "Birthday Leave(BDL)",
+          leaveBalance.bdL_Total,
+          leaveBalance.bdL_Submitted,
+          leaveBalance.bdL_Balance,
+        )}
         {renderLine(
           "Associate Special Leave (ASL)",
           leaveBalance.asL_Total,
           leaveBalance.asL_Submitted,
-          leaveBalance.asL_Balance
+          leaveBalance.asL_Balance,
         )}
-        {renderLine("Work From Home (WFH)", leaveBalance.wfH_Total, leaveBalance.wfH_Submitted, leaveBalance.wfH_Balance)}
+        {renderLine(
+          "Work From Home (WFH)",
+          leaveBalance.wfH_Total,
+          leaveBalance.wfH_Submitted,
+          leaveBalance.wfH_Balance,
+        )}
       </div>
     );
   }, [leaveBalance]);
@@ -115,12 +161,32 @@ export default function LeaveBalance({ userId }: LeaveBalanceProps) {
 
     return (
       <div>
-        {renderLine("Casual Leave(CL)", leaveBalance.cL_Total, leaveBalance.cL_Submitted, leaveBalance.cL_Balance)}
+        {renderLine(
+          "Casual Leave(CL)",
+          leaveBalance.cL_Total,
+          leaveBalance.cL_Submitted,
+          leaveBalance.cL_Balance,
+        )}
         {leaveBalance.isPTLapplicable &&
-          renderLine("Paternity Leave (PTL)", leaveBalance.ptL_Total, leaveBalance.ptL_Submitted, leaveBalance.ptL_Balance)}
+          renderLine(
+            "Paternity Leave (PTL)",
+            leaveBalance.ptL_Total,
+            leaveBalance.ptL_Submitted,
+            leaveBalance.ptL_Balance,
+          )}
         {leaveBalance.isMTLapplicable &&
-          renderLine("Maternity Leave (MTL)", leaveBalance.mtL_Total, leaveBalance.mtL_Submitted, leaveBalance.mtL_Balance)}
-        {renderLine("WFH Exception (WFHX)", leaveBalance.wfhX_Total, leaveBalance.wfhX_Submitted, leaveBalance.wfhX_Balance)}
+          renderLine(
+            "Maternity Leave (MTL)",
+            leaveBalance.mtL_Total,
+            leaveBalance.mtL_Submitted,
+            leaveBalance.mtL_Balance,
+          )}
+        {renderLine(
+          "WFH Exception (WFHX)",
+          leaveBalance.wfhX_Total,
+          leaveBalance.wfhX_Submitted,
+          leaveBalance.wfhX_Balance,
+        )}
       </div>
     );
   }, [leaveBalance]);
@@ -130,31 +196,117 @@ export default function LeaveBalance({ userId }: LeaveBalanceProps) {
 
     return (
       <div>
-        {renderLine("Privilege Leave(PL)", leaveBalance.pL_Total, leaveBalance.pL_Submitted, leaveBalance.pL_Balance)}
-        {renderLine("Sick Leave (SL)", leaveBalance.sL_Total, leaveBalance.sL_Submitted, leaveBalance.sL_Balance)}
+        {isAssociate
+          ? renderLine(
+              "Associate Special Leave (ASL)",
+              leaveBalance.asL_Total,
+              leaveBalance.asL_Submitted,
+              leaveBalance.asL_Balance,
+            )
+          : renderLine(
+              "Privilege Leave(PL)",
+              leaveBalance.pL_Total,
+              leaveBalance.pL_Submitted,
+              leaveBalance.pL_Balance,
+            )}
+        {renderLine(
+          "Sick Leave (SL)",
+          leaveBalance.sL_Total,
+          leaveBalance.sL_Submitted,
+          leaveBalance.sL_Balance,
+        )}
       </div>
     );
-  }, [leaveBalance]);
+  }, [leaveBalance, isAssociate]);
 
   return (
-    <section className="lb-card">
-      <h3 className="lb-title">Leave Balance:</h3>
+    <section className="lb-page">
+      {/* Dashboard First */}
+      {!loading && !error && leaveBalance && showDashboardCards && (
+        <div className="lb-card dashboard-main-card">
+          <div className="lb-title-wrap">
+            <h3 className="lb-title">Leave Dashboard</h3>
+          </div>
 
-      <div className="lb-header">
-        <span className="red">Total</span> |
-        <span className="blue"> Availed or Submitted</span> /
-        <span className="red"> Balance</span>
-      </div>
+          <div className="leave-dashboard-wrapper">
+            <div className="dashboard-cards">
+              <div className="dashboard-card wfh">
+                <div className="dashboard-icon">🏠</div>
+                <div className="dashboard-label">WFH</div>
+                <div className="dashboard-value">
+                  {asDisplay(leaveBalance.wfH_Submitted)}
+                </div>
+              </div>
 
-      {loading && <p>Loading leave balance...</p>}
-      {!loading && error && <p className="red">{error}</p>}
-      {!loading && !error && leaveBalance && (
-        <div className="lb-grid">
-          {firstColumn}
-          {secondColumn}
-          {thirdColumn}
+              <div className="dashboard-card wfhx">
+                <div className="dashboard-icon">🏡</div>
+                <div className="dashboard-label">WFH(X)</div>
+                <div className="dashboard-value">
+                  {asDisplay(leaveBalance.wfhX_Submitted)}
+                </div>
+              </div>
+
+              <div className="dashboard-card cl">
+                <div className="dashboard-icon">🧳</div>
+                <div className="dashboard-label">CL</div>
+                <div className="dashboard-value">
+                  {asDisplay(leaveBalance.cL_Submitted)}
+                </div>
+              </div>
+
+              {isAssociate ? (
+                <div className="dashboard-card asl">
+                  <div className="dashboard-icon">⭐</div>
+                  <div className="dashboard-label">ASL</div>
+                  <div className="dashboard-value">
+                    {asDisplay(leaveBalance.asL_Submitted)}
+                  </div>
+                  {/* <div className="dashboard-subtext">
+                    {asDisplay(leaveBalance.asL_Total)}
+                    (Opening Balance)
+                  </div> */}
+                </div>
+              ) : (
+                <div className="dashboard-card pl">
+                  <div className="dashboard-icon">🏖️</div>
+                  <div className="dashboard-label">PL</div>
+                  <div className="dashboard-value">
+                    {asDisplay(leaveBalance.pL_Submitted)}
+                  </div>
+                  <div className="dashboard-subtext">
+                    {asDisplay(leaveBalance.pL_Total)}
+                    (Opening Balance)
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Leave Balance Below */}
+      <div className="lb-card">
+        <div className="lb-title-wrap">
+          <h3 className="lb-title">Leave Balance</h3>
+        </div>
+
+        <div className="lb-header">
+          <span className="red">Total</span> |
+          <span className="blue"> Availed or Submitted</span> /
+          <span className="red"> Balance</span>
+        </div>
+
+        {loading && <p>Loading leave balance...</p>}
+        {!loading && error && <p className="red">{error}</p>}
+
+        {!loading && !error && leaveBalance && (
+          <div className="lb-grid">
+            {firstColumn}
+            {secondColumn}
+            {thirdColumn}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

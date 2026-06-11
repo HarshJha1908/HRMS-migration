@@ -15,7 +15,7 @@ export default function LeaveFilterHeader({
 }: FilterProps) {
 
   const currentYear = new Date().getFullYear();
-  const years = [currentYear - 1, currentYear, currentYear + 1];
+  const years = [currentYear - 1, currentYear];
 
   return (
   <div className="filter-card">

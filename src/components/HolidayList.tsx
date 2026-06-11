@@ -19,14 +19,16 @@ const HolidayList: React.FC = () => {
   return (
 
     <div className="holidayRoot">
-      <div className="holidayCard">
-        <h2 className="holidayTitle">Holiday List</h2>
-
+     <div className="holidayCard">
+  <div className="holidayHeader">
+    <h2 className="holidayTitle">Holiday List</h2>
+  </div>
         {loading && <p className="status">Loading...</p>}
         {error && <p className="error">{error}</p>}
 
         {!loading && !error && (
-          <table className="holidayTable">
+  <div className="holidayTableWrapper">
+    <table className="holidayTable">
             <thead>
               <tr>
                 <th>Holiday Name</th>
@@ -35,7 +37,9 @@ const HolidayList: React.FC = () => {
             </thead>
             <tbody>
               {holidays.map((holiday, index) => {
-                const isPastHoliday = holiday.date < new Date().toISOString();
+  const isPastHoliday =
+    new Date(holiday.date).getTime() <
+    new Date().setHours(0, 0, 0, 0);
 
                 return (
                   <tr key={index}>
@@ -49,8 +53,9 @@ const HolidayList: React.FC = () => {
                 );
               })}
             </tbody>
-          </table>
-        )}
+              </table>
+  </div>
+)}
       </div>
     </div>
 

@@ -20,6 +20,7 @@ type EmployeeSearchItem = {
     teamHeadName?: string;
     status?: string;
     user_Sex?: string;
+    eligibleTypeCode?: string;
     lwd?: string | null;
     isActive?: boolean;
     user_Mat_Pat_Applicable?: boolean;
@@ -148,7 +149,7 @@ const validateEmergencyContactForm = (form: EmergencyContactForm): EmergencyCont
 };
 
 
- 
+
 export default function MyProfile() {
     const { user } = useAuth();
     const [profile, setProfile] = useState<EmployeeSearchItem | null>(null);
@@ -165,26 +166,37 @@ export default function MyProfile() {
     const [error, setError] = useState("");
     const [saveError, setSaveError] = useState("");
     const [fieldErrors, setFieldErrors] = useState<EmergencyContactFieldErrors>({});
+    const [initialContactForm, setInitialContactForm] = useState<EmergencyContactForm>({
+        contactNoName1: "",
+        contactNo1: "",
+        contactNoName2: "",
+        contactNo2: ""
+    });
+    const hasContactChanges =
+    contactForm.contactNoName1.trim() !== initialContactForm.contactNoName1.trim() ||
+    contactForm.contactNo1.trim() !== initialContactForm.contactNo1.trim() ||
+    contactForm.contactNoName2.trim() !== initialContactForm.contactNoName2.trim() ||
+    contactForm.contactNo2.trim() !== initialContactForm.contactNo2.trim();
 
-     const fullName = useMemo(
-    () => String(profile?.empName || profile?.name || profile?.user_Fname || "NA"),
-    [profile]
-  );
+    const fullName = useMemo(
+        () => String(profile?.empName || profile?.name || profile?.user_Fname || "NA"),
+        [profile]
+    );
 
-   const statusText = useMemo(() => {
-    const profileStatus = String(profile?.status || "").trim();
-    if (profileStatus) return profileStatus;
-    return profile?.isActive === false ? "Inactive" : "Active";
-  }, [profile]);
+    const statusText = useMemo(() => {
+        const profileStatus = String(profile?.status || "").trim();
+        if (profileStatus) return profileStatus;
+        return profile?.isActive === false ? "Inactive" : "Active";
+    }, [profile]);
 
- 
+
     useEffect(() => {
         const loadProfile = async () => {
             try {
                 setLoading(true);
                 setError("");
                 const adID = user?.loginUserAdID; // This should ideally come from auth context or route state
-                const profileResponse = await getEmpProfileByAdId(adID||'');    
+                const profileResponse = await getEmpProfileByAdId(adID || '');
                 setProfile(profileResponse);
 
                 const adId = pickAdId(profileResponse);
@@ -196,8 +208,10 @@ export default function MyProfile() {
 
                         if (Array.isArray(list) && list.length > 0) {
                             const selectedContact = list[0] as ContactDetails;
-                            setContact(selectedContact);
-                            setContactForm(toEditableContact(profileResponse, selectedContact));
+                            const formData = toEditableContact(profileResponse, selectedContact);
+
+                            setContactForm(formData);
+                            setInitialContactForm(formData);
                             return;
                         }
                     } catch {
@@ -205,8 +219,10 @@ export default function MyProfile() {
                     }
                 }
 
-                setContact(null);
-                setContactForm(toEditableContact(profileResponse, null));
+                const formData = toEditableContact(profileResponse, null);
+
+setContactForm(formData);
+setInitialContactForm(formData);
             }
 
 
@@ -218,11 +234,11 @@ export default function MyProfile() {
             }
         };
 
-        
+
 
         loadProfile();
     }
-        , []);
+        , [user?.loginUserAdID]);
 
     const handleContactFieldChange = (field: keyof EmergencyContactForm, value: string) => {
         const nextValue =
@@ -237,6 +253,9 @@ export default function MyProfile() {
     };
 
     const handleSaveEmergencyContact = async () => {
+        if (!hasContactChanges) {
+    return;
+}
         if (!profile) return;
 
         const empIdRaw = pickEmpNo(profile);
@@ -314,16 +333,17 @@ export default function MyProfile() {
             setProfile((prev) =>
                 prev
                     ? {
-                          ...prev,
-                          contactName1: cleanedForm.contactNoName1,
-                          emergencyContactNo1: cleanedForm.contactNo1,
-                          contactName2: cleanedForm.contactNoName2,
-                          emergencyContactNo2: cleanedForm.contactNo2
-                      }
+                        ...prev,
+                        contactName1: cleanedForm.contactNoName1,
+                        emergencyContactNo1: cleanedForm.contactNo1,
+                        contactName2: cleanedForm.contactNoName2,
+                        emergencyContactNo2: cleanedForm.contactNo2
+                    }
                     : prev
             );
 
             setSaveMessage("Emergency contact details updated successfully.");
+            setInitialContactForm(cleanedForm);
         } catch (saveErr) {
             const message =
                 saveErr instanceof Error && saveErr.message
@@ -339,119 +359,120 @@ export default function MyProfile() {
         return <p>Loading profile details...</p>;
     }
 
-    return(
-    <section className="my-profile-page">
-        <div className="ssd-panel">
-            <h2 className="ssd-title">My Profile :</h2>
-            {error && <p className="ssd-error">{error}</p>}
+    return (
+        <section className="my-profile-page">
+            <div className="ssd-panel">
+                <h2 className="ssd-title">My Profile :</h2>
+                {error && <p className="ssd-error">{error}</p>}
+                {!error && (
+                    <div className="ssd-grid">
+                        <div className="my-profile-label">Employee ID:</div>
+                        <div>{pickEmpNo(profile) || "NA"}</div>
+                        <div className="my-profile-label">AD ID:</div>
+                        <div>{pickAdId(profile) || "NA"}</div>
+
+                        <div className="my-profile-label">Name:</div>
+                        <div>{fullName}</div>
+                        <div className="my-profile-label">Employee Type:</div>
+                        <div>{String(profile?.eligibleTypeCode || "NA")}</div>
+                        <div className="my-profile-label">Sex:</div>
+                        <div>{String(profile?.user_Sex || "NA")}</div>
+
+                        <div className="my-profile-label">DOJ (dd/mm/yyyy):</div>
+                        <div>{formatDate(String(profile?.user_Doj || ""))}</div>
+                        <div className="my-profile-label">LWD (dd/mm/yyyy):</div>
+                        <div>{formatDate(String(profile?.lwd || ""))}</div>
+
+                        <div className="my-profile-label">Is Maternity/Paternity Applicable:</div>
+                        <div>{profile?.user_Mat_Pat_Applicable}</div>
+                        <div className="my-profile-label">Status:</div>
+                        <div>{statusText}</div>
+
+                        <div className="my-profile-label">Emergency Contact Name 1:</div>
+                        <div>{String(contact?.contactNoName1 || profile?.contactName1 || "NA")}</div>
+                        <div className="my-profile-label">Emergency Contact Number 1:</div>
+                        <div>{String(contact?.contactNo1 || profile?.emergencyContactNo1 || "NA")}</div>
+
+                        <div className="my-profile-label">Emergency Contact Name 2:</div>
+                        <div>{String(contact?.contactNoName2 || profile?.contactName2 || "NA")}</div>
+                        <div className="my-profile-label">Emergency Contact Number 2:</div>
+                        <div>{String(contact?.contactNo2 || profile?.emergencyContactNo2 || "NA")}</div>
+
+                        <div className="my-profile-label">Team Name:</div>
+                        <div>{String(profile?.teamName || "NA")}</div>
+                        <div className="my-profile-label">Team Head Name:</div>
+                        <div>{String(contact?.headName || profile?.teamHeadName || "NA")}</div>
+
+                        <div className="my-profile-label">Team Manager Name:</div>
+                        <div>{String(contact?.managerName || profile?.teamManagerName || "NA")}</div>
+
+                    </div>
+                )}
+            </div>
+
             {!error && (
-                <div className="ssd-grid">
-                    <div>Emp ID:</div>
-                    <div>{pickEmpNo(profile) || "NA"}</div>
-                    <div>AD ID:</div>
-                    <div>{pickAdId(profile) || "NA"}</div>
-
-                    <div>Name:</div>
-                    <div>{fullName}</div>
-                    <div>Sex:</div>
-                    <div>{String(profile?.user_Sex || "NA")}</div>
-
-                    <div>DOJ (dd/mm/yyyy):</div>
-                    <div>{formatDate(String(profile?.user_Doj || ""))}</div>
-                    <div>LWD (dd/mm/yyyy):</div>
-                    <div>{formatDate(String(profile?.lwd || ""))}</div>
-
-                    <div>Is Maternity/Paternity Applicable:</div>
-                    <div>{profile?.user_Mat_Pat_Applicable ? "Yes" : "No"}</div>
-                    <div>Status:</div>
-                    <div>{statusText}</div>
-
-                    <div>Emergency Contact Name 1:</div>
-                    <div>{String(contact?.contactNoName1 || profile?.contactName1 || "NA")}</div>
-                    <div>Emergency Contact Number 1:</div>
-                    <div>{String(contact?.contactNo1 || profile?.emergencyContactNo1 || "NA")}</div>
-
-                    <div>Emergency Contact Name 2:</div>
-                    <div>{String(contact?.contactNoName2 || profile?.contactName2 || "NA")}</div>
-                    <div>Emergency Contact Number 2:</div>
-                    <div>{String(contact?.contactNo2 || profile?.emergencyContactNo2 || "NA")}</div>
-
-                    <div>Team Name:</div>
-                    <div>{String(profile?.teamName || "NA")}</div>
-                    <div>Team Head Name:</div>
-                    <div>{String(contact?.headName || profile?.teamHeadName || "NA")}</div>
-
-                    <div>Team Manager Name:</div>
-                    <div>{String(contact?.managerName || profile?.teamManagerName || "NA")}</div>
-                    <div />
-                    <div />
+                <div className="ssd-panel">
+                    <h2 className="ssd-title">Emergency Contact :</h2>
+                    <div className="my-profile-emergency-grid">
+                        <div className="my-profile-emergency-field">
+                            <label htmlFor="contactNoName1">Contact Name 1 :</label>
+                            <input
+                                id="contactNoName1"
+                                type="text"
+                                value={contactForm.contactNoName1}
+                                onChange={(e) => handleContactFieldChange("contactNoName1", e.target.value)}
+                            />
+                        </div>
+                        <div className="my-profile-emergency-field">
+                            <label htmlFor="contactNo1">Contact Number 1 :</label>
+                            <input
+                                id="contactNo1"
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={10}
+                                value={contactForm.contactNo1}
+                                onChange={(e) => handleContactFieldChange("contactNo1", e.target.value)}
+                            />
+                            {fieldErrors.contactNo1 && (
+                                <p className="my-profile-field-error">{fieldErrors.contactNo1}</p>
+                            )}
+                        </div>
+                        <div className="my-profile-emergency-field">
+                            <label htmlFor="contactNoName2">Contact Name 2 :</label>
+                            <input
+                                id="contactNoName2"
+                                type="text"
+                                value={contactForm.contactNoName2}
+                                onChange={(e) => handleContactFieldChange("contactNoName2", e.target.value)}
+                            />
+                        </div>
+                        <div className="my-profile-emergency-field my-profile-emergency-action">
+                            <label htmlFor="contactNo2">Contact Number 2 :</label>
+                            <input
+                                id="contactNo2"
+                                type="text"
+                                inputMode="numeric"
+                                maxLength={10}
+                                value={contactForm.contactNo2}
+                                onChange={(e) => handleContactFieldChange("contactNo2", e.target.value)}
+                            />
+                            {fieldErrors.contactNo2 && (
+                                <p className="my-profile-field-error">{fieldErrors.contactNo2}</p>
+                            )}
+                           <button
+    type="button"
+    onClick={handleSaveEmergencyContact}
+    disabled={isSaving || !hasContactChanges}
+>
+                                {isSaving ? "Saving..." : "Save"}
+                            </button>
+                        </div>
+                    </div>
+                    {saveError && <p className="my-profile-save-error">{saveError}</p>}
+                    {saveMessage && <p className="my-profile-save-success"><b>{saveMessage}</b></p>}
                 </div>
             )}
-        </div>
-
-        {!error && (
-            <div className="ssd-panel">
-                <h2 className="ssd-title">Emergency Contact :</h2>
-                <div className="my-profile-emergency-grid">
-                    <div className="my-profile-emergency-field">
-                        <label htmlFor="contactNoName1">Contact Name 1 :</label>
-                        <input
-                            id="contactNoName1"
-                            type="text"
-                            value={contactForm.contactNoName1}
-                            onChange={(e) => handleContactFieldChange("contactNoName1", e.target.value)}
-                        />
-                    </div>
-                    <div className="my-profile-emergency-field">
-                        <label htmlFor="contactNo1">Contact Number 1 :</label>
-                        <input
-                            id="contactNo1"
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={10}
-                            value={contactForm.contactNo1}
-                            onChange={(e) => handleContactFieldChange("contactNo1", e.target.value)}
-                        />
-                        {fieldErrors.contactNo1 && (
-                            <p className="my-profile-field-error">{fieldErrors.contactNo1}</p>
-                        )}
-                    </div>
-                    <div className="my-profile-emergency-field">
-                        <label htmlFor="contactNoName2">Contact Name 2 :</label>
-                        <input
-                            id="contactNoName2"
-                            type="text"
-                            value={contactForm.contactNoName2}
-                            onChange={(e) => handleContactFieldChange("contactNoName2", e.target.value)}
-                        />
-                    </div>
-                    <div className="my-profile-emergency-field my-profile-emergency-action">
-                        <label htmlFor="contactNo2">Contact Number 2 :</label>
-                        <input
-                            id="contactNo2"
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={10}
-                            value={contactForm.contactNo2}
-                            onChange={(e) => handleContactFieldChange("contactNo2", e.target.value)}
-                        />
-                        {fieldErrors.contactNo2 && (
-                            <p className="my-profile-field-error">{fieldErrors.contactNo2}</p>
-                        )}
-                        <button
-                            type="button"
-                            onClick={handleSaveEmergencyContact}
-                            disabled={isSaving}
-                        >
-                            {isSaving ? "Saving..." : "Save"}
-                        </button>
-                    </div>
-                </div>
-                {saveError && <p className="my-profile-save-error">{saveError}</p>}
-                {saveMessage && <p className="my-profile-save-success">{saveMessage}</p>}
-            </div>
-        )}
-    </section>
+        </section>
 
     )
 };
