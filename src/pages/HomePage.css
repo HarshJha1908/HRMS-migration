@@ -179,7 +179,7 @@
   color: #0f5f7f;
   font-weight: 700;
   position: relative;
-  z-index: 2;
+  z-index: 100;
   line-height: 1.4;
 }
 
@@ -336,4 +336,13 @@
   .feature-card h3 {
     font-size: 1.25rem;
   }
+}
+.card-link {
+  color:#667085 ;    /*#0f5d84*/
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.card-link:hover {
+  text-decoration: underline; /* optional */
 }

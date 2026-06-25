@@ -44,7 +44,7 @@
    TOP FORM GRID
    =============================== */
 
-.form-grid {
+.employee-profile-page .form-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   column-gap: 24px;
@@ -52,29 +52,29 @@
 }
 
 /* Form groups */
-.form-group {
+.employee-profile-page .form-group {
   display: flex;
   flex-direction: column;
 }
 
-.contact-spacer {
+.employee-profile-page .contact-spacer {
   visibility: hidden;
   pointer-events: none;
 }
 
-.form-group label {
+.employee-profile-page .form-group label {
   font-size: 14px;
   color: #4d6f81;
   margin-bottom: 6px;
 }
 
-.form-group label span {
+.employee-profile-page .form-group label span {
   color: red;
 }
 
 /* Inputs & selects */
-.form-group input,
-.form-group select {
+.employee-profile-page .form-group input,
+.employee-profile-page .form-group select {
   height: 40px;
   border: 1px solid #bfcdd6;
   border-radius: 4px;
@@ -83,14 +83,14 @@
   background: #ffffff;
   color: #3b5668;
 }
-.form-group input:focus,
-.form-group select:focus {
+.employee-profile-page .form-group input:focus,
+.employee-profile-page .form-group select:focus {
   outline: none;
   border-color: #4a90e2;
 }
 
-.form-group input:disabled,
-.form-group select:disabled {
+.employee-profile-page .form-group input:disabled,
+.employee-profile-page .form-group select:disabled {
   background-color: #eef2f6;
   border-color: #b8c4d3;
   color: #5d6b7a;
@@ -98,19 +98,19 @@
 }
 
 /* Checkbox group */
-.checkbox-group {
+.employee-profile-page .checkbox-group {
   flex-direction: row;
   align-items: center;
   gap: 8px;
   margin-top: 22px;
 }
 
-.checkbox-group label {
+.employee-profile-page .checkbox-group label {
   margin: 0;
 }
 
 /* Full width field */
-.full-width {
+.employee-profile-page .full-width {
   grid-column: span 3;
 }
 

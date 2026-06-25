@@ -177,7 +177,7 @@ export default function SingleSearchDetails() {
 const [selectedLeaveId, setSelectedLeaveId] = useState("");
 const [selectedAction, setSelectedAction] = useState<ActionStatus | null>(null);
   const [leaveBalanceRefreshKey, setLeaveBalanceRefreshKey] = useState(0);
-  const rowsPerPage = 5;
+  const rowsPerPage = 10;
 
   useEffect(() => {
     const loadDetails = async () => {
@@ -490,10 +490,12 @@ const confirmLeaveAction = async () => {
             <div>{formatDate(String(profile?.lwd || ""))}</div>
 
             <div className="my-profile-label">Is Maternity/Paternity Applicable:</div>
-            <div>{profile?.user_Mat_Pat_Applicable }</div>
+            <div>{profile?.user_Mat_Pat_Applicable ? "Yes" : "No"}</div>
             <div className="my-profile-label">Status:</div>
             <div>{statusText}</div>
 
+            <div className="my-profile-label">Team Name:</div>
+            <div>{String(profile?.teamName || "NA")}</div>
             <div className="my-profile-label">Emergency Contact Name 1:</div>
             <div>{String(contact?.contactNoName1 || profile?.contactName1 || "NA")}</div>
             <div className="my-profile-label">Emergency Contact Number 1:</div>
@@ -504,8 +506,6 @@ const confirmLeaveAction = async () => {
             <div className="my-profile-label">Emergency Contact Number 2:</div>
             <div>{String(contact?.contactNo2 || profile?.emergencyContactNo2 || "NA")}</div>
 
-            <div className="my-profile-label">Team Name:</div>
-            <div>{String(profile?.teamName || "NA")}</div>
             <div className="my-profile-label">Team Head Name:</div>
             <div>{String(contact?.headName || profile?.teamHeadName || "NA")}</div>
 

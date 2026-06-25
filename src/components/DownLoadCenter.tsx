@@ -14,7 +14,8 @@ import type {
 } from '../types/apiTypes';
 import { pdfjs } from 'react-pdf';
 import worker from 'pdfjs-dist/build/pdf.worker?url';
-import { CsvExportUtil, PdfExportUtil } from '../utils/Utils';
+import { CsvExportUtil } from '../utils/CsvExportUtil';
+import { PdfExportUtil } from '../utils/PdfExportUtil';
 import { useAuth } from '../auth/useAuth';
 pdfjs.GlobalWorkerOptions.workerSrc = worker;
 

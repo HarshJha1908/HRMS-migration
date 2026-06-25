@@ -1,23 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import "./SummaryReport.css";
 import type {
+    EmployeeContactApi,
     ManagerLeaveBalanceExcelApi,
     ManagerLeaveDetailsExcelApi
 } from "../types/apiTypes";
 import {
+    getEmergencyContactSummaryReport,
     getLeaveBalanceSummaryReport,
     getLeaveDetailsSummaryReport,
     getSummaryReportTeamHeadName,
     getSummaryReportTeamMemberName,
     getSummaryReportTeamName,
+    type EmergencyContactSummaryReportApi,
     type LeaveDetailsSummaryReportApi,
     type SummaryReportTeamHeadApi,
     type SummaryReportTeamMemberApi,
     type SummaryReportTeamNameApi
 } from "../services/apiService";
-import { CsvExportUtil, formatLeaveValue } from "../utils/Utils";
+import { CsvExportUtil } from "../utils/CsvExportUtil";
+import { formatLeaveValue } from "../utils/Utils";
+import { useAuth } from "../auth/useAuth";
 
 const SummaryReport = () => {
+    const { user } = useAuth();
+
     const [reportType, setReportType] = useState("");
     const [teamHeads, setTeamHeads] = useState<
         SummaryReportTeamHeadApi[]
@@ -36,7 +43,7 @@ const SummaryReport = () => {
     >([]);
 
     const [selectedTeamMember, setSelectedTeamMember] =
-        useState("-1");
+        useState("");
 
     const [showResult, setShowResult] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -49,13 +56,16 @@ const SummaryReport = () => {
     const [leaveDetailsData, setLeaveDetailsData] =
         useState<LeaveDetailsSummaryReportApi[]>([]);
 
+    const [emergencyContactData, setEmergencyContactData] =
+        useState<EmergencyContactSummaryReportApi[]>([]);
+
     const [startDate, setStartDate] =
         useState("");
 
     const [endDate, setEndDate] =
         useState("");
 
-    const currentUserId = "IN08FE";
+    const currentUserId = String(user?.loginUserAdID || "").trim();
 
     const getStatusClass = (status: string) => {
         const normalized = String(status || "").trim().toLowerCase();
@@ -73,6 +83,46 @@ const SummaryReport = () => {
 
         return leaveType || "NA";
     };
+
+    const getEmergencyContactValue = (
+        item: EmergencyContactSummaryReportApi,
+        ...keys: Array<keyof EmergencyContactSummaryReportApi>
+    ) => {
+        for (const key of keys) {
+            const value = item[key];
+            const text = String(value ?? "").trim();
+
+            if (text) return text;
+        }
+
+        return "";
+    };
+
+    const mapEmergencyContactsForExport = (
+        data: EmergencyContactSummaryReportApi[]
+    ): EmployeeContactApi[] =>
+        data.map((item) => ({
+            empId: Number(getEmergencyContactValue(item, "empId", "employeeId")) || 0,
+            empName: getEmergencyContactValue(item, "empName", "employeeName"),
+            contactName: getEmergencyContactValue(
+                item,
+                "contactName",
+                "contactNoName1",
+                "contactName1"
+            ),
+            contactNoName1: getEmergencyContactValue(
+                item,
+                "contactNoName1",
+                "contactName1",
+                "contactName"
+            ),
+            contactNo1: getEmergencyContactValue(item, "contactNo1", "contactNumber1"),
+            contactNoName2: getEmergencyContactValue(item, "contactNoName2", "contactName2"),
+            contactNo2: getEmergencyContactValue(item, "contactNo2", "contactNumber2"),
+            teamName: getEmergencyContactValue(item, "teamName"),
+            managerName: getEmergencyContactValue(item, "managerName"),
+            headName: getEmergencyContactValue(item, "headName")
+        }));
 
     const mapLeaveDetailsForExport = (
         data: LeaveDetailsSummaryReportApi[]
@@ -111,6 +161,7 @@ const SummaryReport = () => {
         setMessage("");
         setLeaveBalanceData([]);
         setLeaveDetailsData([]);
+        setEmergencyContactData([]);
     };
 
     useEffect(() => {
@@ -135,6 +186,8 @@ const SummaryReport = () => {
             const data =
                 await getSummaryReportTeamHeadName(
                     userId
+                    
+                    
                 );
             console.log("Team Head API Response", data);
             setTeamHeads(data);
@@ -148,6 +201,7 @@ const SummaryReport = () => {
 
                 await loadTeamNames(
                     userId,
+                    
                     teamHeadId
                 );
             }
@@ -168,18 +222,9 @@ const SummaryReport = () => {
 
             setTeamNames(data);
 
-            if (data.length > 0) {
-                const firstTeamId =
-                    data[0].teamId;
-
-                setSelectedTeamName(
-                    String(firstTeamId)
-                );
-
-                await loadTeamMembers(
-                    firstTeamId
-                );
-            }
+            setSelectedTeamName("");
+            setTeamMembers([]);
+            setSelectedTeamMember("");
         } catch (error) {
             console.error(error);
         }
@@ -205,14 +250,14 @@ const SummaryReport = () => {
             console.log("Members API Response:", members);
             setTeamMembers(members);
 
-            setSelectedTeamMember("-1");
+            setSelectedTeamMember("");
         } catch (error) {
             console.error(
                 "Failed to load team members",
                 error
             );
             setTeamMembers([]);
-            setSelectedTeamMember("-1");
+            setSelectedTeamMember("");
         }
     };
 
@@ -223,9 +268,20 @@ const SummaryReport = () => {
             setShowResult(false);
             setLeaveBalanceData([]);
             setLeaveDetailsData([]);
+            setEmergencyContactData([]);
 
             if (!reportType) {
-                setMessage("Please select report type.");
+                setMessage("Please select Report type.");
+                return;
+            }
+
+            if (!selectedTeamName) {
+                setMessage("Please select Team Name.");
+                return;
+            }
+
+            if (!selectedTeamMember) {
+                setMessage("Please select Team Member Name.");
                 return;
             }
 
@@ -269,6 +325,22 @@ const SummaryReport = () => {
                     setMessage("No leave details data found.");
                 }
             }
+
+            if (reportType === "Emergency Contact") {
+                const data =
+                    await getEmergencyContactSummaryReport(
+                        selectedTeamHead,
+                        selectedTeamName,
+                        selectedTeamMember || -1
+                    );
+
+                setEmergencyContactData(data);
+                setShowResult(true);
+
+                if (data.length === 0) {
+                    setMessage("No emergency contact data found.");
+                }
+            }
         } catch (error) {
             console.error(error);
             setShowResult(false);
@@ -289,6 +361,16 @@ const SummaryReport = () => {
 
             if (!reportType) {
                 setMessage("Please select report type.");
+                return;
+            }
+
+            if (!selectedTeamName) {
+                setMessage("Please select Team Name.");
+                return;
+            }
+
+            if (!selectedTeamMember) {
+                setMessage("Please select Team Member Name.");
                 return;
             }
 
@@ -345,6 +427,32 @@ const SummaryReport = () => {
                         mapLeaveDetailsForExport(data)
                     ),
                     `summary-leave-details-${startDate}-to-${endDate}.csv`
+                );
+                return;
+            }
+
+            if (reportType === "Emergency Contact") {
+                const data =
+                    emergencyContactData.length > 0
+                        ? emergencyContactData
+                        : await getEmergencyContactSummaryReport(
+                            selectedTeamHead,
+                            selectedTeamName,
+                            selectedTeamMember || -1
+                        );
+
+                if (data.length === 0) {
+                    setMessage("No emergency contact data found.");
+                    return;
+                }
+
+                setEmergencyContactData(data);
+                setShowResult(true);
+                downloadCsv(
+                    CsvExportUtil.generateEmergencyContactCsv(
+                        mapEmergencyContactsForExport(data)
+                    ),
+                    "summary-emergency-contact-report.csv"
                 );
             }
         } catch (error) {
@@ -408,12 +516,20 @@ const SummaryReport = () => {
                                 const teamId = e.target.value;
 
                                 setSelectedTeamName(teamId);
+                                setTeamMembers([]);
+                                setSelectedTeamMember("");
                                 clearReportResult();
 
-                                loadTeamMembers(teamId);
+                                if (teamId) {
+                                    loadTeamMembers(teamId);
+                                }
                             }}
                             className="summary-report-select"
                         >
+                            <option value="">
+                                Select Team Name
+                            </option>
+
                             {teamNames.map((item) => (
                                 <option
                                     key={item.teamId}
@@ -441,6 +557,10 @@ const SummaryReport = () => {
                             }}
                             className="summary-report-select"
                         >
+                            <option value="">
+                                Select Team Member Name
+                            </option>
+
                             <option value="-1">
                                 All Member
                             </option>
@@ -480,6 +600,10 @@ const SummaryReport = () => {
 
                             <option value="Leave Details">
                                 Leave Details
+                            </option>
+
+                            <option value="Emergency Contact">
+                                Emergency Contact
                             </option>
                         </select>
                     </div>
@@ -696,6 +820,48 @@ const SummaryReport = () => {
                                             </tr>
                                         )
                                     )}
+                                </tbody>
+                            </table>
+                        )}
+                    {showResult &&
+                        reportType === "Emergency Contact" &&
+                        emergencyContactData.length > 0 && (
+                            <table className="summary-report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Emp ID</th>
+                                        <th>Employee Name</th>
+                                        <th>Contact Name 1</th>
+                                        <th>Contact No1</th>
+                                        <th>Contact Name 2</th>
+                                        <th>Contact No2</th>
+                                        <th>Team Name</th>
+                                        <th>Team Manager</th>
+                                        <th>Team Head</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    {emergencyContactData.map((item, index) => (
+                                        <tr key={`${getEmergencyContactValue(item, "empId", "employeeId")}-${index}`}>
+                                            <td>{getEmergencyContactValue(item, "empId", "employeeId")}</td>
+                                            <td>{getEmergencyContactValue(item, "empName", "employeeName")}</td>
+                                            <td>
+                                                {getEmergencyContactValue(
+                                                    item,
+                                                    "contactNoName1",
+                                                    "contactName1",
+                                                    "contactName"
+                                                )}
+                                            </td>
+                                            <td>{getEmergencyContactValue(item, "contactNo1", "contactNumber1")}</td>
+                                            <td>{getEmergencyContactValue(item, "contactNoName2", "contactName2")}</td>
+                                            <td>{getEmergencyContactValue(item, "contactNo2", "contactNumber2")}</td>
+                                            <td>{getEmergencyContactValue(item, "teamName")}</td>
+                                            <td>{getEmergencyContactValue(item, "managerName")}</td>
+                                            <td>{getEmergencyContactValue(item, "headName")}</td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
                         )}

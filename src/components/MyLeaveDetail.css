@@ -23,15 +23,15 @@
 
 /* TABLE WRAPPER */
 .leave-table-wrapper {
-  overflow-x: auto;
+  overflow-x: hidden;
   width: 100%;
 }
 
 /* TABLE */
 .leave-table {
-  width: calc(100% + 2px);
-  margin-left: -1px;
+  width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 /* TABLE HEADER */
@@ -43,7 +43,8 @@
   text-align: center;
   padding: 14px 10px;
   border: none;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 
 /* TABLE BODY */
@@ -53,7 +54,8 @@
   font-size: 15px;
   color: #3b5668;
   text-align: center;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
   background: #ffffff;
 }
 
@@ -305,3 +307,4 @@
     opacity: 1;
   }
 }
+ 

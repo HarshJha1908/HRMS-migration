@@ -12,7 +12,7 @@
    Common Panel
 ========================= */
 
-.ssd-panel {
+.my-profile-page .ssd-panel {
   background: #ffffff;
   border: 1px solid #d0d0d0;
   border-radius: 2px;
@@ -23,7 +23,7 @@
    Header
 ========================= */
 
-.ssd-title {
+.my-profile-page .ssd-title {
   margin: 0;
   padding: 18px 20px 14px;
   background: #ffffff;
@@ -38,13 +38,13 @@
    Profile Grid
 ========================= */
 
-.ssd-grid {
+.my-profile-page .ssd-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(180px, 1fr));
   border-top: none;
 }
 
-.ssd-grid > div {
+.my-profile-page .ssd-grid > div {
   border-right: 1px solid #d6dbe0;
   border-bottom: 1px solid #d6dbe0;
   padding: 12px 14px;
@@ -57,7 +57,7 @@
   background: #ffffff;
 }
 
-.ssd-grid > div:nth-child(4n) {
+.my-profile-page .ssd-grid > div:nth-child(4n) {
   border-right: none;
 }
 
@@ -65,7 +65,7 @@
    Labels
 ========================= */
 
-.my-profile-label {
+.my-profile-page .my-profile-label {
   font-weight: 600;
   color: #1d6d98 !important;
   background: #f7f7f7 !important;
@@ -75,13 +75,13 @@
    Emergency Contact
 ========================= */
 
-.my-profile-emergency-grid {
+.my-profile-page .my-profile-emergency-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(180px, 1fr));
   border-top: none;
 }
 
-.my-profile-emergency-field {
+.my-profile-page .my-profile-emergency-field {
   border-right: 1px solid #d6dbe0;
   border-bottom: 1px solid #d6dbe0;
   padding: 12px 14px 14px;
@@ -93,18 +93,18 @@
   box-sizing: border-box;
 }
 
-.my-profile-emergency-field:last-child {
+.my-profile-page .my-profile-emergency-field:last-child {
   border-right: none;
 }
 
-.my-profile-emergency-field label {
+.my-profile-page .my-profile-emergency-field label {
   color: #1d6d98;
   font-size: 14px;
   font-weight: 600;
   line-height: 1.2;
 }
 
-.my-profile-emergency-field input {
+.my-profile-page .my-profile-emergency-field input {
   height: 38px;
   border: 1px solid #bfcdd6;
   border-radius: 4px;
@@ -116,7 +116,7 @@
   box-sizing: border-box;
 }
 
-.my-profile-emergency-field input:focus {
+.my-profile-page .my-profile-emergency-field input:focus {
   border-color: #1d6d98;
 }
 
@@ -124,11 +124,11 @@
    Save Button
 ========================= */
 
-.my-profile-emergency-action {
+.my-profile-page .my-profile-emergency-action {
   justify-content: flex-start;
 }
 
-.my-profile-emergency-action button {
+.my-profile-page .my-profile-emergency-action button {
   width: 120px;
   height: 38px;
   border: none;
@@ -141,11 +141,11 @@
   margin-top: 6px;
 }
 
-.my-profile-emergency-action button:hover {
+.my-profile-page .my-profile-emergency-action button:hover {
   background: #174969;
 }
 
-.my-profile-emergency-action button:disabled {
+.my-profile-page .my-profile-emergency-action button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
@@ -154,21 +154,21 @@
    Messages
 ========================= */
 
-.my-profile-save-error,
-.my-profile-save-success {
+.my-profile-page .my-profile-save-error,
+.my-profile-page .my-profile-save-success {
   margin: 10px 14px;
   font-size: 13px;
 }
 
-.my-profile-save-error {
+.my-profile-page .my-profile-save-error {
   color: #b42318;
 }
 
-.my-profile-save-success {
+.my-profile-page .my-profile-save-success {
   color: #067647;
 }
 
-.my-profile-field-error {
+.my-profile-page .my-profile-field-error {
   margin: 0;
   color: #b42318;
   font-size: 12px;
@@ -178,7 +178,7 @@
    Error
 ========================= */
 
-.ssd-error {
+.my-profile-page .ssd-error {
   padding: 14px;
   color: #b42318;
   font-size: 14px;
@@ -189,12 +189,12 @@
 ========================= */
 
 @media (max-width: 1200px) {
-  .ssd-grid,
-  .my-profile-emergency-grid {
+  .my-profile-page .ssd-grid,
+  .my-profile-page .my-profile-emergency-grid {
     grid-template-columns: 1fr 1fr;
   }
 
-  .ssd-grid > div:nth-child(2n) {
+  .my-profile-page .ssd-grid > div:nth-child(2n) {
     border-right: none;
   }
 }
@@ -205,22 +205,22 @@
     gap: 10px;
   }
 
-  .ssd-title {
+  .my-profile-page .ssd-title {
     font-size: 28px;
     padding: 16px;
   }
 
-  .ssd-grid,
-  .my-profile-emergency-grid {
+  .my-profile-page .ssd-grid,
+  .my-profile-page .my-profile-emergency-grid {
     grid-template-columns: 1fr;
   }
 
-  .ssd-grid > div,
-  .my-profile-emergency-field {
+  .my-profile-page .ssd-grid > div,
+  .my-profile-page .my-profile-emergency-field {
     border-right: none;
   }
 
-  .my-profile-emergency-action button {
+  .my-profile-page .my-profile-emergency-action button {
     width: 100%;
   }
 }

@@ -94,9 +94,10 @@ export default function Navbar1() {
                       <span className="hr-mega-icon hr-mega-icon--indigo" aria-hidden="true">📊</span> Reports &amp; Records
                     </div>
                     <ul className="hr-mega-list">
-                      <li><Link to="/download-center?type=leave-details" className="hr-mega-link" title="Download team leave reports">Leave Reports</Link></li>
-                      <li><Link to="/download-center?type=leave-balance" className="hr-mega-link" title="Check leave balance for team members">Leave Balances</Link></li>
-                      <li><Link to="/download-center?type=emergency-contact" className="hr-mega-link" title="View team emergency contact details">Emergency Contacts</Link></li>
+                      {/* <li><Link to="/download-center?type=leave-details" className="hr-mega-link" title="Download team leave reports">Leave Reports</Link></li>
+                      <li><Link to="/download-center?type=leave-balance" className="hr-mega-link" title="Check leave balance for team members">Leave Balances</Link></li> */}
+                      <li><Link to="/summary-report" className="hr-mega-link" title="View summary reports">Summary report</Link></li>
+                      {/* <li><Link to="/download-center?type=emergency-contact" className="hr-mega-link" title="View team emergency contact details">Emergency Contacts</Link></li> */}
                     </ul>
                   </div>
                 </div>
@@ -169,7 +170,7 @@ export default function Navbar1() {
                     target="_blank" rel="noopener noreferrer" className="hr-mega-link">Network Hospital List</a></li>
                     <li><a href="https://prod.hrms.linde.grp/DocHRMS/Hospitalization/All%20relevant%20information%20regarding%20Hospitalization" 
                     target="_blank" rel="noopener noreferrer" className="hr-mega-link">All Hospitalization Related Information</a></li>
-                    <li><Link to="/insurance" className="hr-mega-link">GPA/GTL Declaration</Link></li>
+                    <li><Link to="/insurance" className="hr-mega-link">GPA/GTL/GHI Declaration</Link></li>
                   </ul>
                 </div>
 
@@ -204,7 +205,7 @@ export default function Navbar1() {
                     </div>
                     <ul className="hr-mega-list">
                       <li><Link to="/quick-export" className="hr-mega-link" title="View overall leave summary">Quick Export</Link></li>
-                      <li><Link to="/summary-report" className="hr-mega-link" title="View overall leave summary">Summary Report</Link></li>
+                      {/* <li><Link to="/summary-report" className="hr-mega-link" title="View overall leave summary">Summary Report</Link></li> */}
                       {/* <li><Link to="/locked" className="hr-mega-link" title="Export employee leave data">Leave Reports</Link></li>
                       <li><Link to="/locked" className="hr-mega-link" title="Download yearly leave balance and details">Year-wise Balance Export</Link></li>
                       <li><Link to="/locked" className="hr-mega-link" title="Export all employee emergency contacts">Emergency Contacts (All)</Link></li> */}
@@ -273,3 +274,4 @@ export default function Navbar1() {
     </header>
   );
 }
+ 

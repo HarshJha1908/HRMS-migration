@@ -89,7 +89,7 @@ body,
 
 .leave-form-page .form-row {
   display: grid;
-  grid-template-columns: 180px minmax(500px, 1fr);
+  grid-template-columns: 180px minmax(0, 1fr);
 
   align-items: start;
   column-gap: 20px;
@@ -101,6 +101,17 @@ body,
   font-size: 15px;
   /* font-weight: 600; */
   color: #3b5668;
+}
+
+.leave-form-page .form-control-wrap {
+  width: 100%;
+  max-width: 700px;
+  min-width: 0;
+}
+
+.leave-form-page .field-value {
+  display: block;
+  line-height: 1.4;
 }
 
 /* ================================
@@ -161,6 +172,16 @@ body,
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+  min-width: 0;
+}
+
+.leave-form-page .leave-form-datepicker-input {
+  width: min(700px, 100%);
+  min-width: 0;
+}
+
+.leave-form-page .leave-form-datepicker-input input {
+  max-width: none;
 }
 
 .leave-form-page .half-checkbox {
@@ -359,10 +380,8 @@ body,
    CALENDAR POSITION
    ================================ */
 
-.leave-form-page .react-datepicker-popper {
-  margin-left: 520px !important;
-  margin-top: -50px !important;
-
+.leave-form-datepicker-popper {
+  margin-top: 8px !important;
   z-index: 9999;
 }
 
@@ -390,8 +409,8 @@ body,
     grid-template-columns: 160px 1fr;
   }
 
-  .leave-form-page .react-datepicker-popper {
-    margin-left: 300px !important;
+  .leave-form-datepicker-popper {
+    margin-top: 8px !important;
   }
 }
 
@@ -432,9 +451,8 @@ body,
     max-width: 100%;
   }
 
-  .leave-form-page .react-datepicker-popper {
-    margin-left: 0 !important;
-    margin-top: 10px !important;
+  .leave-form-datepicker-popper {
+    margin-top: 8px !important;
   }
 }
 /* .leave-form-page textarea {
@@ -457,7 +475,7 @@ body,
 .leave-form-page .required {
   color: #d32f2f;
 } */
-.reason-wrapper {
+.leave-form-page .reason-wrapper {
   width: 100%;
   max-width: 700px;
 
@@ -465,7 +483,7 @@ body,
   flex-direction: column;
 }
 
-.char-count {
+.leave-form-page .char-count {
   width: 100%;
 
   margin-top: 6px;

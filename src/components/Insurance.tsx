@@ -82,6 +82,9 @@ const Insurance = () => {
   const [employeeName, setEmployeeName] = useState("");
 
   const [employeeNumber, setEmployeeNumber] = useState("");
+  const [employeeGender, setEmployeeGender] = useState("");
+  const [employeeJoiningDate, setEmployeeJoiningDate] = useState("");
+  const [isMaritalStatusUpdated, setIsMaritalStatusUpdated] = useState(false);
 
   const [lastUpdatedOn, setLastUpdatedOn] = useState("");
 
@@ -114,6 +117,8 @@ const Insurance = () => {
 
   const isHealthInsurance =
     insuranceType === "INS";
+  const GHI_ERR_MESSAGE =
+    "Kindly contact HR for any further assistance or refer to the HR policy for more details.";
 
   const totalPercentageShare =
     isHealthInsurance
@@ -126,6 +131,114 @@ const Insurance = () => {
             : Number(share)),
         0
       );
+  const todayInputValue = new Date().toISOString().split("T")[0];
+
+  const toDateInputValue = (value: string | null | undefined) => {
+    const trimmed = String(value || "").trim();
+
+    if (!trimmed) return "";
+
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (isoMatch) return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
+
+    const slashMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (slashMatch) return `${slashMatch[3]}-${slashMatch[2]}-${slashMatch[1]}`;
+
+    const date = new Date(trimmed);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  const normalizeGender = (value: unknown) => {
+    const normalized = String(value || "").trim().toLowerCase();
+
+    if (normalized === "male" || normalized === "m") return "M";
+    if (normalized === "female" || normalized === "f") return "F";
+
+    return "";
+  };
+
+  const toBoolean = (value: unknown) => {
+    if (typeof value === "boolean") return value;
+
+    const normalized = String(value || "").trim().toLowerCase();
+    return normalized === "true" || normalized === "1" || normalized === "yes" || normalized === "y";
+  };
+
+  const getRelationOption = (code: string) =>
+    relationshipOptions.find(
+      (relation) =>
+        relation.code.trim().toUpperCase() === code.trim().toUpperCase()
+    );
+
+  const getRelationText = (code: string) => {
+    const option = getRelationOption(code);
+    return `${code} ${option?.relationName || ""}`.trim().toLowerCase();
+  };
+
+  const getRelationCategory = (code: string) => {
+    const relationText = getRelationText(code);
+    const normalizedCode = code.trim().toUpperCase();
+
+    if (normalizedCode === "CD" || relationText.includes("child")) return "child";
+    if (["FAL", "MOL"].includes(normalizedCode) || relationText.includes("inlaw") || relationText.includes("in-law")) return "inlaw";
+    if (normalizedCode === "FA" || relationText.includes("father")) return "father";
+    if (normalizedCode === "MO" || relationText.includes("mother")) return "mother";
+    if (relationText.includes("parent")) return "parent";
+    if (relationText.includes("spouse") || relationText.includes("wife") || relationText.includes("husband")) return "spouse";
+
+    return "";
+  };
+
+  const getAge = (date: Date) => {
+    const todayDate = new Date();
+
+    let age =
+      todayDate.getFullYear() -
+      date.getFullYear();
+
+    const monthDifference =
+      todayDate.getMonth() -
+      date.getMonth();
+
+    if (
+      monthDifference < 0 ||
+      (monthDifference === 0 &&
+        todayDate.getDate() <
+        date.getDate())
+    ) {
+      age--;
+    }
+
+    return age;
+  };
+
+  const hasCompletedOneYearOfService = () => {
+    const joiningDate = parseDateOnly(toDateInputValue(employeeJoiningDate));
+
+    if (!joiningDate) return false;
+
+    const oneYearDate = new Date(joiningDate);
+    oneYearDate.setFullYear(oneYearDate.getFullYear() + 1);
+
+    return new Date() >= oneYearDate;
+  };
+
+  const findEmployeeRelationCode = (
+    options: { code: string; relationName: string }[]
+  ) => {
+    const employeeRelation = options.find((relation) => {
+      const relationText = `${relation.code} ${relation.relationName}`.toLowerCase();
+      return relationText.includes("self") || relationText.includes("employee");
+    });
+
+    return employeeRelation?.code || "";
+  };
   useEffect(() => {
     if (!successMessage) return;
 
@@ -137,13 +250,13 @@ const Insurance = () => {
   }, [successMessage]);
 
   useEffect(() => {
-  if (error && errorRef.current) {
-    errorRef.current.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  }
-}, [error]);
+    if (error && errorRef.current) {
+      errorRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [error]);
 
   useEffect(() => {
     const loadUserDetails = async () => {
@@ -172,6 +285,9 @@ const Insurance = () => {
               profile?.user_Employee_No || ""
             )
           );
+          setEmployeeGender(normalizeGender(profile?.user_Sex));
+          setEmployeeJoiningDate(toDateInputValue(profile?.user_Doj));
+          setIsMaritalStatusUpdated(toBoolean(profile?.user_Mat_Pat_Applicable));
         }
 
         // Normal logged-in flow
@@ -192,6 +308,9 @@ const Insurance = () => {
               profile?.user_Employee_No || ""
             )
           );
+          setEmployeeGender(normalizeGender(profile?.user_Sex));
+          setEmployeeJoiningDate(toDateInputValue(profile?.user_Doj));
+          setIsMaritalStatusUpdated(toBoolean(profile?.user_Mat_Pat_Applicable));
         }
       } catch (error) {
         console.error(
@@ -201,6 +320,9 @@ const Insurance = () => {
 
         setEmployeeName("");
         setEmployeeNumber("");
+        setEmployeeGender("");
+        setEmployeeJoiningDate("");
+        setIsMaritalStatusUpdated(false);
       }
     };
 
@@ -306,6 +428,16 @@ const Insurance = () => {
           }
         });
 
+        if (insuranceType === "INS") {
+          const employeeRelationCode = findEmployeeRelationCode(relations);
+
+          updatedNames[0] = employeeName;
+
+          if (employeeRelationCode) {
+            updatedRelationships[0] = employeeRelationCode;
+          }
+        }
+
         setNomineeNames(updatedNames);
 
         setNomineeDobs(updatedDobs);
@@ -345,7 +477,7 @@ const Insurance = () => {
     };
 
     fetchInsuranceData();
-  }, [insuranceType, userId]);
+  }, [insuranceType, userId, employeeName]);
 
   const handlePrint = () => {
     window.print();
@@ -471,7 +603,89 @@ const Insurance = () => {
       }
     }
 
+    const duplicateLimitedRelations = new Set<string>();
+    const hasParent = relationships.some((relationship) =>
+      ["father", "mother", "parent"].includes(getRelationCategory(relationship))
+    );
+    const hasInlaw = relationships.some((relationship) =>
+      getRelationCategory(relationship) === "inlaw"
+    );
+
+    for (
+      let index = 0;
+      index < nomineeRows.length;
+      index++
+    ) {
+      const relationship =
+        relationships[index].trim();
+
+      const dobValue =
+        nomineeDobs[index].trim();
+
+      const shareValue =
+        percentageShares[index].trim();
+
+      if (dobValue) {
+        const dob =
+          parseDateOnly(dobValue);
+
+        if (!dob) {
+          setError(`Please enter a valid DOB for nominee row ${index + 1}.`);
+          return;
+        }
+
+        if (dob > new Date()) {
+          setError(`Future dates are not allowed for DOB in nominee row ${index + 1}.`);
+          return;
+        }
+      }
+
+      if (
+        shareValue &&
+        !/^\d+(\.\d{1,2})?$/.test(shareValue)
+      ) {
+        setError(`Percentage Share for nominee row ${index + 1} can have only up to 2 digits after decimal point.`);
+        return;
+      }
+
+      const relationCategory = getRelationCategory(relationship);
+
+      if (
+        ["father", "mother", "spouse"].includes(relationCategory)
+      ) {
+        if (duplicateLimitedRelations.has(relationCategory)) {
+          setError("There can not be two mother/father/spouse of same employee.");
+          return;
+        }
+
+        duplicateLimitedRelations.add(relationCategory);
+      }
+    }
+
     if (isHealthInsurance) {
+      if (
+        (hasParent || hasInlaw) &&
+        !hasCompletedOneYearOfService()
+      ) {
+        setError("You can add your Parents or Inlaws as Dependant after one year of service." + GHI_ERR_MESSAGE);
+        return;
+      }
+
+      if (employeeGender === "M" && hasInlaw) {
+        setError("Male Employees cannot add Inlaws as Dependant." + GHI_ERR_MESSAGE);
+        return;
+      }
+
+      if (employeeGender === "F" && hasParent && hasInlaw) {
+        setError("Female Employees can add either parents or Inlaws as dependent." + GHI_ERR_MESSAGE);
+        return;
+      }
+
+      if (employeeGender === "F" && hasInlaw && !isMaritalStatusUpdated) {
+        setError("Female Employees cannot add Inlaws as dependent before updating the marital status. Contact HR to update your marital status.");
+        return;
+      }
+
       for (
         let index = 0;
         index < nomineeRows.length;
@@ -494,47 +708,26 @@ const Insurance = () => {
           continue;
         }
 
-        const todayDate = new Date();
-
-        let age =
-          todayDate.getFullYear() -
-          dob.getFullYear();
-
-        const monthDifference =
-          todayDate.getMonth() -
-          dob.getMonth();
+        const age = getAge(dob);
+        const relationCategory = getRelationCategory(relationship);
 
         if (
-          monthDifference < 0 ||
-          (monthDifference === 0 &&
-            todayDate.getDate() <
-            dob.getDate())
-        ) {
-          age--;
-        }
-
-        if (
-          relationship === "CD" &&
-          age > 18
+          relationCategory === "child" &&
+          age > 25
         ) {
           setError(
-            "Maximum permissible age to add your Child as dependent is 18 years. Please check the DOB of your dependents. Kindly refer Group Health Insurance policy or contact HR."
+            "Maximum permissible age to add your Child as dependent is 25 years." + GHI_ERR_MESSAGE
           );
 
           return;
         }
 
         if (
-          [
-            "FA",
-            "MO",
-            "FAL",
-            "MOL",
-          ].includes(relationship) &&
-          age > 85
+          ["father", "mother", "parent", "inlaw"].includes(relationCategory) &&
+          age > 100
         ) {
           setError(
-            "Maximum permissible age to add your Parents or Inlaws as dependent is 85 years. Please check the DOB of your dependents. Kindly refer Group Health Insurance policy or contact HR."
+            "Maximum permissible age to add your Parents or Inlaws as dependent is 100 years." + GHI_ERR_MESSAGE
           );
 
           return;
@@ -664,7 +857,7 @@ const Insurance = () => {
     value: string
   ) => {
     setError("");
-    if (!/^\d*$/.test(value)) {
+    if (!/^\d*(\.\d{0,2})?$/.test(value)) {
       return;
     }
 
@@ -701,21 +894,21 @@ const Insurance = () => {
     );
   };
 
- const handleNomineeNameChange = (
-  index: number,
-  value: string
-) => {
-  setError("");
+  const handleNomineeNameChange = (
+    index: number,
+    value: string
+  ) => {
+    setError("");
 
-  setNomineeNames((currentNames) =>
-    currentNames.map(
-      (name, nameIndex) =>
-        nameIndex === index
-          ? value
-          : name
-    )
-  );
-};
+    setNomineeNames((currentNames) =>
+      currentNames.map(
+        (name, nameIndex) =>
+          nameIndex === index
+            ? value
+            : name
+      )
+    );
+  };
 
   const handleNomineeDobChange = (
     index: number,
@@ -766,14 +959,14 @@ const Insurance = () => {
         </div>
 
         <div className="insurance-content">
-         {error && (
-  <div
-    ref={errorRef}
-    className="insurance-error-text"
-  >
-    {error}
-  </div>
-)}
+          {error && (
+            <div
+              ref={errorRef}
+              className="insurance-error-text"
+            >
+              {error}
+            </div>
+          )}
 
           <ToastMessage
             show={!!successMessage}
@@ -788,26 +981,26 @@ const Insurance = () => {
             <select
               id="insurance-type"
               value={insuranceType}
-             onChange={(e) => {
-  const value = e.target.value;
+              onChange={(e) => {
+                const value = e.target.value;
 
-  setError("");
-  setSuccessMessage("");
+                setError("");
+                setSuccessMessage("");
 
-  setInsuranceType(value);
+                setInsuranceType(value);
 
-  if (value === "") {
-    setNomineeNames(["", "", "", ""]);
-    setNomineeDobs(["", "", "", ""]);
-    setRelationships(["", "", "", ""]);
-    setPercentageShares(["", "", "", ""]);
-    setReasonForChange("");
-    setAcceptTerms(false);
-    setLastUpdatedOn("");
-    setInitialData("");
-    setRelationshipOptions([]);
-  }
-}}
+                if (value === "") {
+                  setNomineeNames(["", "", "", ""]);
+                  setNomineeDobs(["", "", "", ""]);
+                  setRelationships(["", "", "", ""]);
+                  setPercentageShares(["", "", "", ""]);
+                  setReasonForChange("");
+                  setAcceptTerms(false);
+                  setLastUpdatedOn("");
+                  setInitialData("");
+                  setRelationshipOptions([]);
+                }
+              }}
             >
               <option value="">
                 Please Select
@@ -879,7 +1072,8 @@ const Insurance = () => {
                           ]
                         }
                         disabled={
-                          isFormDisabled
+                          isFormDisabled ||
+                          (isHealthInsurance && index === 0)
                         }
                         onChange={(e) =>
                           handleNomineeNameChange(
@@ -898,6 +1092,7 @@ const Insurance = () => {
                           className="insurance-dob-input"
                           aria-label={`Nominee ${row} date of birth`}
                           value={nomineeDobs[index]}
+                          max={todayInputValue}
                           disabled={isFormDisabled}
                           onChange={(e) =>
                             handleNomineeDobChange(
@@ -943,7 +1138,8 @@ const Insurance = () => {
                         }
                         disabled={
                           isFormDisabled ||
-                          loadingRelations
+                          loadingRelations ||
+                          (isHealthInsurance && index === 0)
                         }
                         onChange={(e) =>
                           handleRelationshipChange(
@@ -981,7 +1177,7 @@ const Insurance = () => {
                     <td>
                       <input
                         type="text"
-                        inputMode="numeric"
+                        inputMode="decimal"
                         aria-label={`Nominee ${row} percentage share`}
                         value={
                           isHealthInsurance
@@ -1075,10 +1271,10 @@ const Insurance = () => {
                 disabled={
                   isFormDisabled
                 }
-               onChange={(e) => {
-  setError("");
-  setReasonForChange(e.target.value);
-}}
+                onChange={(e) => {
+                  setError("");
+                  setReasonForChange(e.target.value);
+                }}
               />
             </div>
 
@@ -1106,10 +1302,10 @@ const Insurance = () => {
                 disabled={
                   isFormDisabled
                 }
-               onChange={(e) => {
-  setError("");
-  setAcceptTerms(e.target.checked);
-}}
+                onChange={(e) => {
+                  setError("");
+                  setAcceptTerms(e.target.checked);
+                }}
               />
             </div>
 

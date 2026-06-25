@@ -25,7 +25,7 @@ const formatApiDate = (date: Date) => {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
 
-  return `${year}-${month}-${day}`;
+  return `${month}-${day}-${year}`;
 };
 
 const getSavedLeaveId = (response: any) => {
@@ -57,7 +57,8 @@ export default function LeaveForm({
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [noOfDays, setNoOfDays] = useState<NoOfDaysApi | null>(null);
   const [, setLoadDays] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loadingLeaveTypes, setLoadingLeaveTypes] = useState(false);
+  const [loadingApprover, setLoadingApprover] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
   // const [reasons, setReasons] = useState<ReasonApi[]>([]);
   // const [loadingReasons] = useState(false);
@@ -73,6 +74,10 @@ export default function LeaveForm({
   const errorRef = useRef<HTMLDivElement | null>(null);
 
   const fileRef = useRef<HTMLInputElement | null>(null);
+  // Tracks the previous Leave Type so we can reset the form only when the user
+  // switches to a different type, while avoiding a reset on the initial API load.
+  const previousLeaveTypeRef = useRef("");
+  const hasInitializedLeaveTypeRef = useRef(false);
   // const [username, setUsername] = useState<string | null>(null);
 
   // useEffect(() => {
@@ -87,7 +92,7 @@ export default function LeaveForm({
       if (!targetUserId) return;
 
       try {
-        setLoading(true);
+        setLoadingLeaveTypes(true);
         const result = await getLeaveTypes(targetUserId);
         if (result.isSuccess && result.data) {
           const cleaned = result.data.map((item: any) => ({
@@ -98,13 +103,17 @@ export default function LeaveForm({
           setLeaveTypes(cleaned);
 
           if (cleaned.length > 0) {
-            setLeaveType(cleaned[0].leaveTypeCode);
+            const defaultLeaveType = cleaned[0].leaveTypeCode;
+
+            setLeaveType(defaultLeaveType);
+            previousLeaveTypeRef.current = defaultLeaveType;
+            hasInitializedLeaveTypeRef.current = true;
           }
         }
       } catch (err) {
         console.error("Leave type fetch failed", err);
       } finally {
-        setLoading(false);
+        setLoadingLeaveTypes(false);
       }
     };
 
@@ -122,7 +131,7 @@ export default function LeaveForm({
       if (!targetUserId) return;
 
       try {
-        setLoading(true);
+        setLoadingApprover(true);
 
         const result = await getApprover(targetUserId);
         if (result.isSuccess && result.data) {
@@ -131,7 +140,7 @@ export default function LeaveForm({
       } catch (err) {
         console.error("Leave approver fetch failed", err);
       } finally {
-        setLoading(false);
+        setLoadingApprover(false);
       }
     };
 
@@ -164,7 +173,7 @@ export default function LeaveForm({
   // }, []);
 
   useEffect(() => {
-    if (!startDate || !endDate) {
+    if (!startDate || !endDate || !leaveType) {
       setNoOfDays(null);
       return;
     }
@@ -174,6 +183,7 @@ export default function LeaveForm({
         const result = await getNoOfDays({
           startDate: formatApiDate(startDate),
           endDate: formatApiDate(endDate),
+          LeaveType: String(leaveType),
           totalHalfDays: (isHalfDayStart ? 0.5 : 0) + (isHalfDayEnd ? 0.5 : 0),
         });
         if (result?.isSuccess && result?.data) {
@@ -186,7 +196,7 @@ export default function LeaveForm({
       }
     };
     loadDays();
-  }, [startDate, endDate, isHalfDayStart, isHalfDayEnd]);
+  }, [startDate, endDate, leaveType, isHalfDayStart, isHalfDayEnd]);
 
   useEffect(() => {
     if (error && errorRef.current) {
@@ -268,6 +278,42 @@ export default function LeaveForm({
     );
   };
   const navigate = useNavigate();
+
+  const clearLeaveTypeDependentFormState = useCallback(() => {
+    setStartDate(null);
+    setEndDate(null);
+    setNoOfDays(null);
+    setLoadDays(false);
+    setCalendarOpen(false);
+    setReason("");
+    // setOtherReason('');
+    setIsHalfDayStart(false);
+    setIsHalfDayEnd(false);
+    setError("");
+    if (fileRef.current) fileRef.current.value = "";
+  }, []);
+
+  const handleLeaveTypeChange = (nextLeaveType: string) => {
+    const previousLeaveType = previousLeaveTypeRef.current;
+
+    if (!hasInitializedLeaveTypeRef.current) {
+      setLeaveType(nextLeaveType);
+      previousLeaveTypeRef.current = nextLeaveType;
+      hasInitializedLeaveTypeRef.current = true;
+      return;
+    }
+
+    if (nextLeaveType === previousLeaveType) {
+      return;
+    }
+
+    // A real Leave Type switch invalidates dates, half-day choices, calculated
+    // days, comments, validation, and attachment state. Keep the new type.
+    clearLeaveTypeDependentFormState();
+    setLeaveType(nextLeaveType);
+    previousLeaveTypeRef.current = nextLeaveType;
+  };
+
   const handleSubmit = async () => {
     setError("");
 
@@ -403,16 +449,12 @@ export default function LeaveForm({
   };
 
   const resetForm = () => {
-    setLeaveType(leaveTypes[0]?.leaveTypeCode || "");
-    setStartDate(null);
-    setEndDate(null);
-    setCalendarOpen(false);
-    setReason("");
-    // setOtherReason('');
-    setIsHalfDayStart(false);
-    setIsHalfDayEnd(false);
-    setError("");
-    if (fileRef.current) fileRef.current.value = "";
+    const defaultLeaveType = leaveTypes[0]?.leaveTypeCode || "";
+
+    setLeaveType(defaultLeaveType);
+    previousLeaveTypeRef.current = defaultLeaveType;
+    hasInitializedLeaveTypeRef.current = Boolean(defaultLeaveType);
+    clearLeaveTypeDependentFormState();
   };
 
   return (
@@ -434,29 +476,33 @@ export default function LeaveForm({
             <label>
               Leave Type <span className="required">*</span>
             </label>
-            {loading && <p>Loading leave types...</p>}
-            <select
-              value={leaveType}
-              disabled={loading}
-              onChange={(e) => setLeaveType(e.target.value)}
-            >
-              {leaveTypes.map((type) => (
-                <option key={type.leaveTypeCode} value={type.leaveTypeCode}>
-                  {type.leaveTypeName}
-                </option>
-              ))}
-            </select>
+            <div className="form-control-wrap">
+              <select
+                value={leaveType}
+                disabled={loadingLeaveTypes}
+                onChange={(e) => handleLeaveTypeChange(e.target.value)}
+              >
+                {loadingLeaveTypes && (
+                  <option value="">Loading leave types...</option>
+                )}
+                {leaveTypes.map((type) => (
+                  <option key={type.leaveTypeCode} value={type.leaveTypeCode}>
+                    {type.leaveTypeName}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="form-row">
             <label>
               Approver Name <span className="required">*</span>
             </label>
-            {loading ? (
-              <p>Loading...</p>
-            ) : (
-              <strong>{approver?.managerName || "N/A"}</strong>
-            )}
+            <strong className="field-value" aria-live="polite">
+              {loadingApprover
+                ? "Loading..."
+                : approver?.managerName || "N/A"}
+            </strong>
           </div>
 
           <div className="form-row">
@@ -464,11 +510,24 @@ export default function LeaveForm({
               Start Date <span className="required">*</span>
             </label>
             <div className="date-with-half">
-              <input
-                readOnly
+              <DatePicker
+                selected={startDate}
+                onChange={handleDateChange}
+                startDate={startDate}
+                endDate={endDate}
+                selectsRange
+                open={calendarOpen}
+                shouldCloseOnSelect={false}
+                onInputClick={() => setCalendarOpen(true)}
+                onClickOutside={() => setCalendarOpen(false)}
+                dayClassName={getDayClass}
+                renderDayContents={renderDay}
                 value={startDate ? formatLocalDate(startDate) : ""}
-                placeholder="Select start date"
-                onClick={() => setCalendarOpen(true)}
+                placeholderText="Select start date"
+                customInput={<input readOnly placeholder="Select start date" />}
+                wrapperClassName="leave-form-datepicker-input"
+                popperPlacement="bottom-start"
+                popperClassName="leave-form-datepicker-popper"
               />
               <label className="half-checkbox">
                 <input
@@ -608,21 +667,6 @@ export default function LeaveForm({
             </div>
           </div>
         </div>
-
-        <DatePicker
-          selected={startDate}
-          onChange={handleDateChange}
-          startDate={startDate}
-          endDate={endDate}
-          selectsRange
-          open={calendarOpen}
-          shouldCloseOnSelect={false}
-          onClickOutside={() => setCalendarOpen(false)}
-          dayClassName={getDayClass}
-          renderDayContents={renderDay}
-          customInput={<div style={{ display: "none" }} />}
-          popperPlacement="bottom-start"
-        />
 
         <div className="form-footer">
           <button

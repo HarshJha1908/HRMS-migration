@@ -3,13 +3,12 @@ import { Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import AuthGate from "./auth/AuthGate";
 import { UserProvider } from "./context/UserContext";
-import ApplyLeaveForOthers from "./pages/ApplyLeaveForOthers";
-import SummaryReport from "./components/SummaryReport";
 // import { getLoginUser } from './services/apiService';
 // import { getLoginUser } from './services/apiService';
 // import { useEffect } from 'react';
 
 const HomePage = lazy(() => import("./pages/HomePage"));
+const LeaveToolHome = lazy(() => import("./pages/LeaveToolHome"));
 const JobVacancy = lazy(() => import("./pages/JobVacancy"));
 const LeaveBalance = lazy(() => import("./components/LeaveBalance"));
 const LockedScreen = lazy(() => import("./components/LockedScreen"));
@@ -30,8 +29,9 @@ const SingleSearchCreateException = lazy(() => import("./pages/SingleSearchCreat
 const ExitLeaveAdjustment = lazy(() => import("./pages/ExitLeaveAdjustment"));
 const MyProfile = lazy(() => import("./components/Myprofile"));
 const ViewDocuments = lazy(() => import("./pages/ViewDocuments"));
-
 const SpecialLeaveEntry = lazy(() => import("./pages/SpecialLeaveEntry"));
+const ApplyLeaveForOthers = lazy(() => import("./pages/ApplyLeaveForOthers"));
+const SummaryReport = lazy(() => import("./components/SummaryReport"));
 
 export default function App() {
 
@@ -56,6 +56,7 @@ export default function App() {
         <Routes>
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
+          <Route path="/leave-tool-home" element={<LeaveToolHome />} />
           <Route path="/apply-leave" element={<ApplyLeave />} />
           <Route path="/leave-details" element={<LeaveDetails />} />
           <Route path="/leave-balance" element={<LeaveBalance showDashboardCards={true} />} />
@@ -79,7 +80,7 @@ export default function App() {
         <Route path="/documents/:documentType" element={<ViewDocuments />} />
         <Route path="/documents" element={<ViewDocuments />} />
         <Route path="/locked" element={<LockedScreen />} />
-        <Route path="/apply-leave-for-others/:employeeId" element={<ApplyLeaveForOthers />} />
+        <Route path="/apply-leave-for-others" element={<ApplyLeaveForOthers />} />
         <Route path="/summary-report" element={<SummaryReport />} />
         </Route>
         </Routes>

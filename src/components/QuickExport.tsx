@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMemo, useState, useEffect } from "react";
 import "./QuickExport.css";
-import "./MyLeaveDetail.css";
  
 import Pagination from "./Pagination";
  
@@ -19,7 +18,7 @@ import type {
   EmployeeLeaveBalanceReportType
 } from "../types/apiTypes";
  
-import { CsvExportUtil } from "../utils/Utils";
+import { CsvExportUtil } from "../utils/CsvExportUtil";
  
 type QuickReportType = "" | "leave-details" | "leave-balance" | "Emergency Contacts(All)" | "Insurance Report(All)";
  
@@ -587,9 +586,8 @@ const QuickExport = () => {
  
       {tableData.length > 0 && (
         <>
-          <div className="leave-detail-card">
-            <div className="leave-table-wrapper">
-              <table className="leave-table">
+          <div className="quick-export-table">
+              <table>
                 <thead>
                   <tr>
                     {Object.keys(
@@ -631,7 +629,6 @@ const QuickExport = () => {
                   )}
                 </tbody>
               </table>
-            </div>
           </div>
  
           {totalPages > 1 && (

@@ -1,0 +1,23 @@
+.leave-tool-home .leave-tool-dashboard-section {
+  padding: 34px 20px 70px;
+}
+
+.leave-tool-home .leave-tool-dashboard-container {
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+.leave-tool-home .lb-page {
+  padding: 0;
+  background: transparent;
+}
+
+.leave-tool-home .dashboard-main-card {
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .leave-tool-home .leave-tool-dashboard-section {
+    padding: 30px 15px 64px;
+  }
+}

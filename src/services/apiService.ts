@@ -82,11 +82,13 @@ export const getLeaveStatusCodes = (): Promise<LeaveStatusResponse> => {
 export const getNoOfDays = (data: {
   startDate: string;
   endDate: string;
+  LeaveType: string;
   totalHalfDays: number;
 }) => {
   const params = new URLSearchParams({
     startDate: data.startDate,
     endDate: data.endDate,
+    LeaveType: String(data.LeaveType),
     Totalhalfdays: String(data.totalHalfDays),
   });
 
@@ -1242,6 +1244,25 @@ export interface LeaveDetailsSummaryReportApi {
   reason: string;
 }
 
+export interface EmergencyContactSummaryReportApi {
+  empId?: number | string | null;
+  empName?: string | null;
+  employeeId?: number | string | null;
+  employeeName?: string | null;
+  contactName?: string | null;
+  contactName1?: string | null;
+  contactNoName1?: string | null;
+  contactNo1?: string | null;
+  contactNumber1?: string | null;
+  contactName2?: string | null;
+  contactNoName2?: string | null;
+  contactNo2?: string | null;
+  contactNumber2?: string | null;
+  teamName?: string | null;
+  managerName?: string | null;
+  headName?: string | null;
+}
+
 export interface LeaveBalanceSummaryReportResponse {
   statusCode: number;
   isSuccess: boolean;
@@ -1272,6 +1293,36 @@ export const getLeaveBalanceSummaryReport = async (
 
   if (Array.isArray(response?.data)) {
     return response.data;
+  }
+
+  return [];
+};
+
+export const getEmergencyContactSummaryReport = async (
+  teamHeadId: number | string,
+  teamNameId: number | string,
+  teamMemberId: string | number
+): Promise<EmergencyContactSummaryReportApi[]> => {
+  const params = new URLSearchParams({
+    THNameId: String(teamHeadId),
+    TeamNameId: String(teamNameId),
+    TeamMemberNameId: String(teamMemberId || -1)
+  });
+
+  const res = await apiClient(
+    `/api/Report/GetEmergencyContactReport?${params.toString()}`
+  );
+
+  if (Array.isArray(res)) {
+    return res;
+  }
+
+  if (Array.isArray(res?.data)) {
+    return res.data;
+  }
+
+  if (Array.isArray(res?.employeeEmergencyContactDetails)) {
+    return res.employeeEmergencyContactDetails;
   }
 
   return [];

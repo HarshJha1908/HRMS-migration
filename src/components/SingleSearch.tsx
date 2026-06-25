@@ -212,7 +212,7 @@ const SingleSearch = () => {
                     <button
                       type="button"
                       onClick={() =>
-                        navigate(`/apply-leave-for-others/${emp.user_Employee_No}`, {
+                        navigate("/apply-leave-for-others", {
                           state: {
                             employee: emp,
                             empId: String(emp.user_Employee_No || "").trim(),

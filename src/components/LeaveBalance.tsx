@@ -8,6 +8,7 @@ import "./LeaveBalance.css";
 type LeaveBalanceProps = {
   userId?: string;
   showDashboardCards?: boolean;
+  showLeaveBalanceDetails?: boolean;
   refreshKey?: number;
 };
 
@@ -66,6 +67,7 @@ const renderLine = (
 export default function LeaveBalance({
   userId,
   showDashboardCards = false,
+  showLeaveBalanceDetails = true,
   refreshKey = 0,
 }: LeaveBalanceProps) {
   const { user } = useAuth();
@@ -167,20 +169,12 @@ export default function LeaveBalance({
           leaveBalance.cL_Submitted,
           leaveBalance.cL_Balance,
         )}
-        {leaveBalance.isPTLapplicable &&
-          renderLine(
-            "Paternity Leave (PTL)",
-            leaveBalance.ptL_Total,
-            leaveBalance.ptL_Submitted,
-            leaveBalance.ptL_Balance,
-          )}
-        {leaveBalance.isMTLapplicable &&
-          renderLine(
-            "Maternity Leave (MTL)",
-            leaveBalance.mtL_Total,
-            leaveBalance.mtL_Submitted,
-            leaveBalance.mtL_Balance,
-          )}
+        {renderLine(
+          "Paternity Leave (PTL)",
+          leaveBalance.ptL_Total,
+          leaveBalance.ptL_Submitted,
+          leaveBalance.ptL_Balance,
+        )}
         {renderLine(
           "WFH Exception (WFHX)",
           leaveBalance.wfhX_Total,
@@ -196,19 +190,12 @@ export default function LeaveBalance({
 
     return (
       <div>
-        {isAssociate
-          ? renderLine(
-              "Associate Special Leave (ASL)",
-              leaveBalance.asL_Total,
-              leaveBalance.asL_Submitted,
-              leaveBalance.asL_Balance,
-            )
-          : renderLine(
-              "Privilege Leave(PL)",
-              leaveBalance.pL_Total,
-              leaveBalance.pL_Submitted,
-              leaveBalance.pL_Balance,
-            )}
+        {renderLine(
+          "Privilege Leave(PL)",
+          leaveBalance.pL_Total,
+          leaveBalance.pL_Submitted,
+          leaveBalance.pL_Balance,
+        )}
         {renderLine(
           "Sick Leave (SL)",
           leaveBalance.sL_Total,
@@ -217,7 +204,7 @@ export default function LeaveBalance({
         )}
       </div>
     );
-  }, [leaveBalance, isAssociate]);
+  }, [leaveBalance]);
 
   return (
     <section className="lb-page">
@@ -284,29 +271,43 @@ export default function LeaveBalance({
         </div>
       )}
 
+      {showDashboardCards && !showLeaveBalanceDetails && loading && (
+        <div className="lb-card">
+          <p className="lb-loading">Loading leave dashboard...</p>
+        </div>
+      )}
+
+      {showDashboardCards && !showLeaveBalanceDetails && !loading && error && (
+        <div className="lb-card">
+          <p className="lb-error">{error}</p>
+        </div>
+      )}
+
       {/* Leave Balance Below */}
-      <div className="lb-card">
-        <div className="lb-title-wrap">
-          <h3 className="lb-title">Leave Balance</h3>
-        </div>
-
-        <div className="lb-header">
-          <span className="red">Total</span> |
-          <span className="blue"> Availed or Submitted</span> /
-          <span className="red"> Balance</span>
-        </div>
-
-        {loading && <p>Loading leave balance...</p>}
-        {!loading && error && <p className="red">{error}</p>}
-
-        {!loading && !error && leaveBalance && (
-          <div className="lb-grid">
-            {firstColumn}
-            {secondColumn}
-            {thirdColumn}
+      {showLeaveBalanceDetails && (
+        <div className="lb-card">
+          <div className="lb-title-wrap">
+            <h3 className="lb-title">Leave Balance</h3>
           </div>
-        )}
-      </div>
+
+          <div className="lb-header">
+            <span className="red">Total</span> |
+            <span className="blue"> Availed or Submitted</span> /
+            <span className="red"> Balance</span>
+          </div>
+
+          {loading && <p>Loading leave balance...</p>}
+          {!loading && error && <p className="red">{error}</p>}
+
+          {!loading && !error && leaveBalance && (
+            <div className="lb-grid">
+              {firstColumn}
+              {secondColumn}
+              {thirdColumn}
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

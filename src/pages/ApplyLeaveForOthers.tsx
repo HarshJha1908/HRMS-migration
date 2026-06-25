@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import LeaveBalance from "../components/LeaveBalance";
 import LeaveForm from "../components/LeaveForm";
 import ToastMessage from "../components/ToastMessage";
@@ -15,7 +15,6 @@ type EmployeeRouteState = {
 };
 
 export default function ApplyLeaveForOthers() {
-  const { employeeId } = useParams<{ employeeId: string }>();
   const location = useLocation();
 
   const routeState = (location.state ?? {}) as {
@@ -48,12 +47,9 @@ export default function ApplyLeaveForOthers() {
   const resolvedEmpId = useMemo(
     () =>
       String(
-        routeState.empId ||
-          routeState.employee?.user_Employee_No ||
-          employeeId ||
-          "",
+        routeState.empId || routeState.employee?.user_Employee_No || "",
       ).trim(),
-    [employeeId, routeState.empId, routeState.employee?.user_Employee_No],
+    [routeState.empId, routeState.employee?.user_Employee_No],
   );
 
   useEffect(() => {
