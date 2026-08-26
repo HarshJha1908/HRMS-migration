@@ -20,6 +20,7 @@ import { useUser } from "../context/UserContext";
 import {useNavigate, useSearchParams } from "react-router-dom";
 import ToastMessage from "../components/ToastMessage";
 import Pagination from "../components/Pagination";
+import { Skeleton, TableSkeleton } from "../components/Skeletons";
 
 const DEFAULT_LEAVE_TYPES: SpecialLeaveTypeApi[] = [
   { leaveTypeCode: "LWP", leaveTypeName: "Leave Without Pay" },
@@ -460,13 +461,6 @@ const handleRemoveSelected = () => {
       isHalfStartDay: false,
       isHalfEndDay: false
     }));
-    console.info("Special leave assign payload type snapshot", {
-      assignLeaveTypeCode,
-      resolvedLeaveTypeCode,
-      resolvedLeaveTypeName,
-      resolvedLeaveTypeId
-    });
-
     try {
       setIsAssignSaving(true);
       const response = await addBulkSpecialLeaveRequest(payload);
@@ -685,7 +679,11 @@ const handleRemoveSelected = () => {
             </select>
           </div>
 
-          {assignLoading && <div className="special-leave-error">Loading assign data...</div>}
+          {assignLoading && (
+            <div className="special-leave-error">
+              <Skeleton width="240px" height="16px" />
+            </div>
+          )}
           {error && (
             <div className="special-leave-error">{error}</div>
           )}
@@ -702,9 +700,7 @@ const handleRemoveSelected = () => {
               </thead>
               <tbody>
                 {assignLoading || teamMembersLoading ? (
-                  <tr>
-                    <td colSpan={5}>Loading...</td>
-                  </tr>
+                  <TableSkeleton columns={5} rows={7} />
                 ) : assignMemberRows.length === 0 ? (
                   <tr>
                     <td colSpan={5}>No employees found for selected team.</td>
@@ -824,9 +820,7 @@ const handleRemoveSelected = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={8}>Loading...</td>
-                </tr>
+                <TableSkeleton columns={8} rows={10} />
               ) : normalizedRows.length === 0 ? (
                 <tr>
                   <td colSpan={8}>No records found.</td>

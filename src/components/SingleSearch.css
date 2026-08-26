@@ -126,10 +126,13 @@
   background: #fafafa;
 }
 
-.team {
-  max-width: 350px;
+.single-search-table td.team {
+  width: 40%;
+  min-width: 240px;
+  max-width: 520px;
   white-space: normal;
-  word-break: break-word;
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .action {

@@ -1,6 +1,7 @@
 import React from "react";
 import './HolidayList.css';
 import { useHolidays } from "../hooks/useHolidays";
+import { TableSkeleton } from "./Skeletons";
 
 const HolidayList: React.FC = () => {
   const { holidays, loading, error } = useHolidays();
@@ -23,10 +24,9 @@ const HolidayList: React.FC = () => {
   <div className="holidayHeader">
     <h2 className="holidayTitle">Holiday List</h2>
   </div>
-        {loading && <p className="status">Loading...</p>}
-        {error && <p className="error">{error}</p>}
+        {!loading && error && <p className="error">{error}</p>}
 
-        {!loading && !error && (
+        {!error && (
   <div className="holidayTableWrapper">
     <table className="holidayTable">
             <thead>
@@ -36,7 +36,13 @@ const HolidayList: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {holidays.map((holiday, index) => {
+              {loading ? (
+                <TableSkeleton columns={2} rows={8} />
+              ) : holidays.length === 0 ? (
+                <tr>
+                  <td colSpan={2}>No holidays found.</td>
+                </tr>
+              ) : holidays.map((holiday, index) => {
   const isPastHoliday =
     new Date(holiday.date).getTime() <
     new Date().setHours(0, 0, 0, 0);

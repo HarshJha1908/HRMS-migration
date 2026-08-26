@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "./ViewLeave.css";
@@ -14,11 +14,19 @@ import { useUser } from "../context/UserContext";
 import { useAuth } from "../auth/useAuth";
 import { formatLocalDate } from "../utils/Utils";
 import PageLoader from "./PageLoader";
+import { ProfileSkeleton } from "./Skeletons";
 // import ToastMessage from "./ToastMessage";
 
 type ViewLeaveDetailsProps = {
   onDataLoaded?: (details: LeaveDetails | null) => void;
   onLeaveStatusChanged?: () => void;
+};
+
+const EMAIL_LINK_LEAVE_ID_KEY = "hrms.leaveView.emailLinkLeaveId";
+
+const normalizeLeaveId = (value: unknown) => {
+  const normalized = String(value ?? "").trim();
+  return normalized || "";
 };
 
 export default function ViewLeaveDetails({
@@ -27,12 +35,45 @@ export default function ViewLeaveDetails({
 }: ViewLeaveDetailsProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const leaveId = location.state?.leaveId;
+  const {
+    leaveId: leaveIdFromRouteParam,
+    adId: adIdFromRouteParam
+  } = useParams<{ leaveId?: string; adId?: string }>();
+  const [searchParams] = useSearchParams();
+  const leaveIdFromPath = normalizeLeaveId(leaveIdFromRouteParam);
+  const leaveIdFromRouteState = normalizeLeaveId(location.state?.leaveId);
+  const leaveIdFromQuery = useMemo(
+    () =>
+      normalizeLeaveId(
+        searchParams.get("leaveId") ||
+        searchParams.get("LeaveId") ||
+        searchParams.get("leaveID")
+      ),
+    [searchParams]
+  );
+  const [resolvedLeaveId, setResolvedLeaveId] = useState(() => {
+    if (leaveIdFromPath) {
+      return leaveIdFromPath;
+    }
+
+    if (leaveIdFromRouteState) {
+      return leaveIdFromRouteState;
+    }
+
+    if (leaveIdFromQuery) {
+      return leaveIdFromQuery;
+    }
+
+    return normalizeLeaveId(sessionStorage.getItem(EMAIL_LINK_LEAVE_ID_KEY));
+  });
   const { isManager } = useUser();
   const { user } = useAuth();
   const currentUserAdId = user?.loginUserAdID || "";
   const viewedUserId =
-    location.state?.userId || "";
+    normalizeLeaveId(adIdFromRouteParam) ||
+    location.state?.userId ||
+    "";
+  const loginADIdForDetails = viewedUserId || currentUserAdId;
   const isOwnLeave =
     currentUserAdId.trim().toLowerCase() ===
     viewedUserId.trim().toLowerCase();
@@ -53,15 +94,60 @@ export default function ViewLeaveDetails({
   const [rejectValidationActive, setRejectValidationActive] = useState(false);
 
   useEffect(() => {
+    if (leaveIdFromPath) {
+      sessionStorage.removeItem(EMAIL_LINK_LEAVE_ID_KEY);
+      setResolvedLeaveId(leaveIdFromPath);
+      return;
+    }
+
+    if (leaveIdFromRouteState) {
+      sessionStorage.removeItem(EMAIL_LINK_LEAVE_ID_KEY);
+      setResolvedLeaveId(leaveIdFromRouteState);
+      return;
+    }
+
+    if (leaveIdFromQuery) {
+      sessionStorage.setItem(EMAIL_LINK_LEAVE_ID_KEY, leaveIdFromQuery);
+      setResolvedLeaveId(leaveIdFromQuery);
+      navigate(location.pathname, {
+        replace: true,
+        state: location.state
+      });
+      return;
+    }
+
+    const storedLeaveId = normalizeLeaveId(
+      sessionStorage.getItem(EMAIL_LINK_LEAVE_ID_KEY)
+    );
+
+    if (storedLeaveId) {
+      setResolvedLeaveId(storedLeaveId);
+      sessionStorage.removeItem(EMAIL_LINK_LEAVE_ID_KEY);
+      return;
+    }
+
+    setResolvedLeaveId("");
+  }, [
+    leaveIdFromPath,
+    leaveIdFromQuery,
+    leaveIdFromRouteState,
+    location.pathname,
+    location.state,
+    navigate
+  ]);
+
+  useEffect(() => {
     const loadData = async () => {
       try {
 
         setLoading(true);
 
-        if (!leaveId) return;
+        if (!resolvedLeaveId || !loginADIdForDetails) return;
 
-        const result = await getViewLeaveDetailsByLeaveId(leaveId);
-        console.log("Leave details fetched:", result);
+        const result = await getViewLeaveDetailsByLeaveId(
+          resolvedLeaveId,
+          loginADIdForDetails
+        );
         setData(result.data);
         setRemarks(result?.data?.approverRemarks || "");
         onDataLoaded?.((result?.data as LeaveDetails) || null);
@@ -69,7 +155,7 @@ export default function ViewLeaveDetails({
         // Fetch attachment
         try {
 
-          const attachmentData = await getLeaveAttachment(leaveId);
+          const attachmentData = await getLeaveAttachment(resolvedLeaveId);
 
           if (attachmentData && attachmentData.blob && attachmentData.blob.size > 0) {
 
@@ -82,12 +168,10 @@ export default function ViewLeaveDetails({
             setAttachmentFileName(attachmentData.filename);
           }
         } catch (attachmentError) {
-          console.error("Attachment fetch failed:", attachmentError);
           setAttachmentFile(null);
           setAttachmentFileName("");
         }
       } catch (error) {
-        console.error(error);
         onDataLoaded?.(null);
       } finally {
         setLoading(false);
@@ -95,7 +179,7 @@ export default function ViewLeaveDetails({
     };
 
     loadData();
-  }, [leaveId, onDataLoaded]);
+  }, [resolvedLeaveId, loginADIdForDetails, onDataLoaded]);
 
   useEffect(() => {
     if (!attachmentFile) {
@@ -142,7 +226,7 @@ export default function ViewLeaveDetails({
   const handleManagerAction = async (nextStatus: "A" | "R") => {
     setErrorMessage("");
     setSuccessMessage("");
-    if (!leaveId) {
+    if (!resolvedLeaveId) {
       setErrorMessage("Leave ID is missing.");
       return;
     }
@@ -158,7 +242,7 @@ export default function ViewLeaveDetails({
     try {
       setActionLoading(true);
       const response = await savePendingLeaveRequestByOneLeaveId({
-        leaveId,
+        leaveId: resolvedLeaveId,
         status: nextStatus,
         remarks: trimmedRemarks
       });
@@ -190,7 +274,6 @@ export default function ViewLeaveDetails({
         });
       }, 700);
     } catch (error) {
-      console.error(error);
       const message =
         error instanceof Error && error.message
           ? error.message
@@ -259,7 +342,15 @@ export default function ViewLeaveDetails({
   //   return "";
   // };
 
-  if (loading) return <p>Loading...</p>;
+  if (loading) {
+    return (
+      <section className="view-leave-page">
+        <div className="details-wrapper">
+          <ProfileSkeleton />
+        </div>
+      </section>
+    );
+  }
   if (!data) return <p>No data found.</p>;
 
   return (

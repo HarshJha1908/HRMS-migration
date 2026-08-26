@@ -3,13 +3,14 @@ import { Routes, Route } from 'react-router-dom';
 import MainLayout from './layouts/MainLayout';
 import AuthGate from "./auth/AuthGate";
 import { UserProvider } from "./context/UserContext";
+import { PageSkeleton } from "./components/Skeletons";
 // import { getLoginUser } from './services/apiService';
 // import { getLoginUser } from './services/apiService';
 // import { useEffect } from 'react';
 
 const HomePage = lazy(() => import("./pages/HomePage"));
 const LeaveToolHome = lazy(() => import("./pages/LeaveToolHome"));
-const JobVacancy = lazy(() => import("./pages/JobVacancy"));
+
 const LeaveBalance = lazy(() => import("./components/LeaveBalance"));
 const LockedScreen = lazy(() => import("./components/LockedScreen"));
 const ApplyLeave = lazy(() => import("./pages/ApplyLeave"));
@@ -50,7 +51,7 @@ export default function App() {
 
 // }, []);
   return (
-    <Suspense fallback={<div style={{ padding: "12px" }}>Loading...</div>}>
+    <Suspense fallback={<PageSkeleton />}>
       <AuthGate>
         <UserProvider>
         <Routes>
@@ -66,6 +67,8 @@ export default function App() {
           <Route path="/team-leave-details" element={<TeamLeaveDetails />} />
           <Route path="/holiday-list" element={<HolidayList />} />
           <Route path="/leave-view" element={<EmployeeLeaveDetails />} />
+          <Route path="/leave-view/:leaveId" element={<EmployeeLeaveDetails />} />
+          <Route path="/leave-view/:leaveId/:adId" element={<EmployeeLeaveDetails />} />
           <Route path="/insurance" element={<Insurance />} />
           <Route path="*" element={<h1>404 - Not Found</h1>} />
           <Route path="/download-center" element={<DownLoadCenter />} />
@@ -75,7 +78,7 @@ export default function App() {
           <Route path="/single-search/create-exception" element={<SingleSearchCreateException />} />
           <Route path="/single-search/exit-leave-adjustment" element={<ExitLeaveAdjustment />} />
           <Route path="/my-profile" element={<MyProfile />} />
-        <Route path="/job-vacancy" element={<JobVacancy />} />
+        
         <Route path="/special-leave-entry" element={<SpecialLeaveEntry />} />
         <Route path="/documents/:documentType" element={<ViewDocuments />} />
         <Route path="/documents" element={<ViewDocuments />} />

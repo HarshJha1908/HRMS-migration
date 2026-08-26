@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 import PageLoader from "../components/PageLoader";
 import ToastMessage from "../components/ToastMessage";
+import { TableSkeleton } from "../components/Skeletons";
 
 type PendingApprovalApiItem = {
   leaveId: string;
@@ -47,13 +48,14 @@ export default function PendingApproval() {
   const location = useLocation();
   const [rows, setRows] = useState<PendingRow[]>([]);
   const [nameToAdId, setNameToAdId] = useState<Map<string, string>>(new Map());
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [rejectValidationActive, setRejectValidationActive] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   const userId = user?.loginUserAdID || ""
+  //const userId = "IN08EC"
   const normalize = (value: string | null | undefined) => (value || "").trim();
   const normalizeNameKey = (value: string | null | undefined) => normalize(value).toLowerCase();
   const pickUserId = (item: PendingApprovalApiItem) =>
@@ -213,7 +215,6 @@ export default function PendingApproval() {
       setError("");
 
     } catch (err) {
-      console.error(err);
       setError("Something went wrong");
 
       // ❗ Rollback if API fails
@@ -308,9 +309,7 @@ export default function PendingApproval() {
 
                 <tbody>
                   {loading ? (
-                    <tr>
-                      <td colSpan={9}>Loading...</td>
-                    </tr>
+                    <TableSkeleton columns={9} rows={6} />
                   ) : rows.length === 0 ? (
                     <tr>
                       <td colSpan={9}>No Records Found</td>

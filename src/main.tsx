@@ -13,9 +13,7 @@ const root = ReactDOM.createRoot(document.getElementById('root')!);
 // Initialize MSAL (handle redirect promise, set active account) BEFORE
 // rendering the provider so child components see a ready instance.
 initializeMsal()
-  .catch((err) => {
-    // eslint-disable-next-line no-console
-    console.error('MSAL initialization failed', err);
+  .catch(() => {
   })
   .finally(() => {
     root.render(

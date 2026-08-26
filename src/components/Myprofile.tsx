@@ -6,6 +6,7 @@ import {
     updateEmergencyContactDetails
 } from "../services/apiService";
 import { useAuth } from "../auth/useAuth";
+import { ProfileSkeleton, Skeleton } from "./Skeletons";
 
 type EmployeeSearchItem = {
     user_Employee_No?: string | number;
@@ -226,7 +227,6 @@ setInitialContactForm(formData);
 
 
             catch (err) {
-                console.error(err);
                 setError("Failed to load profile details.");
             } finally {
                 setLoading(false);
@@ -355,7 +355,24 @@ setInitialContactForm(formData);
     };
 
     if (loading) {
-        return <p>Loading profile details...</p>;
+        return (
+            <section className="my-profile-page">
+                <ProfileSkeleton />
+                <div className="ssd-panel">
+                    <div className="skeleton-panel-title">
+                        <Skeleton width="240px" height="30px" />
+                    </div>
+                    <div className="my-profile-emergency-grid">
+                        {Array.from({ length: 4 }, (_, index) => (
+                            <div className="my-profile-emergency-field" key={index}>
+                                <Skeleton width="52%" height="14px" />
+                                <Skeleton width="100%" height="38px" />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
     }
 
     return (

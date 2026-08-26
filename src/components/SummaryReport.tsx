@@ -66,6 +66,7 @@ const SummaryReport = () => {
         useState("");
 
     const currentUserId = String(user?.loginUserAdID || "").trim();
+    //const currentUserId = "IN08EC";    // Hardcoded for testing purposes, replace with actual user ID in production
 
     const getStatusClass = (status: string) => {
         const normalized = String(status || "").trim().toLowerCase();
@@ -189,7 +190,6 @@ const SummaryReport = () => {
                     
                     
                 );
-            console.log("Team Head API Response", data);
             setTeamHeads(data);
 
             if (data.length > 0) {
@@ -206,7 +206,6 @@ const SummaryReport = () => {
                 );
             }
         } catch (error) {
-            console.error(error);
         }
     };
     const loadTeamNames = async (
@@ -226,13 +225,11 @@ const SummaryReport = () => {
             setTeamMembers([]);
             setSelectedTeamMember("");
         } catch (error) {
-            console.error(error);
         }
     };
     const loadTeamMembers = async (
         teamId: number | string
     ) => {
-        console.log("Loading members for team:", teamId);
         try {
             const data =
                 await getSummaryReportTeamMemberName(
@@ -247,15 +244,10 @@ const SummaryReport = () => {
                     employeeNo !== "-1";
             });
 
-            console.log("Members API Response:", members);
             setTeamMembers(members);
 
             setSelectedTeamMember("");
         } catch (error) {
-            console.error(
-                "Failed to load team members",
-                error
-            );
             setTeamMembers([]);
             setSelectedTeamMember("");
         }
@@ -342,7 +334,6 @@ const SummaryReport = () => {
                 }
             }
         } catch (error) {
-            console.error(error);
             setShowResult(false);
             setMessage(
                 error instanceof Error
@@ -456,7 +447,6 @@ const SummaryReport = () => {
                 );
             }
         } catch (error) {
-            console.error(error);
             setMessage(
                 error instanceof Error
                     ? error.message

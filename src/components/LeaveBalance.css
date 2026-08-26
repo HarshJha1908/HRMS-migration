@@ -111,6 +111,10 @@ body,
   cursor: pointer;
 }
 
+.lb-bracket-value {
+  margin-left: 4px;
+}
+
 .custom-tooltip {
   position: absolute;
   bottom: 140%;
@@ -209,6 +213,7 @@ body,
 
   border-radius: 8px;
   border: 1px solid #d6dbe0;
+  cursor: pointer;
 
   display: flex;
   flex-direction: column;
@@ -218,6 +223,7 @@ body,
 
   box-shadow: none;
 
+  font: inherit;
   transition: all 0.2s ease;
 }
 

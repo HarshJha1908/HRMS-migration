@@ -12,6 +12,7 @@ import type { LeaveDetailProps } from "../types/props";
 import { useAuth } from "../auth/useAuth";
 import ToastMessage from "./ToastMessage";
 import PageLoader from "./PageLoader";
+import { TableSkeleton } from "./Skeletons";
 
 const toStatusKey = (value?: string | null) => {
   const normalized = String(value || "").trim().toLowerCase();
@@ -97,7 +98,6 @@ export default function MyLeaveDetail({
 
         setData(filteredRows);
       } catch (err) {
-        console.error(err);
         setError("Failed to load leave details.");
       } finally {
         setLoading(false);
@@ -195,8 +195,6 @@ const confirmCancelLeave = async () => {
     onLeaveStatusChanged?.();
     setSuccessMessage("Leave cancelled successfully.");
   } catch (error) {
-    console.error(error);
-
     setShowCancelModal(false);
 
     setError("Failed to cancel leave.");
@@ -246,13 +244,11 @@ const confirmCancelLeave = async () => {
           />
         )}
 
-        {loading && <p>Loading...</p>}
-
-        {error && (
+        {!loading && error && (
           <p className="error-text">{error}</p>
         )}
 
-        {!loading && !error && (
+        {!error && (
           <div className="leave-table-wrapper">
             <table className="leave-table">
               <thead>
@@ -269,7 +265,9 @@ const confirmCancelLeave = async () => {
               </thead>
 
               <tbody>
-                {displayData.length === 0 ? (
+                {loading ? (
+                  <TableSkeleton columns={8} rows={showLatestOnly ? 2 : 7} />
+                ) : displayData.length === 0 ? (
                   <tr>
                     <td colSpan={8}>
                       No leave records found.

@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
 import { useUser } from "../context/UserContext";
 import { getLeaveBalance } from "../services/apiService";
 import type { LeaveBalanceApiData } from "../types/apiTypes";
 import "./LeaveBalance.css";
+import { DashboardSkeleton, LeaveBalanceSkeleton } from "./Skeletons";
 
 type LeaveBalanceProps = {
   userId?: string;
@@ -36,7 +38,7 @@ const renderLine = (
   balance: string | null | undefined,
 ) => (
   <p>
-    {label}:
+    {label} :{" "}
     <span className="tooltip-item">
       {renderValue(total, "blue")}
 
@@ -45,7 +47,7 @@ const renderLine = (
       </span>
     </span>
     {" ["}
-    <span className="tooltip-item">
+    <span className="tooltip-item lb-bracket-value">
       {renderValue(submitted, "blue")}
 
       <span className="custom-tooltip">
@@ -60,7 +62,7 @@ const renderLine = (
         Balance {label.split("(")[1]?.replace(")", "")}
       </span>
     </span>
-    ]
+    {" ]"}
   </p>
 );
 
@@ -70,6 +72,7 @@ export default function LeaveBalance({
   showLeaveBalanceDetails = true,
   refreshKey = 0,
 }: LeaveBalanceProps) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { userInfo } = useUser();
   const [leaveBalance, setLeaveBalance] = useState<LeaveBalanceApiData | null>(
@@ -77,6 +80,12 @@ export default function LeaveBalance({
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const openLeaveHistory = (leaveTypeCode: string) => {
+    navigate("/leave-details", {
+      state: { leaveTypeCode },
+    });
+  };
 
   // Helper function to check if employee is an associate (ACT code)
   const isAssociate = useMemo(() => {
@@ -217,32 +226,48 @@ export default function LeaveBalance({
 
           <div className="leave-dashboard-wrapper">
             <div className="dashboard-cards">
-              <div className="dashboard-card wfh">
+              <button
+                type="button"
+                className="dashboard-card wfh"
+                onClick={() => openLeaveHistory("WFH")}
+              >
                 <div className="dashboard-icon">🏠</div>
                 <div className="dashboard-label">WFH</div>
                 <div className="dashboard-value">
                   {asDisplay(leaveBalance.wfH_Submitted)}
                 </div>
-              </div>
+              </button>
 
-              <div className="dashboard-card wfhx">
+              <button
+                type="button"
+                className="dashboard-card wfhx"
+                onClick={() => openLeaveHistory("WFHX")}
+              >
                 <div className="dashboard-icon">🏡</div>
                 <div className="dashboard-label">WFH(X)</div>
                 <div className="dashboard-value">
                   {asDisplay(leaveBalance.wfhX_Submitted)}
                 </div>
-              </div>
+              </button>
 
-              <div className="dashboard-card cl">
+              <button
+                type="button"
+                className="dashboard-card cl"
+                onClick={() => openLeaveHistory("CL")}
+              >
                 <div className="dashboard-icon">🧳</div>
                 <div className="dashboard-label">CL</div>
                 <div className="dashboard-value">
                   {asDisplay(leaveBalance.cL_Submitted)}
                 </div>
-              </div>
+              </button>
 
               {isAssociate ? (
-                <div className="dashboard-card asl">
+                <button
+                  type="button"
+                  className="dashboard-card asl"
+                  onClick={() => openLeaveHistory("ASL")}
+                >
                   <div className="dashboard-icon">⭐</div>
                   <div className="dashboard-label">ASL</div>
                   <div className="dashboard-value">
@@ -252,9 +277,13 @@ export default function LeaveBalance({
                     {asDisplay(leaveBalance.asL_Total)}
                     (Opening Balance)
                   </div> */}
-                </div>
+                </button>
               ) : (
-                <div className="dashboard-card pl">
+                <button
+                  type="button"
+                  className="dashboard-card pl"
+                  onClick={() => openLeaveHistory("PL")}
+                >
                   <div className="dashboard-icon">🏖️</div>
                   <div className="dashboard-label">PL</div>
                   <div className="dashboard-value">
@@ -264,7 +293,7 @@ export default function LeaveBalance({
                     {asDisplay(leaveBalance.pL_Total)}
                     (Opening Balance)
                   </div>
-                </div>
+                </button>
               )}
             </div>
           </div>
@@ -272,9 +301,7 @@ export default function LeaveBalance({
       )}
 
       {showDashboardCards && !showLeaveBalanceDetails && loading && (
-        <div className="lb-card">
-          <p className="lb-loading">Loading leave dashboard...</p>
-        </div>
+        <DashboardSkeleton />
       )}
 
       {showDashboardCards && !showLeaveBalanceDetails && !loading && error && (
@@ -296,7 +323,7 @@ export default function LeaveBalance({
             <span className="red"> Balance</span>
           </div>
 
-          {loading && <p>Loading leave balance...</p>}
+          {loading && <LeaveBalanceSkeleton />}
           {!loading && error && <p className="red">{error}</p>}
 
           {!loading && !error && leaveBalance && (

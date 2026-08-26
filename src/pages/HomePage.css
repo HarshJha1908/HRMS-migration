@@ -10,31 +10,9 @@
 
 .hero-section {
   position: relative;
-  padding: 0 0 36px;
-  background: linear-gradient(135deg, #0f5f7f 0%, #1b8fb3 100%);
+  padding: 0;
+  background: #003764;
   overflow: hidden;
-}
-
-.hero-section::before {
-  content: "";
-  position: absolute;
-  width: 650px;
-  height: 650px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
-  top: -260px;
-  right: -180px;
-}
-
-.hero-section::after {
-  content: "";
-  position: absolute;
-  width: 400px;
-  height: 400px;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 50%;
-  bottom: -180px;
-  left: -120px;
 }
 
 .hero-container {
@@ -46,22 +24,11 @@
 
 .hero-image {
   width: 100%;
-  height: 420px;
-  object-fit: cover;
+  height: 100px;
+  object-fit: fill;
   display: block;
-
-  /* Add these */
-  aspect-ratio: 1920 / 420;
+  aspect-ratio: 766 / 271;
   contain: paint;
-
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
-  transition: transform 0.4s ease;
-  mix-blend-mode: soft-light;
-  opacity: 0.92;
-}
-
-.hero-image:hover {
-  transform: scale(1.01);
 }
 
 /* ===== WELCOME SECTION ===== */
@@ -83,14 +50,14 @@
 
   border: 1px solid #000000;
   border-radius: 22px;
-  padding: 22px 38px;
+  padding: 12px 30px;
   text-align: center;
   box-shadow: 5px 6px 0 rgba(0, 0, 0, 0.28), 0 14px 40px rgba(15, 95, 127, 0.12);
 }
 
 .welcome-section h2 {
-  font-size: 2.25rem;
-  margin: 0 0 8px;
+  font-size: 1.75rem;
+  margin: 0;
   color: #0f5f7f;
   font-weight: 800;
   letter-spacing: -1px;
@@ -240,15 +207,15 @@
 
 @media (max-width: 992px) {
   .hero-image {
-    height: 260px;
+    height: 100px;
   }
 
   .welcome-container {
-    padding: 20px 26px;
+    padding: 12px 24px;
   }
 
   .welcome-section h2 {
-    font-size: 2rem;
+    font-size: 1.6rem;
   }
 
   .features-section h2 {
@@ -262,25 +229,24 @@
 
 @media (max-width: 768px) {
   .hero-section {
-    padding: 20px 15px 60px;
+    padding: 0;
   }
 
   .hero-image {
-    height: 210px;
-    border-radius: 20px;
+    height: 100px;
   }
 
   .welcome-section {
-    margin-top: -40px;
+    margin-top: -30px;
   }
 
   .welcome-container {
-    padding: 18px 20px;
+    padding: 10px 18px;
     border-radius: 18px;
   }
 
   .welcome-section h2 {
-    font-size: 2rem;
+    font-size: 1.45rem;
   }
 
   .welcome-section p {
@@ -314,19 +280,13 @@
   }
 }
 
-@media (max-width: 768px) {
-  .hero-image {
-    height: 240px;
-  }
-}
-
 @media (max-width: 480px) {
   .hero-image {
-    height: 180px;
+    height: 100px;
   }
 
   .welcome-section h2 {
-    font-size: 1.7rem;
+    font-size: 1.25rem;
   }
 
   .features-section h2 {

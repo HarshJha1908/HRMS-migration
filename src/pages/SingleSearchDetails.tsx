@@ -14,6 +14,13 @@ import type { LeaveDetailsApi, LeaveTypeApi } from "../types/apiTypes";
 import "./SingleSearchDetails.css";
 import PageLoader from "../components/PageLoader";
 import ToastMessage from "../components/ToastMessage";
+import {
+  FormSkeleton,
+  LeaveBalanceSkeleton,
+  ProfileSkeleton,
+  Skeleton,
+  TableSkeleton
+} from "../components/Skeletons";
 
 type EmployeeSearchItem = {
   user_Employee_No?: string | number;
@@ -454,7 +461,32 @@ const confirmLeaveAction = async () => {
     }
   };
 
-  if (loading) return <p>Loading details...</p>;
+  if (loading) {
+    return (
+      <section className="single-search-details-page">
+        <ProfileSkeleton />
+        <div className="ssd-panel">
+          <div className="skeleton-panel-title">
+            <Skeleton width="210px" height="30px" />
+          </div>
+          <FormSkeleton fields={2} />
+          <div className="ssd-table-wrap">
+            <table className="ssd-table">
+              <tbody>
+                <TableSkeleton columns={7} rows={6} />
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="ssd-panel">
+          <div className="skeleton-panel-title">
+            <Skeleton width="180px" height="30px" />
+          </div>
+          <LeaveBalanceSkeleton />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="single-search-details-page">

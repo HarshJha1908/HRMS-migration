@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { getLeaveRules } from "../services/apiService";
 import type { LeaveRuleApi } from "../types/apiTypes";
 import "./LeaveRules.css";
+import { TableSkeleton } from "../components/Skeletons";
 
 const leaveTypeCodeMap: Record<string, string> = {
   "Birthday Leave": "BDL",
@@ -47,7 +48,6 @@ export default function LeaveRules() {
           setError(response?.message || "Unable to load leave rules.");
         }
       } catch (err) {
-        console.error(err);
         setError("Failed to load leave rules.");
       } finally {
         setLoading(false);
@@ -64,10 +64,9 @@ export default function LeaveRules() {
   <h2 className="leave-rules-title">Clubbing Rule</h2>
 </div>
 
-        {loading && <p className="leave-rules-state">Loading...</p>}
         {error && !loading && <p className="leave-rules-error">{error}</p>}
 
-        {!loading && !error && (
+        {!error && (
           <div className="leave-rules-table-wrapper">
             <table className="leave-rules-table">
               <thead>
@@ -82,7 +81,9 @@ export default function LeaveRules() {
                 </tr>
               </thead>
               <tbody>
-                {rules.length === 0 ? (
+                {loading ? (
+                  <TableSkeleton columns={7} rows={7} />
+                ) : rules.length === 0 ? (
                   <tr>
                     <td colSpan={7}>No leave rules found.</td>
                   </tr>

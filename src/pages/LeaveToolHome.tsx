@@ -8,14 +8,14 @@ export default function LeaveToolHome() {
       <section className="hero-section">
         <div className="hero-container">
           <img
-            src="/image.webp"
-            alt="Linde Logo"
+            src="/homepage-banner.svg"
+            alt="Linde banner"
             className="hero-image"
             fetchPriority="high"
             loading="eager"
             decoding="async"
-            width="1920"
-            height="420"
+            width="766"
+            height="271"
           />
         </div>
       </section>

@@ -10,6 +10,7 @@ import type { LeaveDetailsApi, LeaveTypeApi, TeamMemberApi } from "../types/apiT
 import "./TeamLeaveDetails.css";
 import { useLeaveStatusCodes } from "../hooks/useLeaveStatusCodes";
 import { useAuth } from "../auth/useAuth";
+import { TableSkeleton } from "../components/Skeletons";
 
 
 const normalize = (value: string | null | undefined) => (value || "").trim();
@@ -69,7 +70,7 @@ export default function TeamLeaveDetails() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 15;
+  const rowsPerPage = 100;
 
   useEffect(() => {
     const loadPageData = async () => {
@@ -78,8 +79,8 @@ export default function TeamLeaveDetails() {
         setError("");
 
         const [memberRes, leaveTypeRes, managerRows] = await Promise.all([
-          getAllTeamMembersByManagerId(user?.loginUserAdID || ''), ////user?.loginUserAdID || ''
-          getLeaveTypes(user?.loginUserAdID || ''),
+          getAllTeamMembersByManagerId(user?.loginUserAdID || ""), ////user?.loginUserAdID || ''
+          getLeaveTypes(user?.loginUserAdID || ""),
           getAllLeaveRequestByManagerId(user?.loginUserAdID || '')//user?.loginUserAdID || ''
           
         ]);
@@ -107,7 +108,6 @@ export default function TeamLeaveDetails() {
         setAllRows(normalizedRows);
         setRows(normalizedRows);
       } catch (err) {
-        console.error(err);
         setError("Failed to load team leave details.");
         setAllRows([]);
         setRows([]);
@@ -254,9 +254,7 @@ export default function TeamLeaveDetails() {
             </thead>
             <tbody>
               {loading ? (
-                <tr>
-                  <td colSpan={9}>Loading...</td>
-                </tr>
+                <TableSkeleton columns={9} rows={8} />
               ) : error ? (
                 <tr>
                   <td colSpan={9}>{error}</td>

@@ -5,6 +5,7 @@ import type {
   LeaveDetailsApi,
   LeaveStatusResponse,
   LeaveRuleResponse,
+  LeaveBalanceApiData,
   LeaveBalanceResponse,
   TeamMemberResponse,
   ManageProfileEmpProfileApi,
@@ -41,6 +42,7 @@ import type {
 } from "../types/apiTypes";
 import { apiClient } from "./apiClient";
 import { resolveApiUrl } from "./apiClient";
+import { getApiAccessToken } from "../auth/tokenService";
 
 //User role
 export const getLoginUserInfoByUserid = async (
@@ -63,15 +65,85 @@ export const getLoginUserInfoByUserid = async (
 
 
 export const getLeaveTypes = (userId: string) => {
-  return apiClient(`/api/Leave/GetLeaveType?userid=${userId}`);
+  return apiClient(`/api/Leave/GetLeaveType?userid=${encodeURIComponent(userId)}`);
 };
 
 export const getLeaveRules = (): Promise<LeaveRuleResponse> => {
   return apiClient("/api/Leave/GetLeaveRule");
 };
 
-export const getLeaveBalance = (userId: string): Promise<LeaveBalanceResponse> => {
-  return apiClient(`/api/Leave/GetLeaveBalance?userid=${encodeURIComponent(userId)}`);
+type LeaveBalanceRawData = Partial<LeaveBalanceApiData> & Record<string, unknown>;
+
+const pickLeaveBalanceText = (
+  data: LeaveBalanceRawData,
+  ...keys: string[]
+): string | null => {
+  const normalizedEntries = Object.entries(data).map(([key, value]) => [
+    key.replace(/_/g, "").toLowerCase(),
+    value
+  ] as const);
+
+  for (const key of keys) {
+    const value =
+      data[key] ??
+      normalizedEntries.find(
+        ([normalizedKey]) => normalizedKey === key.replace(/_/g, "").toLowerCase()
+      )?.[1];
+
+    if (value !== undefined && value !== null) {
+      return String(value);
+    }
+  }
+
+  return null;
+};
+
+const normalizeLeaveBalanceData = (
+  data: LeaveBalanceRawData
+): LeaveBalanceApiData => ({
+  ...data,
+  employeeName: String(data.employeeName ?? ""),
+  employeeID: Number(data.employeeID ?? 0),
+  bdL_Total: pickLeaveBalanceText(data, "bdL_Total", "bdlAvailable"),
+  bdL_Submitted: pickLeaveBalanceText(data, "bdL_Submitted", "bdlSubmitted", "bdlSubmited"),
+  bdL_Balance: pickLeaveBalanceText(data, "bdL_Balance", "bdlBalance"),
+  cL_Total: pickLeaveBalanceText(data, "cL_Total", "clAvailable"),
+  cL_Submitted: pickLeaveBalanceText(data, "cL_Submitted", "clSubmitted", "clSubmited"),
+  cL_Balance: pickLeaveBalanceText(data, "cL_Balance", "clBalance"),
+  pL_Total: pickLeaveBalanceText(data, "pL_Total", "plAvailable", "openingPLBalance"),
+  pL_Submitted: pickLeaveBalanceText(data, "pL_Submitted", "plSubmitted", "plSubmited"),
+  pL_Balance: pickLeaveBalanceText(data, "pL_Balance", "plBalance"),
+  asL_Total: pickLeaveBalanceText(data, "asL_Total", "aslAvailable", "openingPLBalance"),
+  asL_Submitted: pickLeaveBalanceText(data, "asL_Submitted", "aslSubmitted", "aslSubmited"),
+  asL_Balance: pickLeaveBalanceText(data, "asL_Balance", "aslBalance", "openingPLBalance"),
+  isPTLapplicable: Boolean(data.isPTLapplicable ?? data.isPTLApplicable ?? data.ptlApplicable),
+  ptL_Total: pickLeaveBalanceText(data, "ptL_Total", "ptlAvailable"),
+  ptL_Submitted: pickLeaveBalanceText(data, "ptL_Submitted", "ptlSubmitted", "ptlSubmited"),
+  ptL_Balance: pickLeaveBalanceText(data, "ptL_Balance", "ptlBalance"),
+  isMTLapplicable: Boolean(data.isMTLapplicable ?? data.isMTLApplicable),
+  mtL_Total: pickLeaveBalanceText(data, "mtL_Total", "mtlAvailable"),
+  mtL_Submitted: pickLeaveBalanceText(data, "mtL_Submitted", "mtlSubmitted", "mtlSubmited"),
+  mtL_Balance: pickLeaveBalanceText(data, "mtL_Balance", "mtlBalance"),
+  sL_Total: pickLeaveBalanceText(data, "sL_Total", "slAvailable"),
+  sL_Submitted: pickLeaveBalanceText(data, "sL_Submitted", "slSubmitted", "slSubmited"),
+  sL_Balance: pickLeaveBalanceText(data, "sL_Balance", "slBalance"),
+  wfH_Total: pickLeaveBalanceText(data, "wfH_Total", "wfhAvailable"),
+  wfH_Submitted: pickLeaveBalanceText(data, "wfH_Submitted", "wfhSubmitted", "wfhSubmited"),
+  wfH_Balance: pickLeaveBalanceText(data, "wfH_Balance", "wfhBalance"),
+  wfhX_Total: pickLeaveBalanceText(data, "wfhX_Total", "coAvailable", "wfhxAvailable"),
+  wfhX_Submitted: pickLeaveBalanceText(data, "wfhX_Submitted", "coSubmitted", "coSubmited", "wfhxSubmitted", "wfhxSubmited"),
+  wfhX_Balance: pickLeaveBalanceText(data, "wfhX_Balance", "coBalance", "wfhxBalance")
+});
+
+export const getLeaveBalance = async (userId: string): Promise<LeaveBalanceResponse> => {
+  const response = await apiClient(`/api/Leave/GetLeaveBalance?userid=${encodeURIComponent(userId)}`) as LeaveBalanceResponse;
+
+  return {
+    ...response,
+    data: response?.data
+      ? normalizeLeaveBalanceData(response.data as LeaveBalanceRawData)
+      : null
+  };
 };
 
 export const getLeaveStatusCodes = (): Promise<LeaveStatusResponse> => {
@@ -162,38 +234,126 @@ export const getLeaveDetails = (data: {
     body: JSON.stringify(data)
   });
 };
+const extractFilenameFromContentDisposition = (contentDisposition: string | null) => {
+  if (!contentDisposition) {
+    return null;
+  }
+
+  const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;\n]+)/i);
+  if (utf8Match?.[1]) {
+    return decodeURIComponent(utf8Match[1]);
+  }
+
+  const asciiMatch = contentDisposition.match(/filename="?([^";\n]+)"?/i);
+  return asciiMatch?.[1] ?? null;
+};
+
+const base64ToBlob = (base64Value: string, contentType: string) => {
+  const normalizedBase64 = base64Value.includes(",")
+    ? base64Value.split(",").pop() ?? ""
+    : base64Value;
+
+  const binary = atob(normalizedBase64);
+  const bytes = new Uint8Array(binary.length);
+
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+
+  return new Blob([bytes], { type: contentType });
+};
+
 export const getLeaveAttachment = async (leaveId: string): Promise<{ blob: Blob; filename: string } | null> => {
   try {
+    const token = await getApiAccessToken();
     const response = await fetch(
-      resolveApiUrl(`/api/Leave/GetLeaveAttachment?leaveID=${encodeURIComponent(leaveId)}`)
+      resolveApiUrl(`/api/Leave/GetLeaveAttachment?leaveID=${encodeURIComponent(leaveId)}`),
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
     );
 
     if (!response.ok) {
       return null;
     }
 
-    const blob = await response.blob();
-    
-    // Extract filename from Content-Disposition header
-    let filename = "attachment.pdf";
-    const contentDisposition = response.headers.get("content-disposition");
-    if (contentDisposition) {
-      const match = contentDisposition.match(/filename="?([^";\n]+)"?/);
-      if (match && match[1]) {
-        filename = match[1];
+    const contentType = (response.headers.get("content-type") || "").toLowerCase();
+    const filenameFromHeader = extractFilenameFromContentDisposition(
+      response.headers.get("content-disposition")
+    );
+
+    if (contentType.includes("application/json")) {
+      const payload = await response.json().catch(() => null) as
+        | {
+          attachmentData?: string | null;
+          fileName?: string | null;
+          filename?: string | null;
+          contentType?: string | null;
+          mimeType?: string | null;
+          data?: {
+            attachmentData?: string | null;
+            fileName?: string | null;
+            filename?: string | null;
+            contentType?: string | null;
+            mimeType?: string | null;
+          } | null;
+        }
+        | null;
+
+      const attachmentPayload = payload?.data ?? payload;
+      const attachmentData = attachmentPayload?.attachmentData?.trim();
+
+      if (!attachmentData) {
+        return null;
       }
+
+      const fileContentType =
+        attachmentPayload?.contentType?.trim() ||
+        attachmentPayload?.mimeType?.trim() ||
+        "application/pdf";
+
+      return {
+        blob: base64ToBlob(attachmentData, fileContentType),
+        filename:
+          attachmentPayload?.fileName?.trim() ||
+          attachmentPayload?.filename?.trim() ||
+          filenameFromHeader ||
+          "attachment.pdf"
+      };
     }
 
-    return { blob, filename };
+    if (
+      contentType.includes("pdf") ||
+      contentType.includes("octet-stream") ||
+      contentType.startsWith("image/")
+    ) {
+      return {
+        blob: await response.blob(),
+        filename: filenameFromHeader || "attachment.pdf"
+      };
+    }
+
+    const responseText = await response.text().catch(() => "");
+    if (responseText.trimStart().toLowerCase().startsWith("<!doctype")) {
+      throw new Error("Leave attachment endpoint returned HTML instead of a file.");
+    }
+
+    throw new Error(`Unexpected attachment content-type: ${contentType || "unknown"}`);
   } catch (error) {
-    console.error("Error fetching leave attachment:", error);
     return null;
   }
 };
 
 //get view leave details by leaveId
-export const getViewLeaveDetailsByLeaveId = (leaveId: string) => {
-  return apiClient(`/api/Leave/GetLeaveRequestDetailsByLeaveId?LeaveId=${leaveId}`);
+export const getViewLeaveDetailsByLeaveId = (leaveId: string, loginADId: string) => {
+  const params = new URLSearchParams({
+    LeaveId: leaveId,
+    loginADId
+  });
+
+  return apiClient(`/api/Leave/GetLeaveRequestDetailsByLeaveId?${params.toString()}`);
 }
 
 export const getApprover=(UserID:string)=>{
@@ -830,6 +990,33 @@ export const getInsuranceRelations = async (
  
   return response.data || [];
 };
+
+type InsuranceChildMaxAgeResponse = {
+  statusCode?: number;
+  isSuccess?: boolean;
+  message?: string;
+  data?: number | string | null;
+};
+
+export const getInsuranceChildMaxAge = async (): Promise<number> => {
+  const res = await apiClient("/api/Insurance/GetInsuranceChildMaxAge");
+
+  const rawValue =
+    typeof res === "number" || typeof res === "string"
+      ? res
+      : (res as InsuranceChildMaxAgeResponse | null)?.data;
+
+  const maxAge = Number(rawValue);
+
+  if (!Number.isFinite(maxAge) || maxAge <= 0) {
+    const response = res as InsuranceChildMaxAgeResponse | null;
+    throw new Error(
+      response?.message || "Failed to fetch insurance child maximum age"
+    );
+  }
+
+  return maxAge;
+};
  
 export interface InsuranceNomineeApi {
   sequence: number;
@@ -1045,8 +1232,6 @@ export const getAllEmployeeLeaveDetailsReport = async (
     `/api/Report/GetAllEmployeeLeaveDetails?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`
   );
 
-  console.log("LEAVE DETAILS RAW RESPONSE:", res); // ✅ ADD THIS
-
   if (Array.isArray(res)) return res.map(mapManagerLeaveDetailsToExcelRow);
 
   if (res?.data && Array.isArray(res.data)) {
@@ -1076,8 +1261,6 @@ export const getAllEmployeeLeaveBalanceReport = async (
       type
     )}`
   );
-
-  console.log("RAW RESPONSE", res);
 
   const data = Array.isArray(res)
     ? res
@@ -1112,10 +1295,6 @@ export const getAllEmployeeEmergencyContactDetails =
 
       return [];
     } catch (error) {
-      console.error(
-        "Emergency Contact API Error:",
-        error
-      );
 
       return [];
     }
@@ -1141,7 +1320,6 @@ export const getAllEmployeeEmergencyContactDetails =
       return [];
     } 
    catch (error) {
-    console.error("Insurance Nomination API Error:", error);
     return [];
   }
 };

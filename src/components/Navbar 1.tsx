@@ -1,14 +1,40 @@
 import './Navbar 1.css';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
 import { useUser } from '../context/UserContext';
+import { getVisibleHrResourceGroups } from '../config/hrResources';
 
 export default function Navbar1() {
   const { user, } = useAuth();
   const {
     isManager,
     isAdmin,
+    userInfo,
   } = useUser();
+  const hrResourceNavbarOrder = [
+    "Kolkata Center HR Policies",
+    "Reward & Recognition Portal",
+    "Training & Certification Portal",
+    "Payroll Portal",
+    "TEMS",
+    "Hospitalization",
+    "Other Important Links"
+  ];
+//const testEligibleTypeCode = "IN091A";
+  const hrResourceGroups = useMemo(
+    () =>
+      getVisibleHrResourceGroups(userInfo?.eligibleTypeCode)
+    //getVisibleHrResourceGroups(testEligibleTypeCode)
+        .filter((group) => group.navIcon)
+        .sort(
+          (left, right) =>
+            hrResourceNavbarOrder.indexOf(left.title) -
+            hrResourceNavbarOrder.indexOf(right.title)
+        ),
+    [userInfo?.eligibleTypeCode]
+  );
+
   return (
     <header className="navbar">
       <nav className="navbar-container">
@@ -112,86 +138,48 @@ export default function Navbar1() {
 
             <div className="dropdown-menu hr-mega-menu">
               <div className="hr-mega-grid">
-                <div className="hr-mega-column">
-                  <div className="hr-mega-heading">
-                    <span className="hr-mega-icon hr-mega-icon--blue" aria-hidden="true">📄</span> Policies
-                  </div>
-                  <ul className="hr-mega-list">
-                    <li><a href="https://lindegroup.sharepoint.com/sites/Linde%20IS%20Kolkata%20Center/SitePages/HR%20Home.aspx?RootFolder=%2fsites%2fLinde+IS+Kolkata+Center%2fHR+Documents%2fLISKC+Local+Policies&FolderCTID=0x012000920ADECB82359C489EFB07D283255E88&View=%7bFE8B44BC-9711-424F-A0B9-FD411227CA94%7d&xsdata=MDV8MDJ8c2F5YW50aW5pLnNlbi5jaG91ZGh1cnlAbGluZGUuY29tfDhiYzdjYzg1ZWNhMzQzYTVmZDMwMDhkZDAwM2U3YmFifDE1NjJmMDA3MDlhNDRmY2I5MzZiZTc5MjQ2NTcxZmM3fDB8MHw2Mzg2NjY5OTA1MzgxMDYwNTJ8VW5rbm93bnxUV0ZwYkdac2IzZDhleUpGYlhCMGVVMWhjR2tpT25SeWRXVXNJbFlpT2lJd0xqQXVNREF3TUNJc0lsQWlPaUpYYVc0ek1pSXNJa0ZPSWpvaVRXRnBiQ0lzSWxkVUlqb3lmUT09fDB8fHw%3d&sdata=WEVjTTRvSkxOZTZUU3hENU1sL29ISHBQc2d6a1Arbmo0SkttZFpvMXVQcz0%3dEnter+text+here...&SafelinksUrl=https%3a%2f%2flindegroup.sharepoint.com%2fsites%2fLinde%2520IS%2520Kolkata%2520Center%2fSitePages%2fHR%2520Home.aspx&SafelinksUrl=https%3a%2f%2flindegroup.sharepoint.com%2fsites%2fLinde%2520IS%2520Kolkata%2520Center%2fSitePages%2fHR%2520Home.aspx" 
-                   target="_blank" rel="noopener noreferrer" className="hr-mega-link">LGSS Policies</a></li>
-                  </ul>
-                </div>
+                {hrResourceGroups.map((group) => (
+                  <div className="hr-mega-column" key={group.title}>
+                    <div className="hr-mega-heading">
+                      <span
+                        className={`hr-mega-icon ${group.navIconClassName}`}
+                        aria-hidden="true"
+                      >
+                        {group.navIcon}
+                      </span>{" "}
+                      {group.navTitle || group.title}
+                    </div>
+                    <ul className="hr-mega-list">
+                      {group.links.map((link) => {
+                        const href = link.navUrl || link.url;
+                        const label = link.navText || link.text;
 
-                <div className="hr-mega-column">
-                  <div className="hr-mega-heading">
-                    <span className="hr-mega-icon hr-mega-icon--purple" aria-hidden="true">🏆</span> Reward &amp; Recognization
+                        return (
+                          <li key={label}>
+                            {href.startsWith("/") ? (
+                              <Link to={href} className="hr-mega-link" title={link.title}>
+                                {label}
+                              </Link>
+                            ) : (
+                              <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hr-mega-link"
+                                title={link.title}
+                              >
+                                {label}
+                              </a>
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
                   </div>
-                  <ul className="hr-mega-list">
-                    <li><a href="https://apps.powerapps.com/play/e/default-1562f007-09a4-4fcb-936b-e79246571fc7/a/66ac46e3-2b3e-4091-8499-712b0ba26628"
-                      target="_blank" rel="noopener noreferrer" className="hr-mega-link">Home</a></li>
-                  </ul>
-                </div>
-
-                <div className="hr-mega-column">
-                  <div className="hr-mega-heading">
-                   <span className="hr-mega-icon hr-mega-icon--purple" aria-hidden="true">🎓</span> Training &amp; Certification
-                  </div>
-                  <ul className="hr-mega-list">
-                    <li><a href="https://apps.powerapps.com/play/e/613585e3-8656-4fe7-960f-0ca2d2332bd2/a/dcec88b5-27a8-480c-9efe-f28a9d431354?tenantId=1562f007-09a4-4fcb-936b-e79246571fc7"
-                      target="_blank" rel="noopener noreferrer" className="hr-mega-link">Home</a></li>
-                  </ul>
-                </div>
-
-                <div className="hr-mega-column">
-                  <div className="hr-mega-heading">
-                    <span className="hr-mega-icon hr-mega-icon--green" aria-hidden="true">🧾</span> Payroll Portal
-                  </div>
-                  <ul className="hr-mega-list">
-                    <li><a href="https://www.cquel.com/lgss/payroll/home.php" target="_blank" rel="noopener noreferrer" className="hr-mega-link">Payroll</a></li>
-                  </ul>
-                </div>
-
-                <div className="hr-mega-column">
-                  <div className="hr-mega-heading">
-                    <span className="hr-mega-icon hr-mega-icon--orange" aria-hidden="true">📑</span> TEMS
-                  </div>
-                  <ul className="hr-mega-list">
-                    <li><a href="https://etms.rse.linde.grp/PC/home.aspx" target="_blank" rel="noopener noreferrer" className="hr-mega-link">Claims Portal</a></li>
-                  </ul>
-                </div>
-
-                <div className="hr-mega-column">
-                  <div className="hr-mega-heading">
-                    <span className="hr-mega-icon hr-mega-icon--red" aria-hidden="true">🏥</span> Hospitalization
-                  </div>
-                  <ul className="hr-mega-list">
-                    <li><a href="https://prod.hrms.linde.grp/DocHRMS/Hospitalization/Claim%20Form.pdf" target="_blank" rel="noopener noreferrer" className="hr-mega-link">Reimbursement Claim Form</a></li>
-                    <li><a href="https://portal.mediassist.in/Home.aspx" 
-                    target="_blank" rel="noopener noreferrer" className="hr-mega-link">Network Hospital List</a></li>
-                    <li><a href="https://prod.hrms.linde.grp/DocHRMS/Hospitalization/All%20relevant%20information%20regarding%20Hospitalization" 
-                    target="_blank" rel="noopener noreferrer" className="hr-mega-link">All Hospitalization Related Information</a></li>
-                    <li><Link to="/insurance" className="hr-mega-link">GPA/GTL/GHI Declaration</Link></li>
-                  </ul>
-                </div>
-
-                <div className="hr-mega-column">
-                  <div className="hr-mega-heading">
-                    <span className="hr-mega-icon hr-mega-icon--orange" aria-hidden="true">🔗</span> Quick Links
-                  </div>
-                  <ul className="hr-mega-list">
-                    <li><a href="https://lindegroup.sharepoint.com/sites/Airtime?xsdata=MDV8MDJ8c3VtYW4uYmlzd2FzQGxpbmRlLmNvbXw2YTA5NDQ0YTJhZWQ0MTZiZWRlYTA4ZGQ4MGJkZDQyNnwxNTYyZjAwNzA5YTQ0ZmNiOTM2YmU3OTI0NjU3MWZjN3wwfDB8NjM4ODA4Mjc0OTk4MDgwNTUzfFVua25vd258VFdGcGJHWnNiM2Q4ZXlKRmJYQjBlVTFoY0draU9uUnlkV1VzSWxZaU9pSXdMakF1TURBd01DSXNJbEFpT2lKWGFXNHpNaUlzSWtGT0lqb2lUV0ZwYkNJc0lsZFVJam95ZlE9PXwwfHx8&sdata=SjJmS1NnVzlkdWN3MTlBbTlhWEtLUk5HRnNJRC9GMHQ0TXkyZk9Wd1Ridz0%3d&SafelinksUrl=https%3a%2f%2flindegroup.sharepoint.com%2fsites%2fAirtime"
-                      target="_blank" rel="noopener noreferrer" className="hr-mega-link">Linde Intranet</a></li>
-                    <li><a href="https://smax.linde.com/homepage" target="_blank" rel="noopener noreferrer" className="hr-mega-link">SMAX</a></li>
-                    <li><a href="https://pgw.linde.grp/sap/bc/ui5_ui5/ui2/ushell/shells/abap/FioriLaunchpad.html?sap-ui2-cache-disable=X&sap-client=100&sap-language=EN&sap-theme=zlgc_custom_quartz@https://pgw.linde.grp:/sap/public/bc/themes/~client-100/#Shell-home"
-                      target="_blank" rel="noopener noreferrer" className="hr-mega-link">My Linde Portal</a></li>
-                    <li><a href="https://lindegroup.sharepoint.com/sites/Linde%20IS%20Kolkata%20Center/SitePages/HR%20Home.aspx?RootFolder=%2Fsites%2FLinde%20IS%20Kolkata%20Center%2FHR%20Documents%2FInduction%202022&FolderCTID=0x012000920ADECB82359C489EFB07D283255E88&View=%7BFE8B44BC%2D9711%2D424F%2DA0B9%2DFD411227CA94%7D&InitialTabId=Ribbon%2ERead&VisibilityContext=WSSTabPersistence&OR=Teams-HL&CT=1696326934347&clickparams=eyJBcHBOYW1lIjoiVGVhbXMtRGVza3RvcCIsIkFwcFZlcnNpb24iOiIyNy8yMzA5MDExMjIyOSIsIkhhc0ZlZGVyYXRlZFVzZXIiOmZhbHNlfQ%3D%3D"
-                      target="_blank" rel="noopener noreferrer" className="hr-mega-link">Onboarding Or Induction materials</a></li>
-                  </ul>
-                </div>
+                ))}
               </div>
             </div>
           </div>
-
           {/* HR Administration Mega Menu */}
           {isAdmin && (
             <div className="dropdown hr-admin-dropdown">

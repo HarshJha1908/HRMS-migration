@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import "./EmployeeProfile.css";
+import { Skeleton } from "./Skeletons";
 // import LockedScreen from "./LockedScreen";
 import {
   getEmployeeType,
@@ -317,7 +318,6 @@ const CreateEmployeeLeaveProfile: React.FC = () => {
         const profileByEmpId = employeeNoFromState
           ? await getEmpProfileByEmpId(employeeNoFromState)
           : null;
-        console.log("Fetched profile for prefill:", profileByEmpId);
         const merged = {
           ...employeeFromState,
           ...(profileByEmpId || {})
@@ -625,7 +625,6 @@ setSelectedEmployeeType(
       if (isUpdateMode) {
 
         await updateEmpProfile(payload);
-        console.log("Update payload:", payload);
       }
       else {
         await saveNewEmpProfile(payload);
@@ -635,7 +634,6 @@ setSelectedEmployeeType(
           ? "Employee profile updated successfully."
           : "Employee profile saved successfully."
       );
-      console.log(saveMessage, payload);
     } catch (error) {
       const errorMessage =
         error instanceof Error && error.message
@@ -930,7 +928,7 @@ setSelectedEmployeeType(
               <label>
                 Assignment Team<span>*</span>
               </label>
-              {loadingTeam && <p>Loading teams...</p>}
+              {loadingTeam && <Skeleton width="220px" height="16px" />}
 
               {teamError && <p style={{ color: "red" }}>{teamError}</p>}
               <select
@@ -948,6 +946,19 @@ setSelectedEmployeeType(
                   </option>
                 ))}
               </select>
+              <div className="assignment-team-note" role="note">
+                <p>Please note the following while changing assignment:</p>
+                <ol>
+                  <li>
+                    If the employee is not a manager/team lead, select the
+                    Assignment Team from the &quot;Team Manager Name&quot; options.
+                  </li>
+                  <li>
+                    If the employee is a manager/team lead, select the
+                    Assignment Team from the &quot;Team Head Name&quot; options.
+                  </li>
+                </ol>
+              </div>
             </div>
           </div>
 

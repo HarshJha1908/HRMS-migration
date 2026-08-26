@@ -17,6 +17,7 @@ import worker from 'pdfjs-dist/build/pdf.worker?url';
 import { CsvExportUtil } from '../utils/CsvExportUtil';
 import { PdfExportUtil } from '../utils/PdfExportUtil';
 import { useAuth } from '../auth/useAuth';
+import { DocumentPreviewSkeleton } from './Skeletons';
 pdfjs.GlobalWorkerOptions.workerSrc = worker;
 
 type ReportType = "leave-details" | "leave-balance" | "emergency-contact";
@@ -241,7 +242,7 @@ const DownLoadCenter = () => {
                         </div>
                         <div className="viewer-panel">
                             <div className="viewer-container">
-                                {loading && <div className="viewer-status">Loading...</div>}
+                                {loading && <DocumentPreviewSkeleton />}
                                 {!loading && error && <div className="viewer-status">{error}</div>}
                                 {!loading && !error && recordCount > 0 && (
                                     <iframe

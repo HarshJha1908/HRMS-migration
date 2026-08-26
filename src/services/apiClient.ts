@@ -96,7 +96,6 @@ export const apiClient = async (url: string, options: RequestInit = {}) => {
     const body = await parseResponseBody(response);
 
     if (!response.ok) {
-      console.error("API ERROR:", response.status, body);
       const responseMessage =
         body && typeof body === "object" && "message" in body
           ? String(body.message || "")

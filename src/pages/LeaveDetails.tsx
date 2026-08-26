@@ -1,20 +1,27 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import LeaveFilterHeader from '../components/FilterHeader';
 import LeaveBalance from '../components/LeaveBalance';
 import MyLeaveDetail from '../components/MyLeaveDetail';
 import { getLeaveTypes } from '../services/apiService';
 import type { LeaveTypeApi } from '../types/apiTypes';
 import { useLeaveStatusCodes } from '../hooks/useLeaveStatusCodes';
+import { useAuth } from '../auth/useAuth';
 
 
 export default function LeaveDetails() {
 
+  const location = useLocation();
+  const { user } = useAuth();
+  const currentUserAdId = String(user?.loginUserAdID || "").trim();
+  const routeState = location.state as { leaveTypeCode?: unknown } | null;
+  const initialLeaveType = String(routeState?.leaveTypeCode || "").trim();
 
   const [year, setYear] = useState(new Date().getFullYear());
-  const [leaveType, setLeaveType] = useState("");
+  const [leaveType, setLeaveType] = useState(initialLeaveType);
   const [status, setStatus] = useState("");
   const [appliedYear, setAppliedYear] = useState(new Date().getFullYear());
-  const [appliedLeaveType, setAppliedLeaveType] = useState("");
+  const [appliedLeaveType, setAppliedLeaveType] = useState(initialLeaveType);
   const [appliedStatus, setAppliedStatus] = useState("");
   const [leaveTypes, setLeaveTypes] = useState<LeaveTypeApi[]>([]);
   const [leaveBalanceRefreshKey, setLeaveBalanceRefreshKey] = useState(0);
@@ -24,18 +31,27 @@ export default function LeaveDetails() {
 
   useEffect(() => {
     const loadFilterData = async () => {
-      const leaveTypeResponse = await getLeaveTypes("a2ef46");
+      if (!currentUserAdId) {
+        setLeaveTypes([]);
+        return;
+      }
 
-      const leaveTypeRaw = leaveTypeResponse?.data ?? [];
-      const leaveTypeCleaned = leaveTypeRaw.map((item: LeaveTypeApi) => ({
-        leaveTypeCode: item.leaveTypeCode.trim(),
-        leaveTypeName: item.leaveTypeName.trim()
-      }));
-      setLeaveTypes(leaveTypeCleaned);
+      try {
+        const leaveTypeResponse = await getLeaveTypes(currentUserAdId);
+
+        const leaveTypeRaw = leaveTypeResponse?.data ?? [];
+        const leaveTypeCleaned = leaveTypeRaw.map((item: LeaveTypeApi) => ({
+          leaveTypeCode: String(item.leaveTypeCode || "").trim(),
+          leaveTypeName: String(item.leaveTypeName || "").trim()
+        }));
+        setLeaveTypes(leaveTypeCleaned);
+      } catch (error) {
+        setLeaveTypes([]);
+      }
     };
 
     loadFilterData();
-  }, []);
+  }, [currentUserAdId]);
 
   const handleApplyFilters = () => {
     setAppliedYear(year);

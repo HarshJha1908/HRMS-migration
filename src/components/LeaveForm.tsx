@@ -18,6 +18,7 @@ import type { LeaveFormProps } from "../types/props";
 // import { useUser } from "../context/UserContext";
 import { useAuth } from "../auth/useAuth";
 import { formatLocalDate } from "../utils/Utils";
+import { Skeleton } from "./Skeletons";
 import PageLoader from "./PageLoader";
 
 const formatApiDate = (date: Date) => {
@@ -111,7 +112,6 @@ export default function LeaveForm({
           }
         }
       } catch (err) {
-        console.error("Leave type fetch failed", err);
       } finally {
         setLoadingLeaveTypes(false);
       }
@@ -138,7 +138,6 @@ export default function LeaveForm({
           setApprover(result.data);
         }
       } catch (err) {
-        console.error("Leave approver fetch failed", err);
       } finally {
         setLoadingApprover(false);
       }
@@ -163,7 +162,6 @@ export default function LeaveForm({
   //         setReasons(cleaned);
   //       }
   //     } catch (err) {
-  //       console.error("Reason fetch failed", err);
   //     } finally {
   //       setLoading(false);
   //     }
@@ -190,7 +188,6 @@ export default function LeaveForm({
           setNoOfDays(result.data);
         }
       } catch (err) {
-        console.error("Leave days fetch failed", err);
       } finally {
         setLoadDays(false);
       }
@@ -383,8 +380,6 @@ export default function LeaveForm({
           throw new Error("PDF file size must be less than 3 MB.");
         }
       }
-      console.log("Submitting payload:", payload);
-
       setPageLoader(true);
       const response = await saveLeaveRequest(payload);
 
@@ -436,7 +431,6 @@ export default function LeaveForm({
         resetForm();
       }
     } catch (error) {
-      console.error("Submit failed:", error);
       const message =
         error instanceof Error && error.message
           ? error.message
@@ -483,7 +477,7 @@ export default function LeaveForm({
                 onChange={(e) => handleLeaveTypeChange(e.target.value)}
               >
                 {loadingLeaveTypes && (
-                  <option value="">Loading leave types...</option>
+                  <option value=""></option>
                 )}
                 {leaveTypes.map((type) => (
                   <option key={type.leaveTypeCode} value={type.leaveTypeCode}>
@@ -500,7 +494,7 @@ export default function LeaveForm({
             </label>
             <strong className="field-value" aria-live="polite">
               {loadingApprover
-                ? "Loading..."
+                ? <Skeleton width="180px" height="14px" />
                 : approver?.managerName || "N/A"}
             </strong>
           </div>
@@ -593,7 +587,7 @@ export default function LeaveForm({
               <option value="">-- Select Reason --</option>
 
               {loadingReasons ? (
-                <option>Loading...</option>
+                <option value=""></option>
               ) : (
                 reasons.map(r => (
                   <option

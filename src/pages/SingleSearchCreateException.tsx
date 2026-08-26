@@ -9,6 +9,7 @@ import {
 import type { LeaveExceptionItem, LeaveTypeApi } from "../types/apiTypes";
 import "./SingleSearchCreateException.css";
 import ToastMessage from "../components/ToastMessage";
+import { TableSkeleton } from "../components/Skeletons";
 
 const formatTodayForInput = () => {
   const today = new Date();
@@ -248,7 +249,7 @@ useEffect(() => {
                   disabled={loadingLeaveTypes || leaveTypes.length === 0}
                 >
                   {loadingLeaveTypes ? (
-                    <option value="">Loading leave types...</option>
+                    <option value=""></option>
                   ) : leaveTypes.length > 0 ? (
                     leaveTypes.map((item) => {
                       const code = item.leaveTypeCode || item.leaveTypeName;
@@ -333,7 +334,11 @@ useEffect(() => {
           </div>
           <div className="ssce-details-wrap">
             {loadingExceptions ? (
-              <p className="ssce-details-state">Loading exception details...</p>
+              <table className="ssce-details-table" aria-label="Loading exception history">
+                <tbody>
+                  <TableSkeleton columns={4} rows={5} />
+                </tbody>
+              </table>
             ) : exceptionError ? (
               <p className="ssce-help-text ssce-details-state">{exceptionError}</p>
             ) : exceptions.length === 0 ? (

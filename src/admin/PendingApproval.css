@@ -97,15 +97,14 @@
 
 .pending-page .table-wrap {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
 }
 
 .pending-page table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
-  table-layout: fixed;
-  min-width: 1200px;
+  table-layout: auto;
 }
 
 .pending-page thead {

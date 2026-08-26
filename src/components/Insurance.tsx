@@ -7,6 +7,7 @@ import "./Insurance.css";
 import { useLocation } from "react-router-dom";
 import {
   getInsuranceRelations,
+  getInsuranceChildMaxAge,
   getInsuranceNominationDetails,
   manageInsuranceNominationDetails,
   getEmpProfileByAdId,
@@ -74,6 +75,7 @@ const Insurance = () => {
 
 
   const [loadingRelations, setLoadingRelations] = useState(false);
+  const [childMaxAge, setChildMaxAge] = useState<number | null>(null);
 
   const [reasonForChange, setReasonForChange] = useState("");
 
@@ -259,6 +261,19 @@ const Insurance = () => {
   }, [error]);
 
   useEffect(() => {
+    const fetchChildMaxAge = async () => {
+      try {
+        const maxAge = await getInsuranceChildMaxAge();
+        setChildMaxAge(maxAge);
+      } catch (error) {
+        setChildMaxAge(null);
+      }
+    };
+
+    fetchChildMaxAge();
+  }, []);
+
+  useEffect(() => {
     const loadUserDetails = async () => {
       try {
         // Single Search flow
@@ -313,11 +328,6 @@ const Insurance = () => {
           setIsMaritalStatusUpdated(toBoolean(profile?.user_Mat_Pat_Applicable));
         }
       } catch (error) {
-        console.error(
-          "Failed to fetch employee details",
-          error
-        );
-
         setEmployeeName("");
         setEmployeeNumber("");
         setEmployeeGender("");
@@ -467,10 +477,6 @@ const Insurance = () => {
 
         setInitialData(originalData);
       } catch (error) {
-        console.error(
-          "Failed to load insurance data",
-          error
-        );
       } finally {
         setLoadingRelations(false);
       }
@@ -711,15 +717,22 @@ const Insurance = () => {
         const age = getAge(dob);
         const relationCategory = getRelationCategory(relationship);
 
-        if (
-          relationCategory === "child" &&
-          age > 25
-        ) {
-          setError(
-            "Maximum permissible age to add your Child as dependent is 25 years." + GHI_ERR_MESSAGE
-          );
+        if (relationCategory === "child") {
+          if (childMaxAge === null) {
+            setError(
+              "Unable to validate maximum permissible age to add your Child as dependent. Please try again later." + GHI_ERR_MESSAGE
+            );
 
-          return;
+            return;
+          }
+
+          if (age > childMaxAge) {
+            setError(
+              `Maximum permissible age to add your Child as dependent is ${childMaxAge} years.` + GHI_ERR_MESSAGE
+            );
+
+            return;
+          }
         }
 
         if (
@@ -811,9 +824,6 @@ const Insurance = () => {
             item.mamberName.trim() !==
             ""
         );
-      console.log("percentageShares", percentageShares);
-      console.log("payload", payload);
-
       await manageInsuranceNominationDetails(
         reasonForChange,
         employeeNumber,
@@ -841,11 +851,6 @@ const Insurance = () => {
 
 
     } catch (error) {
-      console.error(
-        "Failed to save insurance details",
-        error
-      );
-
       setError(
         "Failed to save insurance details"
       );

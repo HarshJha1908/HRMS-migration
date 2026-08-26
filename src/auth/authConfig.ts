@@ -35,11 +35,8 @@ export const msalConfig: Configuration = {
     loggerOptions: {
       logLevel: import.meta.env.DEV ? LogLevel.Warning : LogLevel.Error,
       piiLoggingEnabled: false,
-      loggerCallback: (level, message, containsPii) => {
+      loggerCallback: (_level, _message, containsPii) => {
         if (containsPii) return;
-        // eslint-disable-next-line no-console
-        if (level === LogLevel.Error) console.error("[msal]", message);
-        else if (level === LogLevel.Warning) console.warn("[msal]", message);
       }
     }
   }

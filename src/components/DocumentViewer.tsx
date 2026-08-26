@@ -8,6 +8,7 @@ import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
 import { invalidateApiGetCache } from "../services/apiClient";
 import { faFileLines } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { DocumentPreviewSkeleton, ListSkeleton } from "./Skeletons";
 
 
 interface DocumentViewerProps {
@@ -23,10 +24,10 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
   const isAdmin = role === "admin";
 
   const [docTypes, setDocTypes] = useState<{ docCode: string; typeName: string }[]>([]);
-  const [loadingTypes, setLoadingTypes] = useState(false);
+  const [loadingTypes, setLoadingTypes] = useState(true);
   const [documents, setDocuments] = useState<DocumentApi[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<DocumentApi | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [pdfUrl, setPdfUrl] = useState<string>("");
@@ -61,7 +62,6 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
         }
       } catch (err) {
         setError('Unable to load document list. Try refreshing the page.');
-        console.error('Error loading documents:', err);
       } finally {
         setLoading(false);
       }
@@ -77,7 +77,6 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
         const types = await getDocumentTypes();
         setDocTypes(types);
       } catch (err) {
-        console.error("Failed to load document types", err);
       } finally {
         setLoadingTypes(false);
       }
@@ -107,7 +106,6 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
         pdfObjectUrl = URL.createObjectURL(fixedBlob);
         setPdfUrl(pdfObjectUrl);
       } catch (err) {
-        console.error('Error fetching PDF:', err);
         setPdfUrl("");
       } finally {
         setPdfLoading(false);
@@ -205,7 +203,6 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
       setFormData({ title: '', link: '', isLink: false, isActive: true, file: null });
 
     } catch (err) {
-      console.error(err);
       alert('Operation failed');
     } finally {
       setIsSubmitting(false);
@@ -241,7 +238,6 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
       setDocuments(results);
       setSelectedDocument(results[0] || null);
     } catch (err) {
-      console.error("Search failed:", err);
     } finally {
       setIsSearching(false);
     }
@@ -289,7 +285,7 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
                   }}
                 >
                   {loadingTypes ? (
-                    <option>Loading...</option>
+                    <option value=""></option>
                   ) : docTypes.length === 0 ? (
                     <option>No Types</option>
                   ) : (
@@ -353,8 +349,8 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
             {/* 🔹 LIST */}
             {error ? (
               <div className="sidebar-error">{error}</div>
-            ) : documents.length === 0 && loading ? (
-              <div className="sidebar-empty">Loading...</div>
+            ) : loading ? (
+              <ListSkeleton items={7} />
             ) : documents.length === 0 ? (
               <div className="sidebar-empty">No documents found</div>
             ) : (
@@ -401,12 +397,14 @@ export default function DocumentViewer({ documentType }: DocumentViewerProps) {
 
 
             <div className="preview-body">
-              {!selectedDocument ? (
+              {loading ? (
+                <DocumentPreviewSkeleton />
+              ) : !selectedDocument ? (
                 <div className="preview-empty">
                   <p>Choose a file on the left to see the content here.</p>
                 </div>
               ) : pdfLoading ? (
-                <div className="viewer-status">Loading PDF...</div>
+                <DocumentPreviewSkeleton />
               ) : pdfUrl ? (
                 <iframe
                   src={`${pdfUrl}#toolbar=1`}

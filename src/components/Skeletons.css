@@ -1,0 +1,230 @@
+.skeleton {
+  display: inline-block;
+  max-width: 100%;
+  min-height: 10px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #e6eaed 25%, #f5f7f8 50%, #e6eaed 75%);
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+.skeleton-circle {
+  flex: 0 0 auto;
+  border-radius: 50%;
+}
+
+.skeleton-panel-title {
+  min-height: 63px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #d9d9d9;
+  box-sizing: border-box;
+}
+
+.skeleton-profile {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+}
+
+.skeleton-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+}
+
+.skeleton-profile-grid > div {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  padding: 12px 14px;
+  border-right: 1px solid #d6dbe0;
+  border-bottom: 1px solid #d6dbe0;
+  box-sizing: border-box;
+}
+
+.skeleton-profile-grid > div:nth-child(4n) {
+  border-right: 0;
+}
+
+.skeleton-label-cell {
+  background: #f7f7f7;
+}
+
+.skeleton-table-row td {
+  height: 52px;
+  padding: 12px !important;
+  box-sizing: border-box;
+}
+
+.skeleton-table-cell {
+  display: block;
+  height: 14px;
+}
+
+.skeleton-dashboard {
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 2px;
+}
+
+.skeleton-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 20px;
+}
+
+.skeleton-dashboard-card {
+  display: flex;
+  min-height: 240px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 14px;
+  padding: 24px 16px;
+  border: 1px solid #d6dbe0;
+  border-radius: 8px;
+  box-sizing: border-box;
+  background: #f8fafb;
+}
+
+.skeleton-balance-legend {
+  margin: 16px 20px 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #d6dbe0;
+}
+
+.skeleton-balance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  min-height: 145px;
+  padding: 12px 20px 24px;
+}
+
+.skeleton-balance-line {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.skeleton-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr)) 120px;
+  gap: 14px;
+  align-items: end;
+  padding: 18px;
+  background: #f6f6f6;
+}
+
+.skeleton-form-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.skeleton-list-item {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 58px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #e0e6ea;
+}
+
+.skeleton-list-item > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton-document {
+  display: flex;
+  height: 100%;
+  min-height: 430px;
+  flex-direction: column;
+  gap: 12px;
+  padding: 22px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+.skeleton-document-page {
+  display: block;
+  margin-top: 8px;
+}
+
+.skeleton-page {
+  display: flex;
+  min-height: 420px;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  box-sizing: border-box;
+  background: #e9e9e9;
+}
+
+.skeleton-page-table {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 10px;
+  background: #fff;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -20% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .skeleton-profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .skeleton-profile-grid > div:nth-child(2n) {
+    border-right: 0;
+  }
+
+  .skeleton-dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .skeleton-form {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .skeleton-profile-grid,
+  .skeleton-dashboard-grid,
+  .skeleton-balance-grid,
+  .skeleton-form {
+    grid-template-columns: 1fr;
+  }
+
+  .skeleton-profile-grid > div {
+    border-right: 0;
+  }
+
+  .skeleton-dashboard-card {
+    min-height: 200px;
+  }
+
+  .skeleton-form-button {
+    width: 100% !important;
+  }
+}

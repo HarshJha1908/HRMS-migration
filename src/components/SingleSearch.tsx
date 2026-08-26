@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./SingleSearch.css";
 import { getEmployeeByKeyword } from "../services/apiService"; // adjust path
 import { useNavigate } from "react-router-dom";
+import { TableSkeleton } from "./Skeletons";
 // import { useAuth } from "../auth/useAuth";
 
 type EmployeeSearchItem = {
@@ -113,11 +114,7 @@ const SingleSearch = () => {
 
           <tbody>
             {loading ? (
-              <tr>
-                <td colSpan={5} className="no-data">
-                  Loading...
-                </td>
-              </tr>
+              <TableSkeleton columns={5} rows={6} />
             ) : employees.length === 0 ? (
               <tr>
                 <td colSpan={5} className="no-data">

@@ -5,6 +5,7 @@ import LeaveForm from "../components/LeaveForm";
 import ToastMessage from "../components/ToastMessage";
 import { getEmpProfileByEmpId } from "../services/apiService";
 import type { LeaveFormProps } from "../types/props";
+import { FormSkeleton, LeaveBalanceSkeleton, Skeleton } from "../components/Skeletons";
 
 type EmployeeRouteState = {
   user_Employee_No?: string | number;
@@ -79,7 +80,6 @@ export default function ApplyLeaveForOthers() {
         setEmployeeName(String(profile.empName || "").trim());
       } catch (err) {
         setError("Unable to load employee details. Please try again.");
-        console.error("Profile load error:", err);
       } finally {
         setLoading(false);
       }
@@ -107,7 +107,17 @@ export default function ApplyLeaveForOthers() {
         show={showSuccess}
         type="success"
       />
-      {loading && <p>Loading employee details...</p>}
+      {loading && (
+        <section className="lb-page">
+          <div className="lb-card">
+            <div className="skeleton-panel-title">
+              <Skeleton width="190px" height="30px" />
+            </div>
+            <LeaveBalanceSkeleton />
+          </div>
+          <FormSkeleton fields={4} />
+        </section>
+      )}
       {!loading && error && (
         <p style={{ color: "red", padding: "10px" }}>{error}</p>
       )}

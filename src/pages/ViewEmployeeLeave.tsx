@@ -1,7 +1,7 @@
 import LeaveBalance from "../components/LeaveBalance";
 import ViewLeaveDetails from "../components/ViewLeave";
 import { useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import type { LeaveDetails } from "../types/apiTypes";
 
 const normalizeAdId = (value: unknown) => String(value ?? "").trim();
@@ -28,6 +28,7 @@ const pickAdIdFromLeaveDetails = (details: LeaveDetails | null) => {
 
 export default function EmployeeLeaveDetails() {
   const location = useLocation();
+  const { adId: adIdFromRouteParam } = useParams<{ adId?: string }>();
   const [resolvedUserId, setResolvedUserId] = useState("");
   const [leaveBalanceRefreshKey, setLeaveBalanceRefreshKey] = useState(0);
 
@@ -49,7 +50,8 @@ export default function EmployeeLeaveDetails() {
     );
   }, [location.state]);
 
-  const leaveBalanceUserId = userIdFromRouteState || resolvedUserId || undefined;
+  const userIdFromPath = normalizeAdId(adIdFromRouteParam);
+  const leaveBalanceUserId = userIdFromPath || userIdFromRouteState || resolvedUserId || undefined;
 
   return (
     <>
